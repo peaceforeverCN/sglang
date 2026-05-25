@@ -643,6 +643,8 @@ class Req:
         self.last_node: Any = None
         self.last_host_node: Any = None
         self.host_hit_length = 0
+        # Tokens matched by KV connector (e.g., FlexKV) for this request.
+        self.cached_tokens_extended_device = 0
         # The node to lock until for swa radix tree lock ref
         self.swa_uuid_for_lock: Optional[int] = None
         # Whether the prefill-time SWA tree lock has been released early
@@ -884,6 +886,7 @@ class Req:
                     key=RadixKey(token_ids=token_ids, extra_key=self.extra_key),
                     req=self if tree_cache.supports_mamba() else None,
                     cow_mamba=tree_cache.supports_mamba(),
+                    update_connector_state=True,
                 )
             )
             (

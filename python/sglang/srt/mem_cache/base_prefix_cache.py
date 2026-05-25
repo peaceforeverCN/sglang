@@ -42,6 +42,11 @@ class MatchPrefixParams:
     cow_mamba: bool = False
     req: Optional[Req] = None
 
+    # External KV connector specific
+    # When True, the cache may update per-request connector state (e.g. reserve
+    # load-back metadata keyed by rid) as part of match_prefix.
+    update_connector_state: bool = False
+
 
 @dataclasses.dataclass
 class InsertParams:

@@ -541,7 +541,7 @@ class HiRadixCache(RadixCache):
         """
         return self.cache_controller.start_loading()
 
-    def check_hicache_events(self):
+    def check_kv_events(self):
         self.writing_check()
         self.loading_check()
         if self.enable_storage:
