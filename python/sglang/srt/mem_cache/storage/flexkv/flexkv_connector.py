@@ -271,6 +271,19 @@ class FlexKVConnector(BaseKVConnector):
             or cache_config.enable_kv_sharing
         )
 
+        # ---- SWA (Sliding Window Attention) GPU pool detection ----
+        self._swa_kv_pool = getattr(kvcache, 'swa_kv_pool', None)
+        self._swa_window_size = (
+            cache_config.swa.window_size
+            if cache_config.swa is not None and cache_config.swa.enabled
+            else 0
+        )
+        if self._swa_kv_pool is not None:
+            logger.info(
+                f"[FlexKV-SWA] Detected SWA KV pool on kvcache, "
+                f"window_size={self._swa_window_size}"
+            )
+
         if self._sync_ctx.is_sync_leader:
             wait_count = 0
             while not self.kv_manager.is_ready():
@@ -362,6 +375,18 @@ class FlexKVConnector(BaseKVConnector):
                 ## GPU hit length is the zero length of token masks
                 gpu_hit_length = torch.logical_not(token_mask).sum()
                 logger.debug(f"[FlexKV Connector] gpu hit length: {gpu_hit_length}, Flexkv hit length: {hit_length}")
+
+                # SWA: Check if SWA data is available for the matched prefix
+                if hit_length > 0 and hasattr(self.kv_manager, 'swa_available'):
+                    try:
+                        matched_prefix = token_ids_np[:hit_length]
+                        swa_avail = self.kv_manager.swa_available(matched_prefix)
+                        if swa_avail:
+                            logger.debug(
+                                f"[FlexKV-SWA] SWA available for prefix hit_length={hit_length}"
+                            )
+                    except Exception as swa_err:
+                        logger.debug(f"[FlexKV-SWA] SWA check in get_new_hit_length failed: {swa_err}")
 
         if self._sync_ctx.needs_sync:
             data = self._sync_ctx.scatter(
@@ -584,6 +609,15 @@ class FlexKVConnector(BaseKVConnector):
                 self._ongoing_stores[task_id] = fkv_task_id
             else:
                 self._completed_stores.append(task_id)
+
+            # SWA: Extract and store sliding window attention data alongside main KV
+            if self._swa_kv_pool is not None and hasattr(self.kv_manager, 'swa_put'):
+                try:
+                    swa_data = self._extract_swa_from_gpu(kv_indices)
+                    if swa_data is not None:
+                        self.kv_manager.swa_put(token_ids_np, swa_data)
+                except Exception as swa_err:
+                    logger.debug(f"[FlexKV-SWA] SWA store in start_store_kv failed: {swa_err}")
         except Exception as e:
             logger.error("[FlexKV] start_store_kv failed: %s", e, exc_info=True)
             _send_pp_put_meta(fkv_task_id=-1, unmatched_mask=[])
@@ -740,6 +774,154 @@ class FlexKVConnector(BaseKVConnector):
                 logger.warning(
                     f"[FlexKV] Error shutting down TransferManagerOnRemote{self._rank_label}: {e}")
             self._remote_process = None
+
+    # ---- SWA (Sliding Window Attention) Integration ----
+
+    def _extract_swa_from_gpu(self, kv_indices: torch.Tensor) -> Optional["torch.Tensor"]:
+        """Extract SWA data from SGLang's GPU SWA pool for the last window_size tokens.
+
+        Reads the sliding window attention KV data from the GPU SWA pool
+        and returns it as a CPU tensor for host-side storage.
+
+        Args:
+            kv_indices: GPU KV cache indices for the full sequence.
+
+        Returns:
+            CPU tensor containing SWA data, or None if SWA pool is not available.
+        """
+        if self._swa_kv_pool is None:
+            return None
+        if self._swa_window_size <= 0:
+            return None
+
+        try:
+            # Get the last window_size indices
+            window = min(self._swa_window_size, len(kv_indices))
+            if window <= 0:
+                return None
+            last_indices = kv_indices[-window:]
+
+            # Translate full KV indices to SWA pool indices if the kvcache
+            # has a translation method (e.g., for compressed SWA storage)
+            if hasattr(self._swa_kv_pool, 'get_flat_data'):
+                swa_indices = last_indices
+                if hasattr(self._swa_kv_pool, 'translate_loc_from_full_to_swa'):
+                    swa_indices = self._swa_kv_pool.translate_loc_from_full_to_swa(last_indices)
+                # Read SWA KV data from GPU pool (all layers, flattened)
+                swa_data = self._swa_kv_pool.get_flat_data(swa_indices)
+                return swa_data.cpu()  # D2H transfer
+            else:
+                # Fallback: read individual layer buffers if available
+                return None
+        except Exception as e:
+            logger.debug(f"[FlexKV-SWA] _extract_swa_from_gpu failed: {e}")
+            return None
+
+    @property
+    def swa_enabled(self) -> bool:
+        """Check if SWA is available on the underlying KVManager."""
+        if not self._sync_ctx.is_sync_leader:
+            return False
+        return hasattr(self.kv_manager, 'swa_put') and hasattr(self.kv_manager, '_get_swa_connector')
+
+    def swa_store(
+        self,
+        token_ids: List[int],
+        swa_data: "torch.Tensor",
+    ) -> bool:
+        """Store SWA data for a completed request.
+
+        Called after start_store_kv() to also persist the sliding window
+        attention state alongside the main KV cache.
+
+        Args:
+            token_ids: Full token sequence from the completed request.
+            swa_data: SWA snapshot tensor (CPU or GPU).
+
+        Returns:
+            True if stored successfully, False otherwise.
+        """
+        if not self._sync_ctx.is_sync_leader:
+            return False
+
+        if not hasattr(self.kv_manager, 'swa_put'):
+            return False
+
+        try:
+            token_ids_np = np.array(token_ids, dtype=np.int64)
+            # Ensure swa_data is on CPU
+            if hasattr(swa_data, 'is_cuda') and swa_data.is_cuda:
+                swa_data = swa_data.cpu()
+            result = self.kv_manager.swa_put(token_ids_np, swa_data)
+            if result:
+                logger.debug(
+                    f"[FlexKV-SWA] Stored SWA data for {len(token_ids)} tokens"
+                )
+            return result
+        except Exception as e:
+            logger.warning(f"[FlexKV-SWA] swa_store failed: {e}")
+            return False
+
+    def swa_load(
+        self,
+        token_ids: List[int],
+    ) -> Optional["torch.Tensor"]:
+        """Load SWA data for a prefix match hit.
+
+        Called after get_new_hit_length() reports a cache hit to retrieve
+        the associated sliding window attention state.
+
+        Args:
+            token_ids: Token prefix that was matched.
+
+        Returns:
+            SWA data tensor (CPU) or None if not available.
+        """
+        if not self._sync_ctx.is_sync_leader:
+            return None
+
+        if not hasattr(self.kv_manager, 'swa_get'):
+            return None
+
+        try:
+            token_ids_np = np.array(token_ids, dtype=np.int64)
+            result = self.kv_manager.swa_get(token_ids_np)
+            if result is not None:
+                logger.debug(
+                    f"[FlexKV-SWA] Loaded SWA data for {len(token_ids)} tokens"
+                )
+            return result
+        except Exception as e:
+            logger.warning(f"[FlexKV-SWA] swa_load failed: {e}")
+            return None
+
+    def swa_check(
+        self,
+        token_ids: List[int],
+    ) -> bool:
+        """Check if SWA data is available for a prefix.
+
+        Can be called during scheduling to determine if a prefix match
+        also has SWA data available for faster resumption.
+
+        Args:
+            token_ids: Token prefix to check.
+
+        Returns:
+            True if SWA data is available for the trailing window.
+        """
+        if not self._sync_ctx.is_sync_leader:
+            return False
+
+        if not hasattr(self.kv_manager, 'swa_available'):
+            return False
+
+        try:
+            token_ids_np = np.array(token_ids, dtype=np.int64)
+            return self.kv_manager.swa_available(token_ids_np)
+        except Exception as e:
+            logger.warning(f"[FlexKV-SWA] swa_check failed: {e}")
+            return False
 
     # ---- Private helpers ----
 
