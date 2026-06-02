@@ -313,9 +313,13 @@ class BasePrefixCache(ABC, PrefixCacheTrait):
 
     def check_hicache_events(self) -> Any:
         """
-        Check HiCache related activities to update radix tree and synchronize across TP workers if needed
+        Check HiCache related activities to update radix tree and synchronize across TP workers if needed.
+
+        Default no-op: caches that don't participate in async host transfers
+        (plain RadixCache, SWARadixCache, ChunkCache, ...) have nothing to drain.
+        HiCache / KV-connector wrappers override this.
         """
-        raise NotImplementedError()
+        return None
 
     def take_events(self):
         return []

@@ -340,11 +340,11 @@ class Scheduler(
         self.enable_hierarchical_cache = server_args.enable_hierarchical_cache
         self.enable_hicache_storage = server_args.hicache_storage_backend is not None
         # FlexKV connector uses the same event-polling / load-back paths as HiCache.
-        # Treat kv_connector_cls as enabling hierarchical-cache-like scheduling paths.
-        self.enable_kv_connector = server_args.kv_connector_cls is not None
-        self.enable_hierarchical_cache_or_connector = (
-            self.enable_hierarchical_cache or self.enable_kv_connector
-        )
+        # CLI flag only records the request; real value is set after build_kv_cache
+        # returns and we can check whether tree_cache is actually wrapped.
+        self._kv_connector_requested = server_args.kv_connector_cls is not None
+        self.enable_kv_connector = False
+        self.enable_hierarchical_cache_or_connector = self.enable_hierarchical_cache
         self.max_recv_per_poll = envs.SGLANG_SCHEDULER_MAX_RECV_PER_POLL.get()
         self.enable_hisparse = server_args.enable_hisparse
         self.hisparse_coordinator: Optional[HiSparseCoordinator] = None
@@ -459,6 +459,37 @@ class Scheduler(
         self.token_to_kv_pool_allocator = result.token_to_kv_pool_allocator
         self.disable_radix_cache = result.disable_radix_cache
         self.tree_cache = result.tree_cache
+
+        # Reconcile enable_kv_connector with reality: connector may have been
+        # requested via --kv-connector-cls but registry._load_and_create_connector
+        # returned None (import error, constructor exception, unsupported KV pool).
+        # In that case tree_cache is NOT wrapped with ExtendedRadixCache and the
+        # hicache-event polling paths must stay off.
+        from sglang.srt.mem_cache.extended_radix_cache import ExtendedRadixCache
+
+        def _has_kv_connector(cache) -> bool:
+            seen = set()
+            while cache is not None and id(cache) not in seen:
+                if isinstance(cache, ExtendedRadixCache):
+                    return True
+                seen.add(id(cache))
+                cache = getattr(cache, "_inner_radixtree", None) or getattr(
+                    cache, "_wrapped", None
+                )
+            return False
+
+        attached = _has_kv_connector(self.tree_cache)
+        if self._kv_connector_requested and not attached:
+            logger.warning(
+                "--kv-connector-cls=%s was requested but the connector failed to "
+                "attach; tree_cache=%s. Disabling kv-connector scheduling paths.",
+                server_args.kv_connector_cls,
+                type(self.tree_cache).__name__,
+            )
+        self.enable_kv_connector = attached
+        self.enable_hierarchical_cache_or_connector = (
+            self.enable_hierarchical_cache or self.enable_kv_connector
+        )
 
         if self.enable_hisparse:
             # Coordinator was created inside ModelRunner.initialize() before CUDA graph capture
@@ -2080,6 +2111,16 @@ class Scheduler(
         for tokenized_req in recv_req:
             self.handle_generate_request(tokenized_req)
 
+    @property
+    def enable_hicache_storage_or_connector(self) -> bool:
+        """True if either L3 storage prefetch or a kv_connector prefetch is wired up.
+
+        Tracked as a property (not a cached flag) because
+        ``enable_hicache_storage`` flips at runtime when storage backends are
+        attached/detached via the admin RPCs.
+        """
+        return self.enable_hicache_storage or self.enable_kv_connector
+
     def _prefetch_kvcache(self, req: Req):
         if self.enable_hicache_storage:
             req.init_next_round_input(self.tree_cache, cow_mamba=False)
@@ -2101,6 +2142,12 @@ class Scheduler(
                     last_hash,
                     prefix_keys,
                 )
+        elif self.enable_kv_connector:
+            # FlexKV-style connectors run their own prefix lookup against an
+            # external store; no host-radix anchoring needed. Just hand the
+            # connector the full token id sequence so its async prefetch can
+            # stage CPU/SSD/Remote hits while the request waits in queue.
+            self.tree_cache.prefetch(req)
 
     def _add_request_to_queue(self, req: Req, is_retracted: bool = False):
         if not self._set_or_validate_priority(req):
@@ -2177,7 +2224,7 @@ class Scheduler(
                 direction * recv_req.priority < direction * candidate_req.priority
             )
             if abort_existing_req:
-                if self.enable_hicache_storage:
+                if self.enable_hicache_storage_or_connector:
                     # Release prefetch events associated with the request
                     self.tree_cache.release_aborted_request(candidate_req.rid)
                 elif self.enable_hierarchical_cache:
@@ -2209,7 +2256,7 @@ class Scheduler(
         for req in self.waiting_queue:
             entry_time = req.time_stats.wait_queue_entry_time
             if 0 < entry_time < deadline:
-                if self.enable_hicache_storage:
+                if self.enable_hicache_storage_or_connector:
                     # Release prefetch events associated with the request
                     self.tree_cache.release_aborted_request(req.rid)
                 self.ipc_channels.send_to_tokenizer.send_output(
@@ -2606,7 +2653,7 @@ class Scheduler(
                 ):
                     break
 
-            if self.enable_hicache_storage:
+            if self.enable_hicache_storage_or_connector:
                 prefetch_done = self.tree_cache.check_prefetch_progress(req.rid)
                 if not prefetch_done:
                     # skip staging requests that are ongoing prefetch
@@ -3175,6 +3222,61 @@ class Scheduler(
                 self.pool_stats_observer.get_pool_stats(),
             )
             if has_leak:
+                # [LEAK-DEBUG] Compare ExtendedRadixCache.protected_size() (the
+                # value invariant_checker reads) against the inner SWARadixCache's
+                # raw full_protected_size_ / swa_protected_size_ fields (the values
+                # inc_lock_ref writes to). If they diverge, the getter path is
+                # buggy. If they match (both 0), some hidden code path zeroed the
+                # fields between inc_lock_ref and on_idle.
+                try:
+                    _tc = self.tree_cache
+                    _inner = getattr(_tc, "_inner_radixtree", None)
+                    _tc_prot = None
+                    _tc_evict = None
+                    try:
+                        _tc_prot = _tc.protected_size()
+                    except Exception as _e:
+                        _tc_prot = f"<err:{_e}>"
+                    try:
+                        _tc_evict = _tc.evictable_size()
+                    except Exception as _e:
+                        _tc_evict = f"<err:{_e}>"
+                    _inner_prot_method = None
+                    _inner_evict_method = None
+                    if _inner is not None:
+                        try:
+                            _inner_prot_method = _inner.protected_size()
+                        except Exception as _e:
+                            _inner_prot_method = f"<err:{_e}>"
+                        try:
+                            _inner_evict_method = _inner.evictable_size()
+                        except Exception as _e:
+                            _inner_evict_method = f"<err:{_e}>"
+                    _full_prot_field = getattr(_inner, "full_protected_size_", "<missing>") if _inner else "<no-inner>"
+                    _full_evict_field = getattr(_inner, "full_evictable_size_", "<missing>") if _inner else "<no-inner>"
+                    _swa_prot_field = getattr(_inner, "swa_protected_size_", "<missing>") if _inner else "<no-inner>"
+                    _swa_evict_field = getattr(_inner, "swa_evictable_size_", "<missing>") if _inner else "<no-inner>"
+                    _ongoing_store = getattr(_tc, "_ongoing_store_tasks", None)
+                    _ongoing_load = getattr(_tc, "_ongoing_load_tasks", None)
+                    logger.info(
+                        "[LEAK-DEBUG on_idle PRE-REPORT] "
+                        "tree_cache.protected_size()=%s tree_cache.evictable_size()=%s "
+                        "inner.protected_size()=%s inner.evictable_size()=%s "
+                        "inner.full_protected_size_=%s inner.full_evictable_size_=%s "
+                        "inner.swa_protected_size_=%s inner.swa_evictable_size_=%s "
+                        "ongoing_store_tasks=%s ongoing_load_tasks=%s "
+                        "tree_cache_type=%s inner_type=%s",
+                        _tc_prot, _tc_evict,
+                        _inner_prot_method, _inner_evict_method,
+                        _full_prot_field, _full_evict_field,
+                        _swa_prot_field, _swa_evict_field,
+                        list(_ongoing_store.keys()) if isinstance(_ongoing_store, dict) else _ongoing_store,
+                        list(_ongoing_load.keys()) if isinstance(_ongoing_load, dict) else _ongoing_load,
+                        type(_tc).__name__,
+                        type(_inner).__name__ if _inner is not None else None,
+                    )
+                except Exception as _e:
+                    logger.info("[LEAK-DEBUG on_idle PRE-REPORT] failed to capture diagnostics: %s", _e)
                 self.invariant_checker._report_leak("pool", "\n".join(messages))
             self.invariant_checker._check_req_pool()
 
@@ -3491,7 +3593,7 @@ class Scheduler(
             # This only works for requests that have not started anything.
             # We still need to send something back to TokenizerManager to clean up the state.
             req = self.waiting_queue.pop(i)
-            if self.enable_hicache_storage:
+            if self.enable_hicache_storage_or_connector:
                 # to release prefetch events associated with the request
                 self.tree_cache.release_aborted_request(req.rid)
             self.ipc_channels.send_to_tokenizer.send_output(AbortReq(rid=req.rid), req)

@@ -601,14 +601,42 @@ def release_kv_cache(req: Req, tree_cache: BasePrefixCache, is_insert: bool = Tr
             start_p == end_p
         ), f"Unexpected overallocated KV cache, {req.kv_committed_len=}, {req.kv_allocated_len=}"
 
+    # [LEAK-DEBUG] Capture state before ceil_align so we can see the
+    # [start_p_raw : start_p_aligned] gap that the existing code silently
+    # drops. Logic unchanged.
+    _leak_dbg_start_p_raw = start_p
     if page_size > 1:
         start_p = ceil_align(start_p, page_size)
+    _leak_dbg_start_p_aligned = start_p
 
     if start_p < end_p:
         indices_to_free = tree_cache.req_to_token_pool.req_to_token[req.req_pool_idx][
             start_p:end_p
         ]
         tree_cache.token_to_kv_pool_allocator.free(indices_to_free)
+
+    _leak_dbg_gap_size = max(
+        0, min(_leak_dbg_start_p_aligned, end_p) - _leak_dbg_start_p_raw
+    )
+    if _leak_dbg_gap_size > 0:
+        logger.warning(
+            "[LEAK-DEBUG release_kv_cache] rid=%s "
+            "kv_committed_len=%d kv_allocated_len=%d "
+            "start_p_raw=%d start_p_aligned=%d end_p=%d "
+            "page_size=%d spec_algo=%s "
+            "gap=[%d,%d) size=%d (these slots are NOT freed by release_kv_cache)",
+            getattr(req, "rid", None),
+            req.kv_committed_len,
+            req.kv_allocated_len,
+            _leak_dbg_start_p_raw,
+            _leak_dbg_start_p_aligned,
+            end_p,
+            page_size,
+            spec_algo,
+            _leak_dbg_start_p_raw,
+            min(_leak_dbg_start_p_aligned, end_p),
+            _leak_dbg_gap_size,
+        )
     # If the prefix cache doesn't manage mamba states, we must free them here.
     if isinstance(tree_cache.req_to_token_pool, HybridReqToTokenPool) and (
         not tree_cache.supports_mamba()

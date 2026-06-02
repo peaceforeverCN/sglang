@@ -205,6 +205,13 @@ class RadixKey:
         return hasher.hexdigest()
 
 
+def page_align_keys(token_ids, page_size: int):
+    if page_size <= 1:
+        return token_ids
+    aligned_len = len(token_ids) // page_size * page_size
+    return token_ids[:aligned_len]
+
+
 class TreeNode:
 
     counter = 0

@@ -22,7 +22,7 @@ The radix tree data structure for managing the hybrid (full and SWA) KV cache.
 import heapq
 import time
 from collections import defaultdict
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple
 
 import torch
 from numpy import float64
@@ -288,11 +288,25 @@ class LRUList:
         return evictable_size
 
     # Note: this is expensive, only use for debug or idle check
-    def sanity_check(self, tree_cache: "SWARadixCache"):
+    def sanity_check(
+        self,
+        tree_cache: "SWARadixCache",
+        exempt_node_ids: Optional[Set[int]] = None,
+    ):
         """
         Check if the lru list is valid by rebuilding the lru list from the tree, heapifying it, and
         checking if the lru list is valid.
+
+        exempt_node_ids: ids of nodes that are legitimately locked at idle
+        because an async KV-connector store (e.g. FlexKV D2H) is in flight.
+        Such a store holds full_lock_ref on the stored leaf and every ancestor
+        up to root until the transfer completes, so those nodes must be exempted
+        from the "must be unlocked when idle" assert. This mirrors how
+        UnifiedRadixCache.sanity_check tolerates ongoing_write_through /
+        ongoing_load_back nodes being locked at idle.
         """
+        if exempt_node_ids is None:
+            exempt_node_ids = frozenset()
         try:
             if self.is_swa_list:
                 nodes = tree_cache._collect_nontombstone_nodes()
@@ -316,12 +330,13 @@ class LRUList:
                 assert (
                     x == x_lru
                 ), f"Incorrect LRU list, {self.is_swa_list=}, x: {x.id=} != x_lru: {x_lru.id=}"
-                assert (
-                    x_lru.full_lock_ref == 0
-                ), f"x_lru should not be locked when idle, {x_lru.full_lock_ref=}, {x_lru.swa_uuid=}, {x_lru.id=}"
-                assert (
-                    x_lru.swa_lock_ref == 0
-                ), f"x_lru should not be locked when idle, {x_lru.swa_lock_ref=}, {x_lru.swa_uuid=}, {x_lru.id=}"
+                if x_lru.id not in exempt_node_ids:
+                    assert (
+                        x_lru.full_lock_ref == 0
+                    ), f"x_lru should not be locked when idle, {x_lru.full_lock_ref=}, {x_lru.swa_uuid=}, {x_lru.id=}"
+                    assert (
+                        x_lru.swa_lock_ref == 0
+                    ), f"x_lru should not be locked when idle, {x_lru.swa_lock_ref=}, {x_lru.swa_uuid=}, {x_lru.id=}"
                 x_lru = getattr(x, self.prv)
 
             if self.is_swa_list:
@@ -457,6 +472,69 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
         values = kv_indices[:page_aligned_len].to(dtype=torch.int64, copy=True)
         old_prefix_len = req.cache_protected_len
 
+        # [LEAK-DEBUG] Snapshot what cache_finished_req sees BEFORE insert/free.
+        # Goal: pair with [LEAK-DEBUG release_kv_cache] to determine which
+        # slot range falls through the cracks. Logic unchanged.
+        logger.warning(
+            "[LEAK-DEBUG swa.cache_finished_req PRE] rid=%s "
+            "kv_committed_len=%d len(token_ids)=%d "
+            "is_eagle=%s is_bigram=%s page_size=%d "
+            "len(radix_key_after_page_aligned)=%d page_aligned_len=%d "
+            "old_prefix_len=%d swa_evicted_seqlen=%s "
+            "is_insert=%s len(kv_indices)=%d "
+            "will_free_unaligned_tail=[%d,%d) size=%d",
+            getattr(req, "rid", None),
+            kv_committed_len,
+            len(token_ids),
+            self.is_eagle,
+            radix_key.is_bigram,
+            self.page_size,
+            len(radix_key),
+            page_aligned_len,
+            old_prefix_len,
+            req.swa_evicted_seqlen,
+            is_insert,
+            kv_indices.numel(),
+            page_aligned_len,
+            kv_indices.numel(),
+            max(0, kv_indices.numel() - page_aligned_len),
+        )
+
+        def _leak_snapshot(tag):
+            try:
+                _full_avail = self.token_to_kv_pool_allocator.full_available_size()
+            except Exception:
+                try:
+                    _full_avail = self.token_to_kv_pool_allocator.available_size()
+                except Exception:
+                    _full_avail = -1
+            try:
+                _swa_avail = self.token_to_kv_pool_allocator.swa_available_size()
+            except Exception:
+                _swa_avail = -1
+            logger.warning(
+                "[LEAK-DEBUG swa.cache_finished_req %s] rid=%s "
+                "full_avail=%s swa_avail=%s "
+                "full_evict=%d full_prot=%d swa_evict=%d swa_prot=%d "
+                "last_node.id=%s last_node.full_lock=%s last_node.swa_lock=%s "
+                "swa_uuid_for_lock=%s swa_prefix_released=%s",
+                tag,
+                getattr(req, "rid", None),
+                _full_avail,
+                _swa_avail,
+                self.full_evictable_size_,
+                self.full_protected_size_,
+                self.swa_evictable_size_,
+                self.swa_protected_size_,
+                getattr(req.last_node, "id", None) if req.last_node is not None else None,
+                getattr(req.last_node, "full_lock_ref", None) if req.last_node is not None else None,
+                getattr(req.last_node, "swa_lock_ref", None) if req.last_node is not None else None,
+                req.swa_uuid_for_lock,
+                req.swa_prefix_lock_released,
+            )
+
+        _leak_snapshot("MID0-before-insert")
+
         # Radix Cache takes one ref in memory pool
         # Note: the insert function already frees the overlapped kv_indices
         if is_insert:
@@ -473,8 +551,50 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
                 kv_indices[old_prefix_len:page_aligned_len]
             )
 
+        _leak_snapshot("MID1-after-insert")
+
         # free the unaligned tail
-        self.token_to_kv_pool_allocator.free(kv_indices[page_aligned_len:])
+        _tail_slice = kv_indices[page_aligned_len:]
+        try:
+            _tail_list = _tail_slice.tolist()
+        except Exception:
+            _tail_list = "<err>"
+        try:
+            _aligned_list = kv_indices[:page_aligned_len].tolist()
+        except Exception:
+            _aligned_list = "<err>"
+        try:
+            _full_avail_before = self.token_to_kv_pool_allocator.full_available_size()
+        except Exception:
+            _full_avail_before = -1
+        logger.warning(
+            "[LEAK-DEBUG swa.cache_finished_req TAIL_FREE] rid=%s "
+            "page_aligned_len=%d tail_numel=%d tail_indices=%s "
+            "aligned_first=%s aligned_last=%s aligned_unique_pages=%s "
+            "full_avail_before=%s",
+            getattr(req, "rid", None),
+            page_aligned_len,
+            _tail_slice.numel(),
+            _tail_list,
+            _aligned_list[:4] if isinstance(_aligned_list, list) else _aligned_list,
+            _aligned_list[-4:] if isinstance(_aligned_list, list) else _aligned_list,
+            sorted({i // self.page_size for i in _aligned_list}) if isinstance(_aligned_list, list) else _aligned_list,
+            _full_avail_before,
+        )
+        self.token_to_kv_pool_allocator.free(_tail_slice)
+        try:
+            _full_avail_after = self.token_to_kv_pool_allocator.full_available_size()
+        except Exception:
+            _full_avail_after = -1
+        logger.warning(
+            "[LEAK-DEBUG swa.cache_finished_req TAIL_FREE_POST] rid=%s "
+            "full_avail_after=%s delta=%s",
+            getattr(req, "rid", None),
+            _full_avail_after,
+            (_full_avail_after - _full_avail_before) if isinstance(_full_avail_after, int) and isinstance(_full_avail_before, int) else "n/a",
+        )
+
+        _leak_snapshot("MID2-after-tail-free")
 
         # Remove req slot release the cache lock
         self.dec_lock_ref(
@@ -483,6 +603,8 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
             skip_swa=req.swa_prefix_lock_released,
         )
         req.swa_prefix_lock_released = False
+
+        _leak_snapshot("MID3-after-dec-lock-ref")
 
     def cache_unfinished_req(self, req: Req, chunked=False) -> None:
         """Cache request when it is unfinished."""
@@ -568,6 +690,13 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
         swa_num_tokens = params.swa_num_tokens
         full_num_evicted = 0
         swa_num_evicted = 0
+        logger.warning(
+            "[LEAK-DEBUG swa.evict ENTER] full_num_tokens=%d swa_num_tokens=%d "
+            "full_evict=%d full_prot=%d swa_evict=%d swa_prot=%d",
+            full_num_tokens, swa_num_tokens,
+            self.full_evictable_size_, self.full_protected_size_,
+            self.swa_evictable_size_, self.swa_protected_size_,
+        )
         if full_num_tokens > 0:
             # get the least recently used leaf node that is not locked
             x = self.full_lru_list.get_leaf_lru_no_lock()
@@ -578,6 +707,10 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
                 ), f"root node should not exist in full lru list, {x.id=}"
                 assert x.full_lock_ref == 0, f"node is in use, {x.id=}"
 
+                logger.warning(
+                    "[LEAK-DEBUG swa.evict FULL-leaf] x.id=%s len=%d tombstone=%s",
+                    x.id, len(x.value), x.swa_tombstone,
+                )
                 # 1. free node kv indices, evict full and swa tokens
                 self._record_remove_event(x)
                 self.token_to_kv_pool_allocator.free(x.value)
@@ -617,6 +750,10 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
                 assert x.swa_lock_ref == 0, f"node is in use by swa kv indices, {x.id=}"
 
                 if len(x.children) > 0:
+                    logger.warning(
+                        "[LEAK-DEBUG swa.evict SWA-internal] x.id=%s len=%d",
+                        x.id, len(x.value),
+                    )
                     # 1. an internal node, free swa tokens.
                     self.token_to_kv_pool_allocator.free_swa(x.value)
                     swa_num_evicted += len(x.value)
@@ -628,6 +765,11 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
                     # 3. tombstone the node
                     self._tombstone_internal_node(x)
                 elif x.full_lock_ref > 0:
+                    logger.warning(
+                        "[LEAK-DEBUG swa.evict SWA-leaf-fulllocked] x.id=%s len=%d "
+                        "full_lock_ref=%d",
+                        x.id, len(x.value), x.full_lock_ref,
+                    )
                     # Leaf still holds a full-side lock (can happen when the
                     # SWA leaf-lock early-release optimization revived a
                     # tombstoned leaf. Treat it like an internal tombstone.
@@ -643,6 +785,10 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
                     assert (
                         x.full_lock_ref == 0
                     ), f"leaf node with full lock must also have swa lock, {x.id=}"
+                    logger.warning(
+                        "[LEAK-DEBUG swa.evict SWA-leaf-unlocked] x.id=%s len=%d",
+                        x.id, len(x.value),
+                    )
                     # 1. a leaf node, free full and swa tokens
                     self._record_remove_event(x)
                     self.token_to_kv_pool_allocator.free(x.value)
@@ -728,16 +874,29 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
         if self.disable:
             return DecLockRefResult()
 
+        logger.warning(
+            "[LEAK-DEBUG swa.dec_lock_ref ENTER] start_node.id=%s "
+            "start_full_lock=%d start_swa_lock=%d swa_uuid_for_lock=%s skip_swa=%s",
+            getattr(node, "id", None),
+            getattr(node, "full_lock_ref", -1),
+            getattr(node, "swa_lock_ref", -1),
+            swa_uuid_for_lock,
+            skip_swa,
+        )
+
         dec_lock_swa = not skip_swa
         while node != self.root_node:
             assert (
                 node.full_lock_ref > 0
             ), f"dec_lock_ref on node with {node.full_lock_ref=}, {node.id=}"
+            _was_full_lock = node.full_lock_ref
+            _was_swa_lock = node.swa_lock_ref
             if node.full_lock_ref == 1:
                 self.full_evictable_size_ += len(node.value)
                 self.full_protected_size_ -= len(node.value)
             node.full_lock_ref -= 1
 
+            _swa_changed = False
             if dec_lock_swa:
                 assert (
                     not node.swa_tombstone
@@ -750,8 +909,21 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
                     self.swa_evictable_size_ += len(node.value)
                     self.swa_protected_size_ -= len(node.value)
                 node.swa_lock_ref -= 1
+                _swa_changed = True
                 if swa_uuid_for_lock and node.swa_uuid == swa_uuid_for_lock:
                     dec_lock_swa = False
+
+            logger.warning(
+                "[LEAK-DEBUG swa.dec_lock_ref WALK] node.id=%s len(value)=%d "
+                "full_lock %d->%d swa_lock %d->%d swa_changed=%s "
+                "swa_tombstone=%s swa_uuid=%s",
+                node.id, len(node.value),
+                _was_full_lock, node.full_lock_ref,
+                _was_swa_lock, node.swa_lock_ref,
+                _swa_changed,
+                node.swa_tombstone,
+                node.swa_uuid,
+            )
 
             node = node.parent
 
@@ -812,9 +984,9 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
                 break
             node = node.parent
 
-    def sanity_check(self):
-        self.full_lru_list.sanity_check(self)
-        self.swa_lru_list.sanity_check(self)
+    def sanity_check(self, exempt_node_ids: Optional[Set[int]] = None):
+        self.full_lru_list.sanity_check(self, exempt_node_ids)
+        self.swa_lru_list.sanity_check(self, exempt_node_ids)
 
     def evictable_size(self) -> Tuple[int, int]:
         # Note: use full_evictable_size() and swa_evictable_size() instead.
@@ -1264,6 +1436,13 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
         return node, full_num_evicted
 
     def _delete_leaf(self, node: TreeNode) -> None:
+        import traceback as _tb
+        logger.warning(
+            "[LEAK-DEBUG swa._delete_leaf] node.id=%s len(key)=%d swa_tombstone=%s "
+            "STACK:\n%s",
+            node.id, len(node.key), node.swa_tombstone,
+            "".join(_tb.format_stack(limit=8)),
+        )
         assert len(node.children) == 0, f"leaf node has children, {node.id=}"
         key = node.key.child_key(self.page_size)
         v = node.parent.children.pop(key, None)
@@ -1275,11 +1454,23 @@ class SWARadixCache(KVCacheEventMixin, BasePrefixCache):
             self.swa_evictable_size_ -= len(node.key)
 
     def _tombstone_internal_node(self, node: TreeNode) -> None:
+        import traceback as _tb
+        logger.warning(
+            "[LEAK-DEBUG swa._tombstone_internal] node.id=%s len(key)=%d STACK:\n%s",
+            node.id, len(node.key),
+            "".join(_tb.format_stack(limit=8)),
+        )
         assert len(node.children) != 0, f"Cannot tombstone a leaf node, {node.id=}"
         node.swa_tombstone = True
         self.swa_evictable_size_ -= len(node.key)
 
     def _delete_tombstone_leaf(self, node: TreeNode) -> None:
+        import traceback as _tb
+        logger.warning(
+            "[LEAK-DEBUG swa._delete_tombstone_leaf] node.id=%s len(key)=%d STACK:\n%s",
+            node.id, len(node.key),
+            "".join(_tb.format_stack(limit=8)),
+        )
         assert (
             node.swa_tombstone
         ), f"Deleting a unexpected non-tombstone leaf node, {node.id=}"
