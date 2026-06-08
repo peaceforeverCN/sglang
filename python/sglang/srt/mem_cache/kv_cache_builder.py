@@ -128,11 +128,46 @@ def maybe_register_hicache_draft(
     tree_cache.cache_controller.set_draft_kv_pool(pool, draft_host_pool)
 
 
+def prepare_kv_connector_draft_pool(
+    *,
+    draft_worker: Optional["BaseTpWorker"],
+    spec_algorithm: "SpeculativeAlgorithm",
+    server_args: "ServerArgs",
+    enable_overlap: bool,
+):
+    """Return draft kv_pool for KV-connector init, or None if not applicable.
+
+    Used by ``build_kv_cache`` to feed the connector's ``__init__`` with the
+    draft pool BEFORE the connector calls ``_register_to_server``. This is
+    required because FlexKV's TransferManager doesn't support re-registering
+    an already-known GPU device_id (see ``_handle_gpu_blocks_registration`` —
+    "first registration wins"). The HiCache analog
+    (``maybe_register_hicache_draft``) registers AFTER tree_cache creation,
+    which doesn't work for FlexKV.
+
+    Returns ``None`` (skip MTP piggyback, draft KV stays GPU-only) when:
+      - No KV connector configured.
+      - No draft worker (e.g. ``--speculative-algorithm`` not set).
+      - NGRAM speculative algorithm (no KV pool by design).
+    """
+    if not server_args.kv_connector_cls:
+        return None
+
+    draft_kv_pool, _ = get_draft_kv_pool(
+        draft_worker=draft_worker,
+        spec_algorithm=spec_algorithm,
+        server_args=server_args,
+        enable_overlap=enable_overlap,
+    )
+    return draft_kv_pool
+
+
 def build_kv_cache(
     *,
     server_args: "ServerArgs",
     model_config: "ModelConfig",
     tp_worker: "BaseTpWorker",
+    draft_worker: Optional["BaseTpWorker"] = None,
     page_size: int,
     spec_algorithm: "SpeculativeAlgorithm",
     attn_tp_cpu_group: "ProcessGroup",
@@ -143,6 +178,7 @@ def build_kv_cache(
     ps: "ParallelState",
     tp_group: "GroupCoordinator",
     enable_hierarchical_cache: bool,
+    enable_overlap: bool = False,
 ) -> "KVCacheBuildResult":
     sliding_window_size: Optional[int] = None
     full_tokens_per_layer: Optional[int] = None
@@ -222,6 +258,16 @@ def build_kv_cache(
         pp_size=ps.pp_size,
         chunked_prefill_size=effective_chunked_prefill_size,
         sliding_window_size=sliding_window_size,
+        # MTP piggyback: passed to KV connector __init__ so the connector can
+        # register draft pool's KV buffers as an extra LayerGroup BEFORE its
+        # one-shot register_to_server call (FlexKV doesn't allow re-register).
+        # See ``prepare_kv_connector_draft_pool`` for the gate logic.
+        draft_token_to_kv_pool=prepare_kv_connector_draft_pool(
+            draft_worker=draft_worker,
+            spec_algorithm=spec_algorithm,
+            server_args=server_args,
+            enable_overlap=enable_overlap,
+        ),
     )
 
     tree_cache = create_tree_cache(
