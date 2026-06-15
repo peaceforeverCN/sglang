@@ -353,6 +353,24 @@ class FlexKVConnector(BaseKVConnector):
             device_id=rank_info.local_rank,
         )
 
+        # ---- MTP piggyback: attach draft pool BEFORE registration ----
+        # FlexKV's TransferManager rejects re-registering a known device_id
+        # (see _handle_gpu_blocks_registration: "first registration wins"),
+        # so the draft pool MUST be folded into the layer_groups list before
+        # we call _register_with_retry() below. The method extends
+        # self._dsv4_layer_groups_info in-place and returns the additional
+        # GPU buffers to append to kv_caches; on any unsupported case it
+        # returns [] and logs a warning, leaving kv_caches unchanged.
+        #
+        # NOTE: ``self._draft_kv_pool`` is also assigned later in __init__
+        # (in the SWA detection block) for code-clarity / locality with the
+        # SWA pool fields. We pre-initialize it here so that
+        # ``_attach_draft_pool`` can read it without an AttributeError.
+        # The later assignment writes the same value (idempotent).
+        self._draft_kv_pool = getattr(params, 'draft_token_to_kv_pool', None)
+        self._draft_swa_layer_group = None  # populated by _attach_draft_pool()
+        kv_caches = list(kv_caches) + self._attach_draft_pool()
+
         # ---- GPU Registration (with retry) ----
         self._register_with_retry(kv_caches, indexer_buffers)
         logger.info(
@@ -407,6 +425,13 @@ class FlexKVConnector(BaseKVConnector):
         # ---- SWA (Sliding Window Attention) GPU pool detection ----
         self._kvcache = kvcache  # Store full kvcache for translate_loc_from_full_to_swa
         self._swa_kv_pool = getattr(kvcache, 'swa_kv_pool', None)
+        # MTP piggyback: draft model's token_to_kv_pool, set by SGLang's
+        # build_kv_cache when speculative decoding is enabled together with
+        # this connector. Used by _attach_draft_pool() (called below) to
+        # extend self._dsv4_layer_groups_info with a "draft_swa" group BEFORE
+        # the one-shot register_to_server.
+        self._draft_kv_pool = getattr(params, 'draft_token_to_kv_pool', None)
+        self._draft_swa_layer_group = None  # populated by _attach_draft_pool()
 
         # Auto-derive SWA config: if a SWA GPU pool is present but
         # cache_config.swa is None / disabled, build a sensible default so
@@ -1691,6 +1716,121 @@ class FlexKVConnector(BaseKVConnector):
                         f"attempt={attempt+1}/{max_retries}, error={e}"
                     )
                 time.sleep(1.0)
+
+    def _attach_draft_pool(self) -> List[torch.Tensor]:
+        """Fold the speculative-decoding draft pool into ``_dsv4_layer_groups_info``.
+
+        Called from ``__init__`` after target ``_dsv4_layer_groups_info`` is
+        built but BEFORE ``_register_with_retry`` runs. Returns the list of
+        draft GPU buffers to append to ``kv_caches``; empty list on any
+        unsupported case (and a warning is logged).
+
+        Why here and not in a public setter:
+            FlexKV's ``TransferManager._handle_gpu_blocks_registration``
+            rejects re-registering an already-known device_id, and
+            ``model_config.layer_groups`` follows "first registration wins"
+            semantics. So the draft pool MUST be folded into the very first
+            ``register_to_server`` call. Set-after-init would not work.
+
+        Simplified-version supported scope (see
+        ``MTP_PIGGYBACK_DESIGN.md`` §2.4):
+            * draft pool is a ``DeepSeekV4TokenToKVPool`` (DSv4 NextN).
+            * draft has exactly 1 SWA layer (the standard NextN topology).
+            * Any other case returns ``[]`` and degrades silently to
+              "no piggyback" (i.e. accept_length will degrade after a
+              FlexKV cache hit, but correctness is preserved).
+        """
+        if self._draft_kv_pool is None:
+            return []
+
+        # We only support the DSv4 multi-pool layout for now (no MLA/MHA
+        # draft support in the simplified version). Detect by presence of
+        # the ``swa_kv_pool`` attribute, matching how the target side does
+        # DSv4 detection above.
+        if not hasattr(self._draft_kv_pool, 'swa_kv_pool'):
+            logger.warning(
+                "[FlexKV-MTP] Draft pool type %s lacks 'swa_kv_pool'; "
+                "MTP piggyback unsupported, falling back to no piggyback",
+                type(self._draft_kv_pool).__name__,
+            )
+            return []
+
+        draft_swa = self._draft_kv_pool.swa_kv_pool
+        if draft_swa is None:
+            logger.warning("[FlexKV-MTP] Draft pool has no swa_kv_pool; skipping piggyback")
+            return []
+
+        draft_buffers = getattr(draft_swa, 'kv_buffer', None)
+        if draft_buffers is None or len(draft_buffers) == 0:
+            logger.warning(
+                "[FlexKV-MTP] Draft swa_kv_pool has no kv_buffer; skipping piggyback"
+            )
+            return []
+
+        num_draft_layers = len(draft_buffers)
+        if num_draft_layers != 1:
+            # Multi-layer draft (e.g. EAGLE-2) is out of scope for the
+            # simplified version. Skip — accept_length will degrade after
+            # FlexKV cache hit, but model correctness is preserved.
+            logger.warning(
+                "[FlexKV-MTP] Draft has %d swa layers; simplified version "
+                "supports only 1-layer NextN. Skipping piggyback.",
+                num_draft_layers,
+            )
+            return []
+
+        if not hasattr(self, '_dsv4_layer_groups_info'):
+            # Target is not DSv4 (e.g. MLA/MHA). Simplified version requires
+            # DSv4 on both sides because the layer-groups wiring is DSv4-
+            # specific (compress_ratio / sub_page_size / packed bytes).
+            logger.warning(
+                "[FlexKV-MTP] Target is not DSv4 multi-pool; simplified version "
+                "requires DSv4 on both target and draft. Skipping piggyback.",
+            )
+            return []
+
+        # Layer-id namespace: target uses 0..target_num_layers-1; we put
+        # draft at target_num_layers..+num_draft_layers-1 so layer_ids
+        # don't collide. The actual numeric value doesn't matter to the
+        # transfer engine (LayerGroup is opaque), only that it's unique
+        # across all groups.
+        target_num_layers = self.rank_info.num_layers_per_pp_stage
+        draft_layer_ids = [target_num_layers + i for i in range(num_draft_layers)]
+
+        # Build the LayerGroup descriptor mirroring c4/c128/c4_indexer
+        # entries — the rest of the registration / store / load path
+        # iterates self._dsv4_layer_groups_info uniformly.
+        # Note: ratio=1 (raw, uncompressed). DSv4 NextN uses
+        # COMPRESS_RATIO_NEXTN_LAYER=0 internally, but FlexKV's
+        # LayerGroupSpec requires compress_ratio >= 1; ratio=1 is the
+        # natural representation for "no compression".
+        bytes_per_token = (
+            draft_swa.get_bytes_per_token()
+            if hasattr(draft_swa, 'get_bytes_per_token')
+            else None
+        )
+        sub_page_size = getattr(draft_swa, 'page_size', self.page_size)
+
+        self._draft_swa_layer_group = {
+            "name": "draft_swa",
+            "ratio": 1,
+            "layer_ids": draft_layer_ids,
+            "buffers": list(draft_buffers),
+            "bytes_per_token": bytes_per_token,
+            "sub_page_size": sub_page_size,
+            "dtype": draft_buffers[0].dtype,
+        }
+        self._dsv4_layer_groups_info.append(self._draft_swa_layer_group)
+
+        logger.info(
+            f"[FlexKV-MTP] Draft pool attached{self._rank_label}: "
+            f"num_layers={num_draft_layers}, "
+            f"bytes_per_token={bytes_per_token}, "
+            f"sub_page_size={sub_page_size}, "
+            f"layer_ids={draft_layer_ids}, "
+            f"draft_pool_type={type(self._draft_kv_pool).__name__}"
+        )
+        return list(draft_buffers)
 
     def _register_to_server(
         self,

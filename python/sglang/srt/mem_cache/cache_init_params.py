@@ -44,3 +44,16 @@ class CacheInitParams:
     cache_ttl_seconds: Optional[float] = None
 
     tree_components: Optional[tuple[ComponentType, ...]] = None
+
+    # Draft model's token_to_kv_pool, used by KV connectors that support
+    # speculative-decoding piggyback (target + draft KV stored/loaded together).
+    # Set by build_kv_cache when ``--speculative-algorithm`` and
+    # ``--kv-connector-cls`` are both enabled. ``None`` otherwise — connectors
+    # treat ``None`` as "no MTP piggyback" and fall back gracefully.
+    #
+    # Why this is here (not registered later via a setter):
+    # FlexKV's TransferManager doesn't accept re-registration of a GPU
+    # device_id, so the draft pool MUST be available BEFORE the connector
+    # calls ``_register_to_server``. The earliest hook with both target and
+    # draft pools live is the connector's ``__init__``, hence this field.
+    draft_token_to_kv_pool: Optional[object] = None

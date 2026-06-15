@@ -313,7 +313,31 @@ class ExtendedRadixCache(BasePrefixCache):
         is_eagle = bool(getattr(self._inner_radixtree, 'is_eagle', False))
         effective_len = host_hit_length - (1 if is_eagle else 0)
         if page_size > 1:
-            effective_len = (effective_len // page_size) * page_size
+            # TEMP FIX (999-temp-fix-init-load-back.patch): the original
+            # implementation used floor-page-align, which under EAGLE bigram
+            # always trims a host_hit_length that's already a page multiple
+            # to 0:
+            #     hit_length=256, page_size=256, eagle=True
+            #     → effective_len = 256 - 1 = 255
+            #     → floor(255/256)*256 = 0
+            #     → "trims to 0" warning, rolls back alloc, H2D never fires.
+            #
+            # The store path (cache_finished_req above) page-aligns
+            # ``len(token_ids)`` BEFORE applying EAGLE's bigram view, so
+            # for hit_length=256 it stores exactly 256 tokens. For load to
+            # match store, we want effective_len to round to the same
+            # 256-token boundary.
+            #
+            # Fix: under EAGLE, ceil-page-align AFTER the bigram trim,
+            # capped at host_hit_length so we never exceed what FlexKV
+            # actually has on the host side.
+            if is_eagle and effective_len > 0:
+                effective_len = min(
+                    ((effective_len + page_size - 1) // page_size) * page_size,
+                    host_hit_length,
+                )
+            else:
+                effective_len = (effective_len // page_size) * page_size
         if effective_len <= 0:
             logger.warning(
                 "[FlexKV] init_load_back: host_hit_length=%d trims to 0 after "
@@ -423,17 +447,32 @@ class ExtendedRadixCache(BasePrefixCache):
         )
         new_node = match_result.last_device_node
         if new_node is None or new_node is getattr(self._inner_radixtree, 'root_node', None):
-            logger.warning(
+            # TEMP FIX (999-temp-fix-init-load-back.patch, layer 2):
+            # When insert() is effectively a no-op because EAGLE bigram +
+            # page_align trims all host_hit_length tokens to 0, no new
+            # tree node is created and match_prefix naturally returns
+            # root.  This is the extreme case of "the trailing partial
+            # page is not in the tree but is held alive by
+            # req.prefix_indices" (comment below).
+            #
+            # Instead of rolling back the alloc and aborting H2D, fall
+            # back to the existing parent node (req.last_node at
+            # gpu_cached_len).  We skip inc_lock_ref because no new node
+            # was created; ``device_indices`` are still added to
+            # ``prefix_indices`` so model forward sees them all.
+            logger.info(
                 "[FlexKV] init_load_back: re-match returned root for rid=%s, "
-                "host_hit_length=%d. Releasing load state and rolling back GPU alloc.",
+                "host_hit_length=%d (EAGLE bigram+page_align trimmed insert to 0). "
+                "Falling back to parent node for H2D.",
                 req.rid, host_hit_length,
             )
-            try:
-                allocator.free(device_indices)
-            except Exception:
-                pass
-            self._connector.release_load_state(req.rid)
-            return empty_indices, req.last_node
+            new_node = req.last_node
+            load_swa_uuid = None
+            # Fall through to H2D queuing below.
+        else:
+            # Normal path: insert created a node, lock it.
+            inc_result = self._inner_radixtree.inc_lock_ref(new_node)
+            load_swa_uuid = getattr(inc_result, 'swa_uuid_for_lock', None)
 
         # NOTE: device_indices may be longer than match_result.device_indices
         # by up to one page when is_eagle + page_size > 1 — that's normal
@@ -444,13 +483,6 @@ class ExtendedRadixCache(BasePrefixCache):
         # and to req.prefix_indices (so model forward sees them all).
         # ``new_node`` only reflects the in-tree slots, which is correct
         # for the lock_ref protection.
-
-        # Capture swa_uuid_for_lock for the matched SWA range so that the
-        # dec_lock_ref in _check_load_completion can pair correctly on
-        # SWARadixCache. Plain RadixCache returns IncLockRefResult without
-        # SWA fields; getattr default keeps this backward-compatible.
-        inc_result = self._inner_radixtree.inc_lock_ref(new_node)
-        load_swa_uuid = getattr(inc_result, 'swa_uuid_for_lock', None)
 
         self._load_queue.append(
             LoadOperation(
