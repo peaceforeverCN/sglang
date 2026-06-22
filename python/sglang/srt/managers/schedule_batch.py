@@ -861,6 +861,8 @@ class Req(ReqDllmMixin):
         self.num_matched_prefix_tokens = 0
         # Tokens loaded from storage backend (L3) during prefetch for this request
         self.storage_hit_length = 0
+        # Tokens matched by KV connector (e.g., FlexKV) for this request.
+        self.cached_tokens_extended_device = 0
         # The node to lock until for swa radix tree lock ref
         self.swa_uuid_for_lock: Optional[int] = None
         # Whether the prefill-time SWA tree lock has been released early
@@ -1172,6 +1174,7 @@ class Req(ReqDllmMixin):
                     ),
                     req=self,
                     cow_mamba=cow_mamba,
+                    update_connector_state=True,
                 )
             )
             if envs.SGLANG_RADIX_FORCE_MISS.get():
@@ -2898,6 +2901,15 @@ class ScheduleBatch(ScheduleBatchDisaggregationDecodeMixin):
                             )
                             self._evict_swa(req, pre_len)
                     else:
+                        self._evict_swa(req, pre_len)
+                elif self.forward_mode.is_extend() and self.tree_cache.is_tree_cache():
+                    # Radix cache extend: evict SWA tokens that are outside the sliding
+                    # window for already-running requests (those beyond index 0 in the
+                    # batch, i.e., the ones that were already in flight before this
+                    # extend batch). New requests (extend_batch_idx == 0) have not yet
+                    # written their KV, so nothing to evict yet.
+                    if req.extend_batch_idx >= 1:
+                        pre_len = self.prefix_lens[idx]
                         self._evict_swa(req, pre_len)
 
     def _evict_swa(self, req: Req, pre_len: int):

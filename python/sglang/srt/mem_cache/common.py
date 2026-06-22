@@ -295,7 +295,19 @@ def alloc_token_slots(
     return (out_cache_loc, state) if backup_state else out_cache_loc
 
 
-def evict_from_tree_cache(tree_cache: BasePrefixCache | None, num_tokens: int):
+def evict_from_tree_cache(
+    tree_cache: BasePrefixCache | None,
+    num_tokens: int,
+    *,
+    swa_num_tokens: int | None = None,
+):
+    """Evict radix-cache entries so the allocator can satisfy an allocation.
+
+    For hybrid SWA pools, ``num_tokens`` is the full-attention demand and
+    ``swa_num_tokens`` is the SWA demand (defaults to ``num_tokens`` when omitted).
+    FlexKV ``init_load_back`` with ``alloc_extend_swa_tail`` must pass a smaller
+    SWA demand than the full demand.
+    """
     if tree_cache is None:
         return
 
@@ -303,20 +315,26 @@ def evict_from_tree_cache(tree_cache: BasePrefixCache | None, num_tokens: int):
         return
 
     allocator = tree_cache.token_to_kv_pool_allocator
+    swa_need = num_tokens if swa_num_tokens is None else swa_num_tokens
 
     if isinstance(allocator, SWATokenToKVPoolAllocator):
-        # Hybrid allocator
-        full_available_size = allocator.full_available_size()
-        swa_available_size = allocator.swa_available_size()
-
-        if full_available_size < num_tokens or swa_available_size < num_tokens:
+        while True:
+            full_available_size = allocator.full_available_size()
+            swa_available_size = allocator.swa_available_size()
+            if full_available_size >= num_tokens and swa_available_size >= swa_need:
+                break
             full_num_tokens = max(0, num_tokens - full_available_size)
-            swa_num_tokens = max(0, num_tokens - swa_available_size)
+            swa_to_evict = max(0, swa_need - swa_available_size)
+            if full_num_tokens == 0 and swa_to_evict == 0:
+                break
             tree_cache.evict(
-                EvictParams(num_tokens=full_num_tokens, swa_num_tokens=swa_num_tokens)
+                EvictParams(num_tokens=full_num_tokens, swa_num_tokens=swa_to_evict)
             )
+            new_full = allocator.full_available_size()
+            new_swa = allocator.swa_available_size()
+            if new_full == full_available_size and new_swa == swa_available_size:
+                break
     else:
-        # Standard allocator
         if allocator.available_size() < num_tokens:
             tree_cache.evict(EvictParams(num_tokens=num_tokens))
 
@@ -356,6 +374,12 @@ def alloc_paged_token_slots_extend(
     # Over estimate the number of tokens: assume each request needs a new page.
     allocator = tree_cache.token_to_kv_pool_allocator
     num_tokens = extend_num_tokens + len(seq_lens_cpu) * allocator.page_size
+
+    # Hybrid-SWA prefill still calls SWATokenToKVPoolAllocator.alloc_extend(),
+    # which allocates SWA pages for the whole extend before maybe_evict_swa()
+    # reclaims out-of-window slots. Eviction demand must match that transient
+    # peak (same as upstream sglang). Tail-only SWA demand is only for FlexKV
+    # init_load_back via alloc_extend_swa_tail — see extended_radix_cache.py.
     evict_from_tree_cache(tree_cache, num_tokens)
 
     state = None
@@ -684,5 +708,31 @@ def release_kv_cache(req: Req, tree_cache: BasePrefixCache, is_insert: bool = Tr
     tree_cache.req_to_token_pool.free(req)
 
 
-def available_and_evictable_str(tree_cache: BasePrefixCache) -> str:
-    return tree_cache.available_and_evictable_str()
+def available_and_evictable_str(tree_cache: BasePrefixCache | None) -> str:
+    if tree_cache is None:
+        return "(tree_cache=None)\n"
+    try:
+        return tree_cache.available_and_evictable_str()
+    except NotImplementedError:
+        pass
+    allocator = tree_cache.token_to_kv_pool_allocator
+    if tree_cache.supports_swa():
+        full_available = allocator.full_available_size()
+        swa_available = allocator.swa_available_size()
+        full_evictable = tree_cache.full_evictable_size()
+        swa_evictable = tree_cache.swa_evictable_size()
+        return (
+            f"Available full tokens: {full_available + full_evictable} "
+            f"({full_available=} + {full_evictable=})\n"
+            f"Available swa tokens: {swa_available + swa_evictable} "
+            f"({swa_available=} + {swa_evictable=})\n"
+        )
+    available = allocator.available_size()
+    try:
+        evictable = tree_cache.evictable_size()
+    except NotImplementedError:
+        evictable = tree_cache.full_evictable_size()
+    return (
+        f"Available tokens: {available + evictable} "
+        f"({available=} + {evictable=})\n"
+    )

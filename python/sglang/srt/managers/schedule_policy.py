@@ -936,12 +936,24 @@ class PrefillAdder:
                         req=req,
                     )
                 )
-                req.prefix_indices = torch.cat([req.prefix_indices, new_indices])
+                # FlexKV decoupled H2D restore: extended_radix_cache.init_load_back
+                # already appends the restored slots to prefix_indices (kept OUT of
+                # the radix tree), so do NOT torch.cat them here again.
+                # req.prefix_indices = torch.cat([req.prefix_indices, new_indices])
                 req.set_extend_input_len(
                     len(req.full_untruncated_fill_ids) - len(req.prefix_indices)
                 )
                 prefix_len = len(req.prefix_indices)
-                req.cache_protected_len = prefix_len
+                # FlexKV decoupled H2D restore (extended_radix_cache.init_load_back)
+                # appends the restored slots to prefix_indices but leaves them
+                # OUT of the radix tree (req-owned/uncached). It already pinned
+                # cache_protected_len to the pre-restore prefix length so that
+                # cache_*_req uses the correct prev_prefix_len; do NOT overwrite
+                # it with the full length here (that lie causes a pool leak).
+                if getattr(req, "_flexkv_uncached_restore", False):
+                    req._flexkv_uncached_restore = False
+                else:
+                    req.cache_protected_len = prefix_len
 
             input_tokens = self.ceil_paged_tokens(req.extend_input_len)
 

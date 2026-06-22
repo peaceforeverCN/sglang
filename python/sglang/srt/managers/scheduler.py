@@ -349,6 +349,12 @@ class Scheduler(
             server_args.disaggregation_decode_enable_radix_cache
             and self.enable_hierarchical_cache
         )
+        # FlexKV connector uses the same event-polling / load-back paths as HiCache.
+        # Treat kv_connector_cls as enabling hierarchical-cache-like scheduling paths.
+        self.enable_kv_connector = server_args.kv_connector_cls is not None
+        self.enable_hierarchical_cache_or_connector = (
+            self.enable_hierarchical_cache or self.enable_kv_connector
+        )
         self.max_recv_per_poll = envs.SGLANG_SCHEDULER_MAX_RECV_PER_POLL.get()
         self.enable_hisparse = server_args.enable_hisparse
         self.hisparse_coordinator: Optional[HiSparseCoordinator] = None
@@ -443,6 +449,14 @@ class Scheduler(
             server_args=self.server_args,
             model_config=self.model_config,
             tp_worker=self.tp_worker,
+            # Pass draft_worker so KV connectors that support MTP piggyback
+            # (e.g. FlexKV) can register the draft pool's KV buffers as part
+            # of the connector's initial register_to_server call. Required
+            # because FlexKV's TransferManager rejects re-registration of
+            # an already-known GPU device_id. ``maybe_init_draft_worker()``
+            # has run by this point so ``self.draft_worker`` is either an
+            # actual worker or None.
+            draft_worker=self.draft_worker,
             page_size=self.page_size,
             spec_algorithm=self.spec_algorithm,
             attn_tp_cpu_group=self.attn_tp_cpu_group,
@@ -458,6 +472,7 @@ class Scheduler(
             tp_group=self.tp_group,
             pp_group=self.pp_group,
             enable_hierarchical_cache=self.enable_hierarchical_cache,
+            enable_overlap=self.enable_overlap,
         )
         self.is_hybrid_swa = result.is_hybrid_swa
         self.is_hybrid_ssm = result.is_hybrid_ssm
@@ -2714,7 +2729,7 @@ class Scheduler(
             for req in ready_grammar_requests:
                 self._add_request_to_queue(req)
 
-        if self.enable_hierarchical_cache:
+        if self.enable_hierarchical_cache or self.enable_kv_connector:
             self.tree_cache.check_hicache_events()
 
         if self.enable_priority_preemption or self.is_hybrid_swa:
@@ -2842,7 +2857,7 @@ class Scheduler(
 
             if res != AddReqResult.CONTINUE:
                 if res == AddReqResult.NO_TOKEN:
-                    if self.enable_hierarchical_cache:
+                    if self.enable_hierarchical_cache or self.enable_kv_connector:
                         # Set batch_is_full after making sure there are requests that can be served
                         self.running_batch.batch_is_full = len(
                             adder.can_run_list
@@ -2906,7 +2921,7 @@ class Scheduler(
         )
 
         self.max_prefill_bs = max(self.max_prefill_bs, len(can_run_list))
-        if self.enable_hierarchical_cache:
+        if self.enable_hierarchical_cache or self.enable_kv_connector:
             # todo (zhiqiang): disable cuda graph execution if hicache loading triggered
             new_batch.hicache_consumer_index = (
                 self.tree_cache.ready_to_load_host_cache()

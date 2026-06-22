@@ -1073,6 +1073,10 @@ class ServerArgs:
     enable_lmcache: bool = False
     lmcache_config_file: Optional[str] = None
 
+    # External KV connector (KV-cache offloading)
+    kv_connector_cls: Optional[str] = None
+    kv_connector_extra_config: Optional[str] = None
+
     # Ktransformers/AMX expert parallelism
     kt_weight_path: Optional[str] = None
     kt_method: Optional[str] = None
@@ -4766,6 +4770,16 @@ class ServerArgs:
                 "and cannot be used at the same time. Please use only one of them."
             )
 
+        if self.kv_connector_cls is not None:
+            if self.disable_radix_cache:
+                raise ValueError(
+                    "The arguments kv-connector-cls and disable-radix-cache are mutually exclusive "
+                    "because ExtendedRadixCache requires radix cache enabled."
+                )
+            # Note: kv_connector_cls and enable_hierarchical_cache CAN coexist now.
+            # ExtendedRadixCache wraps any inner cache and provides its own
+            # event polling / load-back paths compatible with hierarchical scheduling.
+
         if self.disaggregation_decode_enable_offload_kvcache:
             if self.disaggregation_mode != "decode":
                 raise ValueError(
@@ -6488,6 +6502,23 @@ class ServerArgs:
             type=str,
             default=ServerArgs.lmcache_config_file,
             help="Path to the LMCache YAML configuration file",
+        )
+
+        # KVConnector
+        parser.add_argument(
+            "--kv-connector-cls",
+            type=str,
+            default=ServerArgs.kv_connector_cls,
+            help="The full Python class path for the external KV connector "
+            "(e.g., 'my_module.MyConnector'). The class must inherit from "
+            "sglang.srt.mem_cache.kv_connector.BaseKVConnector.",
+        )
+        parser.add_argument(
+            "--kv-connector-extra-config",
+            type=str,
+            default=ServerArgs.kv_connector_extra_config,
+            help="A dictionary in JSON string format containing extra configuration "
+            "for the external KV connector.",
         )
 
         # Ktransformer server args
