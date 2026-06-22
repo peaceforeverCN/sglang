@@ -338,9 +338,9 @@ class SWATokenToKVPoolAllocator(BaseTokenToKVPoolAllocator):
         else:
             self.full_to_swa_index_mapping[full_indices] = swa_indices
 
-    def free_swa(self, free_index: torch.Tensor):
+    def free_swa(self, free_index: torch.Tensor) -> int:
         if free_index.numel() == 0:
-            return
+            return 0
 
         if self.page_size == 1:
             mapping_indices = free_index
@@ -349,8 +349,11 @@ class SWATokenToKVPoolAllocator(BaseTokenToKVPoolAllocator):
 
         swa_indices = self.full_to_swa_index_mapping[mapping_indices]
         swa_indices = swa_indices[swa_indices > 0]
-        self.swa_attn_allocator.free(swa_indices)
+        n = int(swa_indices.numel())
+        if n > 0:
+            self.swa_attn_allocator.free(swa_indices)
         self.full_to_swa_index_mapping[mapping_indices] = 0
+        return n
 
     def _expand_to_full_pages(self, indices: torch.Tensor) -> torch.Tensor:
         pages = torch.unique(indices // self.page_size)
