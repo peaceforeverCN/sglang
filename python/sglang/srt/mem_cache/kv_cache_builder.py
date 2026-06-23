@@ -125,7 +125,6 @@ def prepare_kv_connector_draft_pool(
     draft_worker: Optional["BaseTpWorker"],
     spec_algorithm: "SpeculativeAlgorithm",
     server_args: "ServerArgs",
-    enable_overlap: bool,
 ):
     """Return draft kv_pool for KV-connector init, or None if not applicable.
 
@@ -149,7 +148,6 @@ def prepare_kv_connector_draft_pool(
         draft_worker=draft_worker,
         spec_algorithm=spec_algorithm,
         server_args=server_args,
-        enable_overlap=enable_overlap,
     )
     return draft_kv_pool
 
@@ -261,7 +259,6 @@ def build_kv_cache(
             draft_worker=draft_worker,
             spec_algorithm=spec_algorithm,
             server_args=server_args,
-            enable_overlap=enable_overlap,
         ),
     )
 
