@@ -216,23 +216,129 @@ class FlexKVConnector(BaseKVConnector):
             #   bytes_per_token: packed bytes per token in this sub-pool
             #   sub_page_size: per-token slots per page IN THE SUB-POOL
             #                  (= full-pool page_size // compress_ratio)
+            #
+            # Two layouts coexist for DSv4 (selected by SGLANG_HACK_FLASHMLA_BACKEND):
+            #
+            # 1. Default (FP8 packed sub-pools): each compressed group has its
+            #    own 2D uint8 buffer ``kvcache.{c4,c128}_kv_pool.kv_buffer``.
+            #    Per-token bytes ~= 585 (nope FP8 + rope BF16 + scale).
+            #
+            # 2. Unified (``unified_kv_triton``, HIP only): all compressed K
+            #    for a layer lives in one bf16 tensor
+            #    ``kvcache.unified_kv_pool.kv_buffer[local_layer]`` of shape
+            #    ``[swa_pages + compress_pages, head_dim]``. The c4_kv_pool /
+            #    c128_kv_pool attributes are still allocated (constructor
+            #    overrides them after the unified branch sets them to None)
+            #    but the model's forward path NEVER writes to them — it
+            #    writes to unified_kv_pool rows ``[swa_pages, ...)`` directly.
+            #    Registering c{4,128}_kv_pool.kv_buffer in this mode makes
+            #    FlexKV transfer empty buffers and restore into pools the
+            #    model never reads, producing accuracy regressions.
+            #
+            #    For unified mode we register a uint8 view over the
+            #    compressed slice ``unified_kv_pool.kv_buffer[L][swa_pages:]``
+            #    re-shaped to ``[num_pages, rows_per_page * head_dim * 2]``.
+            #    This is byte-identical to the layout the model writes.
+            is_unified_kv = bool(getattr(kvcache, "_unified_kv", False))
+            unified_kv_pool = (
+                getattr(kvcache, "unified_kv_pool", None) if is_unified_kv else None
+            )
+            if is_unified_kv and unified_kv_pool is None:
+                raise RuntimeError(
+                    "[FlexKV] kvcache._unified_kv=True but unified_kv_pool is "
+                    "missing/None on the kvcache. Cannot register compressed "
+                    "buffers for unified_kv_triton mode."
+                )
+
+            # Hold strong refs to constructed unified views so PyTorch does
+            # not collect them (FlexKV registration only stores data_ptr's).
+            self._dsv4_unified_buffer_views: List[torch.Tensor] = []
+
+            def _build_unified_compressed_group(
+                absolute_layer_ids: List[int], ratio: int,
+            ) -> Tuple[List[torch.Tensor], int, int]:
+                """Slice unified_kv_pool buffers for the compressed region of
+                each layer and return ``(buffers, bytes_per_token, sub_page_size)``
+                in the same per-page byte layout the FP8 path uses."""
+                swa_pages = unified_kv_pool.swa_pages
+                head_dim = unified_kv_pool.head_dim
+                # Unified storage is bf16 throughout. Treat the whole row as
+                # one packed token; FlexKV transfers bytes regardless of dtype.
+                bytes_per_row = head_dim * torch.bfloat16.itemsize
+                rows_per_page = self.page_size // ratio
+                if self.page_size % ratio != 0:
+                    raise RuntimeError(
+                        f"[FlexKV-DSv4-unified] page_size_full={self.page_size} "
+                        f"is not divisible by compress_ratio={ratio}"
+                    )
+                bytes_per_page = rows_per_page * bytes_per_row
+                bufs: List[torch.Tensor] = []
+                for absolute_id in absolute_layer_ids:
+                    local_id = absolute_id - stage_start
+                    if local_id < 0 or local_id >= len(unified_kv_pool.kv_buffer):
+                        raise RuntimeError(
+                            f"[FlexKV-DSv4-unified] absolute_layer_id={absolute_id} "
+                            f"-> local={local_id} out of range "
+                            f"[0, {len(unified_kv_pool.kv_buffer)})"
+                        )
+                    unified_buf = unified_kv_pool.kv_buffer[local_id]
+                    compressed = unified_buf[swa_pages:]  # [compress_pages, head_dim] bf16
+                    if not compressed.is_contiguous():
+                        # Slicing the leading dim of a contiguous row-major 2D
+                        # tensor is always contiguous; this guards against any
+                        # future allocator change.
+                        compressed = compressed.contiguous()
+                    compress_pages = compressed.shape[0]
+                    num_pages = compress_pages // rows_per_page
+                    if num_pages * rows_per_page != compress_pages:
+                        raise RuntimeError(
+                            f"[FlexKV-DSv4-unified] layer={absolute_id} ratio={ratio}: "
+                            f"compress_pages={compress_pages} not divisible by "
+                            f"rows_per_page={rows_per_page} (page_size_full="
+                            f"{self.page_size})."
+                        )
+                    # Reinterpret bf16 -> uint8, then group rows into
+                    # full-pool pages so FlexKV's ``slot[::P]//P`` page-id
+                    # math indexes one row of this view per full-pool page.
+                    view_uint8 = compressed.view(torch.uint8).reshape(
+                        num_pages, bytes_per_page
+                    )
+                    bufs.append(view_uint8)
+                    self._dsv4_unified_buffer_views.append(view_uint8)
+                return bufs, bytes_per_row, rows_per_page
+
+            if is_unified_kv:
+                c4_buffers, c4_bpt, c4_sps = _build_unified_compressed_group(
+                    c4_layer_ids, ratio=4
+                )
+                c128_buffers, c128_bpt, c128_sps = _build_unified_compressed_group(
+                    c128_layer_ids, ratio=128
+                )
+            else:
+                c4_buffers = kvcache.c4_kv_pool.kv_buffer
+                c4_bpt = kvcache.c4_kv_pool.get_bytes_per_token()
+                c4_sps = kvcache.c4_kv_pool.page_size
+                c128_buffers = kvcache.c128_kv_pool.kv_buffer
+                c128_bpt = kvcache.c128_kv_pool.get_bytes_per_token()
+                c128_sps = kvcache.c128_kv_pool.page_size
+
             self._dsv4_layer_groups_info = []
             self._dsv4_layer_groups_info.append({
                 "name": "c4",
                 "ratio": 4,
                 "layer_ids": c4_layer_ids,
-                "buffers": kvcache.c4_kv_pool.kv_buffer,
-                "bytes_per_token": kvcache.c4_kv_pool.get_bytes_per_token(),
-                "sub_page_size": kvcache.c4_kv_pool.page_size,
+                "buffers": c4_buffers,
+                "bytes_per_token": c4_bpt,
+                "sub_page_size": c4_sps,
                 "dtype": torch.uint8,
             })
             self._dsv4_layer_groups_info.append({
                 "name": "c128",
                 "ratio": 128,
                 "layer_ids": c128_layer_ids,
-                "buffers": kvcache.c128_kv_pool.kv_buffer,
-                "bytes_per_token": kvcache.c128_kv_pool.get_bytes_per_token(),
-                "sub_page_size": kvcache.c128_kv_pool.page_size,
+                "buffers": c128_buffers,
+                "bytes_per_token": c128_bpt,
+                "sub_page_size": c128_sps,
                 "dtype": torch.uint8,
             })
 
@@ -285,12 +391,19 @@ class FlexKVConnector(BaseKVConnector):
             # registered via a layer_group instead.
             indexer_buffers = None
 
+            # In unified_kv_triton mode swa_kv_pool is always None and
+            # cache_config.swa stays disabled (see auto-derive guard below).
+            # SWA put/get becomes a no-op; the long-term compressed cache
+            # is the part that has to be byte-correct, and that is now
+            # registered against the unified buffer slice above.
+            _swa_kv_pool_attr = getattr(kvcache, "swa_kv_pool", None)
             logger.info(
                 f"[FlexKV] Detected DeepSeekV4TokenToKVPool: "
                 f"groups={[(g['name'], g['ratio'], len(g['layer_ids'])) for g in self._dsv4_layer_groups_info]}, "
                 f"total_layers={len(compression_ratios)}, "
                 f"page_size_full={self.page_size}, "
-                f"swa_pool={'present' if hasattr(kvcache, 'swa_kv_pool') else 'absent'}"
+                f"unified_kv={is_unified_kv}, "
+                f"swa_pool={'present' if _swa_kv_pool_attr is not None else 'absent'}"
             )
         elif hasattr(kvcache, "kv_buffer"):
             # MLA: K and V share the same buffer, register once per layer
