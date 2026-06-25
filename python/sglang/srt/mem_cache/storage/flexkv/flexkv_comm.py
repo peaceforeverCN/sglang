@@ -302,6 +302,22 @@ class FlexKVComm:
 
         logger.debug(f"[FlexKV] barrier EXIT  rank={self.world_rank}")
 
+    def all_gather_tp_bytes(self, tensor: torch.Tensor) -> Optional[List[torch.Tensor]]:
+        """All-gather a 1-D uint8 CPU tensor across the attn_tp group.
+
+        Debug-only: used to compare whether the per-rank GPU KV pages are
+        byte-identical. Returns a list of attn_tp_size tensors (index = tp rank)
+        on every rank, or None if there is no TP group (size 1). All ranks in
+        the attn_tp group MUST call this collectively.
+        """
+        if self.attn_tp_size <= 1 or self.attn_tp_cpu_group is None:
+            return None
+        assert tensor.dim() == 1 and tensor.dtype == torch.uint8
+        cpu_tensor = tensor.contiguous().cpu()
+        gathered = [torch.empty_like(cpu_tensor) for _ in range(self.attn_tp_size)]
+        dist.all_gather(gathered, cpu_tensor, group=self.attn_tp_cpu_group)
+        return gathered
+
     # ==================================================================
     # Unified scatter helper
     # ==================================================================

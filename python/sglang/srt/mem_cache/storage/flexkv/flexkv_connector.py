@@ -863,6 +863,22 @@ class FlexKVConnector(BaseKVConnector):
                 {"cmd": CMD_PUT_META, "fkv_task_id": fkv_task_id, "unmatched_mask": mask_list},
             )
 
+        # Debug-only cross-TP page identity check. MUST run on ALL attn_tp ranks
+        # (collective all_gather), so it sits before the leader/non-leader split.
+        # It needs the same page-aligned kv_indices every rank holds (TP is
+        # synchronous => identical kv_indices). Page-align here to match the
+        # store path's alignment.
+        if os.getenv("FLEXKV_VERIFY_ROUNDTRIP", "0") == "1":
+            try:
+                _ki = kv_indices
+                if self.page_size > 1:
+                    _al = (len(_ki) // self.page_size) * self.page_size
+                    if _al > 0:
+                        _ki = _ki[:_al]
+                        self._compare_tp_kv_pages(_ki)
+            except Exception as _tpc_err:
+                logger.warning("[FLEXKV-TPCHECK] cross-TP compare failed: %s", _tpc_err)
+
         if not self._sync_ctx.is_sync_leader:
             if self._sync_ctx.is_pp_receiver:
                 logger.debug(
@@ -982,6 +998,20 @@ class FlexKVConnector(BaseKVConnector):
                 logger.debug("[FlexKV-SWA] swa_put skipped: no SWA GPU pool")
             elif not hasattr(self.kv_manager, 'swa_put'):
                 logger.warning("[FlexKV-SWA] swa_put skipped: kv_manager has no swa_put method")
+
+            # ---- Debug-only: put->get roundtrip self-check ----
+            # Gated by FLEXKV_VERIFY_ROUNDTRIP=1. DESTRUCTIVE (zeroes GPU slots
+            # then restores them via H2D), sync-leader only, and only when an
+            # actual D2H store was launched (unmatched > 0). Must run AFTER the
+            # SWA store above so swa_get has data to return.
+            if (
+                os.getenv("FLEXKV_VERIFY_ROUNDTRIP", "0") == "1"
+                and unmatched_mask.sum() > 0
+                and fkv_task_id >= 0
+            ):
+                self._verify_roundtrip(token_ids_np, kv_indices, fkv_task_id, int(unmatched_mask.sum()))
+                if self._ongoing_stores.pop(task_id, None) is not None:
+                    self._completed_stores.append(task_id)
         except Exception as e:
             logger.error("[FlexKV] start_store_kv failed: %s", e, exc_info=True)
             _send_pp_put_meta(fkv_task_id=-1, unmatched_mask=[])
@@ -1484,6 +1514,506 @@ class FlexKVConnector(BaseKVConnector):
         except Exception as e:
             logger.warning(f"[FlexKV-SWA] _extract_swa_from_gpu failed: {e}", exc_info=True)
             return None
+
+    def _compare_tp_kv_pages(self, kv_indices: torch.Tensor) -> None:
+        """Debug-only: check whether the DSv4 KV pages are byte-identical across
+        attn_tp ranks.
+
+        FlexKV's MLA sharded-D2H optimization assumes every attn_tp rank holds a
+        byte-identical copy of the (TP-replicated) MLA KV, so each rank stores
+        only its 1/tp_size slice and they concatenate into one logical CPU page.
+        If that assumption is violated, a reloaded page is a concat of different
+        ranks' slices. This method tests the assumption DIRECTLY (no FlexKV
+        transfer involved): every attn_tp rank all-gathers its own GPU bytes for
+        the touched pages and rank 0 reports any cross-rank differences.
+
+        MUST be called collectively on ALL attn_tp ranks (it runs an all_gather).
+        Gated by the same FLEXKV_VERIFY_ROUNDTRIP env as _verify_roundtrip.
+        """
+        if not self._is_dsv4 or not self._dsv4_layer_groups_info:
+            return
+        if self._sync_ctx.attn_tp_size <= 1:
+            return  # nothing to compare
+
+        page = self.page_size
+        dev = self._dsv4_layer_groups_info[0]["buffers"][0].device
+        kvi = (
+            kv_indices.to(dev).to(torch.int64)
+            if hasattr(kv_indices, "to")
+            else torch.as_tensor(kv_indices, device=dev, dtype=torch.int64)
+        )
+        page_ids = torch.unique(kvi // page)
+
+        BANNER = "#" * 76
+        report_lines: List[str] = []
+        any_diff = False
+
+        for gi in self._dsv4_layer_groups_info:
+            name = gi["name"]
+            # Skip the MTP piggyback "draft_swa" group: it is a small NextN SWA
+            # sub-pool (e.g. 77 pages) indexed by a DIFFERENT (sliding-window)
+            # slot space than the full pool. ``page_ids`` here are full-pool
+            # page ids (range 0..num_full_pages-1, e.g. up to 767); indexing the
+            # 77-page draft buffer with them runs out of bounds and triggers a
+            # CUDA device-side assert (vectorized_gather_kernel index OOB) that
+            # aborts the scheduler. The draft pool is also legitimately NOT
+            # byte-identical across TP ranks (each rank computes its own NextN
+            # KV), so a cross-TP identity check does not apply to it anyway.
+            if name == "draft_swa":
+                continue
+            # Compare layer 0 only (cheap, representative): gather that layer's
+            # touched pages as a flat uint8 vector across all tp ranks.
+            buf0 = gi["buffers"][0]
+            local = buf0[page_ids].reshape(-1).to(torch.uint8)
+            gathered = self._sync_ctx.all_gather_tp_bytes(local)
+            if gathered is None:
+                continue
+            # Only rank 0 evaluates / logs.
+            if self._sync_ctx.attn_tp_rank != 0:
+                continue
+            ref = gathered[0]
+            worst = ""
+            n_diff_ranks = 0
+            for r in range(1, len(gathered)):
+                if not torch.equal(gathered[r], ref):
+                    any_diff = True
+                    n_diff_ranks += 1
+                    diff = gathered[r] != ref
+                    nbytes = int(diff.sum().item())
+                    first = int(torch.nonzero(diff)[0].item())
+                    # express first-diff offset within a padded page
+                    padded = buf0.shape[1]
+                    pg = first // padded
+                    col = first % padded
+                    if not worst:
+                        worst = (
+                            f"rank{r}: {nbytes}/{int(ref.numel())} bytes differ, "
+                            f"first@page_idx={pg} col={col}"
+                        )
+            status = "IDENTICAL" if n_diff_ranks == 0 else f"DIFFERS ({n_diff_ranks} ranks)"
+            report_lines.append(f"    [{status}] {name:<12} {worst}")
+
+        if self._sync_ctx.attn_tp_rank != 0:
+            return
+        header = (
+            f"[FLEXKV-TPCHECK] cross-TP KV page compare  "
+            f"tp_size={self._sync_ctx.attn_tp_size} pages={int(page_ids.numel())}"
+        )
+        body = "\n".join(report_lines)
+        if any_diff:
+            logger.error("\n%s\n  %s  => TP RANKS NOT BYTE-IDENTICAL\n%s\n%s",
+                         BANNER, header, body, BANNER)
+        else:
+            logger.info("\n%s\n  %s  => all TP ranks byte-identical\n%s\n%s",
+                        "=" * 76, header, body, "=" * 76)
+
+    def _field_diff_report(
+        self,
+        now2d: "torch.Tensor",
+        ref2d: "torch.Tensor",
+        bpt: int,
+        useful_bytes: int,
+    ) -> str:
+        """Decode the useful region of two [P, padded] uint8 page tensors by
+        FIELD and compare numerically, so a fp8/bf16 value is never misread as
+        the wrong dtype.
+
+        DSv4 MLA token (bpt=584) is a mix of three encodings:
+          nope   -> fp8_e4m3   (448 values, 1 byte each)
+          rope   -> bfloat16   (64 values, 2 bytes each)
+          scale  -> fp8_e8m0   (7 scale + 1 pad; pure-exponent
+                                power-of-two factor, byte 255 = NaN)
+
+        IMPORTANT: the GPU page is stored **SoA (segmented)**, NOT per-token
+        contiguous AoS (cf. dsv4/index_buf_accessor.py::_set_k_and_s_triton_kernel):
+            page = [ nope+rope segment (sub*576 bytes) | scale segment (sub*8) ]
+              - nope+rope: token t at byte t*576, [0:448) nope, [448:576) rope
+              - scale:     starts at sub*576, token t at +t*8, [0:7) scale, [7] pad
+        Decoding it as AoS (reshape to [P, sub, 584]) misaligns every token
+        after token 0 and produces bogus field stats. This branch decodes the
+        true SoA segments.
+
+        For each field we report: #elements that differ, max abs diff, max rel
+        diff, allclose, and (for nope) a per-element ULP histogram so 1-ULP
+        requant jitter is distinguishable from real corruption. For non-584
+        pools (c4_indexer) the per-token field split is unknown, so we fall back
+        to raw-uint8 |delta| stats plus an fp8-decoded proxy (clearly labelled).
+        """
+        sub = (useful_bytes // bpt) if bpt else 0
+        if bpt == 584 and sub > 0:
+            P = now2d.shape[0]
+            nr_bytes = sub * 576                      # nope+rope segment length
+            sc_bytes = sub * 8                        # scale segment length
+            # SoA segment split (NOT AoS): nope+rope first, then scale.
+            nr_now = now2d[:, :nr_bytes].reshape(P, sub, 576)
+            nr_ref = ref2d[:, :nr_bytes].reshape(P, sub, 576)
+            sc_now = now2d[:, nr_bytes:nr_bytes + sc_bytes].reshape(P, sub, 8)
+            sc_ref = ref2d[:, nr_bytes:nr_bytes + sc_bytes].reshape(P, sub, 8)
+            parts = []
+            for fname, seg_now, seg_ref, lo, hi, kind in (
+                ("nope_fp8e4m3", nr_now, nr_ref, 0, 448, "e4m3"),
+                ("rope_bf16", nr_now, nr_ref, 448, 576, "bf16"),
+                # 7 real scales; [7] is pad
+                ("scale_fp8e8m0", sc_now, sc_ref, 0, 7, "e8m0"),
+            ):
+                nb = seg_now[..., lo:hi].reshape(-1).contiguous()
+                rb = seg_ref[..., lo:hi].reshape(-1).contiguous()
+                if kind == "e4m3":
+                    nf = nb.view(torch.float8_e4m3fn).float()
+                    rf = rb.view(torch.float8_e4m3fn).float()
+                elif kind == "e8m0":
+                    # e8m0: pure-exponent factor, value = 2^(byte-127);
+                    # byte 255 == NaN.
+                    nf = nb.view(torch.float8_e8m0fnu).float()
+                    rf = rb.view(torch.float8_e8m0fnu).float()
+                else:
+                    nf = nb.view(torch.bfloat16).float()
+                    rf = rb.view(torch.bfloat16).float()
+                # fp8/bf16 bit patterns can decode to NaN/Inf (e.g. e4m3 0xFF);
+                # sanitize so a single special value can't poison max/allclose.
+                nf = torch.nan_to_num(nf, nan=0.0, posinf=0.0, neginf=0.0)
+                rf = torch.nan_to_num(rf, nan=0.0, posinf=0.0, neginf=0.0)
+                d = (nf - rf).abs()
+                nmis = int((nf != rf).sum())
+                mx = float(d.max()) if d.numel() else 0.0
+                rel = float((d / rf.abs().clamp_min(1e-6)).max()) if d.numel() else 0.0
+                ac = bool(torch.allclose(nf, rf, rtol=0.13, atol=1e-3))
+                # Per-side absolute-value ranges: max_abs above is |now-ref| and
+                # cannot tell which side holds the garbage. now=CPU read-back,
+                # ref=GPU snapshot at store time. A ~1e38 on ref => GPU snapshot
+                # (verify baseline) is garbage; on now => FlexKV read-back.
+                now_absmax = float(nf.abs().max()) if nf.numel() else 0.0
+                ref_absmax = float(rf.abs().max()) if rf.numel() else 0.0
+                part = (
+                    f"{fname}: diff={nmis}/{nf.numel()} "
+                    f"max_abs={mx:.4g} max_rel={rel:.4g} allclose={ac} "
+                    f"now_absmax={now_absmax:.4g} ref_absmax={ref_absmax:.4g}"
+                )
+                # Per-element ULP histogram over the DIFFERING elements only.
+                # ULP(v) for a 3-mantissa-bit fp8 = 2^(floor(log2|v|) - 3).
+                # n_ulp = |now-ref| / ULP(ref). Buckets: ==1, ==2, >2 ULP.
+                # 1 ULP = pure requant rounding (batch/scale-dependent, benign);
+                # >2 ULP = beyond what rounding alone explains.
+                if kind in ("e4m3", "e8m0") and nmis > 0:
+                    dm = nf != rf
+                    nfd, rfd = nf[dm], rf[dm]
+                    # smallest e4m3 subnormal magnitude = 2**-9; floor ref to it
+                    rabs = rfd.abs().clamp_min(2.0 ** -9)
+                    ulp = torch.pow(2.0, torch.floor(torch.log2(rabs)) - 3)
+                    n_ulp = (nfd - rfd).abs() / ulp
+                    le1 = int((n_ulp <= 1.001).sum())
+                    eq2 = int(((n_ulp > 1.001) & (n_ulp <= 2.001)).sum())
+                    gt2 = int((n_ulp > 2.001).sum())
+                    part += (
+                        f" ulp[<=1={le1} ==2={eq2} >2={gt2} "
+                        f"max={float(n_ulp.max()):.2f}]"
+                    )
+                parts.append(part)
+            return " | ".join(parts)
+        # Unknown per-token field layout: raw uint8 + fp8 proxy.
+        nb = now2d[:, :useful_bytes].reshape(-1)
+        rb = ref2d[:, :useful_bytes].reshape(-1)
+        idel = (nb.to(torch.int16) - rb.to(torch.int16)).abs()
+        nf = torch.nan_to_num(nb.view(torch.float8_e4m3fn).float(), posinf=0.0, neginf=0.0)
+        rf = torch.nan_to_num(rb.view(torch.float8_e4m3fn).float(), posinf=0.0, neginf=0.0)
+        d = (nf - rf).abs()
+        return (
+            f"raw uint8 |delta| max={int(idel.max())} "
+            f"mean={float(idel.float().mean()):.3f} "
+            f"<=1:{int((idel <= 1).sum())}/{int(idel.numel())}; "
+            f"fp8proxy max_abs={float(d.max()):.4g} "
+            f"allclose={bool(torch.allclose(nf, rf, rtol=0.13, atol=1e-3))}"
+        )
+
+    def _verify_roundtrip(
+        self,
+        token_ids_np: np.ndarray,
+        kv_indices: torch.Tensor,
+        fkv_store_tid: int,
+        put_token_count: int = -1,
+    ) -> None:
+        """Debug-only put->get byte-exact roundtrip self-check.
+
+        For each of the four pools (c4, c128, c4_indexer, swa):
+          1. Wait for the D2H store (``fkv_store_tid``) to complete.
+          2. Snapshot the GPU slots that were just stored (``tmp = buf[page_ids].clone()``).
+          3. Zero those GPU slots (so a stale-in-place H2D cannot pass silently).
+          4. ``get_match`` + H2D ``launch`` (and ``swa_get`` + restore) write the
+             data back into the same slots.
+          5. Compare ``buf[page_ids]`` against ``tmp`` byte-for-byte.
+        """
+        if not self._sync_ctx.is_sync_leader:
+            return
+
+        BANNER = "!" * 76
+        page = self.page_size
+
+        # 1. Wait for D2H store to land in the CPU pool
+        resp = self.kv_manager.wait([fkv_store_tid], timeout=60.0, completely=True)
+        if not (
+            fkv_store_tid in resp
+            and resp[fkv_store_tid].status == KVResponseStatus.SUCCESS
+        ):
+            logger.error(
+                f"[FLEXKV-VERIFY] store(D2H) task {fkv_store_tid} did NOT succeed; aborting roundtrip verify\n%s"
+            )
+            return
+
+        # Full-pool page ids touched by this store (1:1 == sub-pool page ids).
+        if self._dsv4_layer_groups_info:
+            dev = self._dsv4_layer_groups_info[0]["buffers"][0].device
+        else:
+            dev = self._device
+        kvi = (
+            kv_indices.to(dev, torch.int64)
+            if hasattr(kv_indices, "to")
+            else torch.as_tensor(kv_indices, device=dev, dtype=torch.int64)
+        )
+        page_ids = torch.unique(kvi // page)
+
+        results: Dict[str, Tuple[bool, str]] = {}
+
+        # 2. Snapshot + zero the three main pools (c4 / c128 / c4_indexer).
+        # Exclude the MTP piggyback "draft_swa" group: its H2D restore reads
+        # back all-zero (now_bad_zero=100%) because the draft NextN pool is not
+        # populated by swa_get on this path, so zeroing-without-restore would
+        # both spam false MISMATCHes AND destructively leave the draft pool
+        # zeroed (degrading subsequent spec-decode accept_length). Skipping it
+        # here keeps verify non-destructive for the draft pool.
+        main_tmp: Dict[str, List[torch.Tensor]] = {}
+        for gi in self._dsv4_layer_groups_info:
+            name = gi["name"]
+            if name == "draft_swa":
+                continue
+            rows = []
+            for buf in gi["buffers"]:
+                rows.append(buf[page_ids].clone())  # clone: detach from buffer
+                buf[page_ids] = 0
+            main_tmp[name] = rows
+
+        # 3. Snapshot + zero the SWA pool (reuse extract/restore so the byte
+        #    layout stays identical to the production path).
+        swa_ref = None
+        if self._swa_kv_pool is not None and hasattr(self.kv_manager, "swa_get"):
+            swa_ref = self._extract_swa_from_gpu(kv_indices)
+            if swa_ref is not None:
+                self._restore_swa_to_gpu(kv_indices, torch.zeros_like(swa_ref))
+
+        torch.cuda.synchronize()
+
+        # 4. get_match + H2D restore into the same GPU slots.
+        gres = self.kv_manager.get_match(token_ids=token_ids_np, token_mask=None)
+        if gres is None:
+            logger.error(
+                "[FLEXKV-VERIFY] get_match returned None; cannot restore (GPU slots left zeroed!)"
+            )
+            return
+        gtid, matched_mask = gres
+        # Only the matched (fetched) prefix is restored by H2D. Page-align the
+        # fetched length and restrict the byte comparison to those pages — the
+        # tail beyond it stays zeroed by design and is NOT corruption.
+        matched_tokens = int(matched_mask.sum()) if matched_mask is not None else len(token_ids_np)
+        fetched_tokens = (matched_tokens // page) * page
+        logger.info(
+            "[FLEXKV-VERIFY] put_token_count=%d (stored by put_match), "
+            "matched_tokens=%d, fetched_tokens=%d (got back)",
+            put_token_count, matched_tokens, fetched_tokens,
+        )
+        if fetched_tokens <= 0:
+            logger.error(
+                "\n%s\n[FLEXKV-VERIFY] get matched 0 pages (matched_tokens=%d); "
+                "store was not retrievable. GPU slots left zeroed!\n%s",
+                BANNER, matched_tokens, BANNER,
+            )
+            return
+        fetched_page_ids = torch.unique(kvi[:fetched_tokens] // page)
+        slot_map = kvi.cpu()
+
+        # In layerwise-transfer deployments there is NO standalone H2D worker —
+        # only D2H + LAYERWISE workers exist. Emitting a plain H2D op there
+        # crashes the scheduler ("Unsupported transfer type: TransferType.H2D"),
+        # so the read-back must go through the LAYERWISE path too.
+        #
+        # The layer-done counter is normally drained by the model forward pass
+        # (events[...].wait() per layer). Verify has no forward pass, so we must
+        # NOT call update_producer() (it would assert "event should be finished
+        # before reuse" once we rotate through all counters). Instead we borrow
+        # an already-finished counter slot, then drain its per-layer eventfds
+        # ourselves after the transfer so the slot returns to _finished=True and
+        # stays clean for the real load path.
+        drain_layerwise = (
+            self.enable_layerwise_transfer and self._layer_done_counter is not None
+        )
+        ldc = self._layer_done_counter
+        counter_id = 0
+        if drain_layerwise:
+            counter_id = next(
+                (i for i in range(ldc.num_counters) if ldc.events[i]._finished),
+                0,
+            )
+            ldc.events[counter_id].reset_for_new_transfer()
+
+        launched = self.kv_manager.launch(
+            task_ids=[gtid],
+            slot_mappings=[slot_map],
+            as_batch=True,
+            layerwise_transfer=drain_layerwise,
+            counter_id=counter_id,
+        )
+        # as_batch returns [batch_id]; wait on graph completion (completely=True
+        # mirrors the test's wait(..., completely=True) and guarantees every
+        # layer's H2D landed before we read back the GPU).
+        wait_id = launched[0] if launched else gtid
+        self.kv_manager.wait([wait_id], timeout=60.0, completely=True)
+
+        if drain_layerwise:
+            self._signal_dense_layers_ready(counter_id)
+            ev = ldc.events[counter_id]
+            for layer in range(ldc.num_layers):
+                ev.wait(layer)
+
+        # 5. SWA H2D restore.
+        if swa_ref is not None:
+            sg = self.kv_manager.swa_get(token_ids_np)
+            if sg is not None:
+                self._restore_swa_to_gpu(kv_indices, sg)
+            else:
+                results["swa"] = (False, "swa_get returned None after store")
+
+        torch.cuda.synchronize()
+
+        # 6. Compare the three main pools page-by-page over every fetched page.
+        # Index the snapshot rows by position within page_ids.
+        fetched_pos = torch.searchsorted(page_ids, fetched_page_ids)
+        for gi in self._dsv4_layer_groups_info:
+            name = gi["name"]
+            # draft_swa was skipped in step 2 (not snapshotted/zeroed); skip the
+            # comparison too — there is no ref to compare against and it is not
+            # part of the main-pool roundtrip being validated here.
+            if name == "draft_swa":
+                continue
+            ok_all = True
+            detail = ""
+            sub_page = int(gi.get("sub_page_size") or 1)
+            bpt = int(gi.get("bytes_per_token") or 0)  # useful bytes/token (584)
+            bytes_per_page_padded = gi["buffers"][0].shape[1]
+            useful_bytes = sub_page * bpt if bpt else bytes_per_page_padded
+            if fetched_page_ids.numel() == 0:
+                continue
+            for li, buf in enumerate(gi["buffers"]):
+                now = buf[fetched_page_ids]
+                ref = main_tmp[name][li][fetched_pos]
+                if not torch.equal(now, ref):
+                    ok_all = False
+                    diff = now != ref                       # [P, padded]
+                    nbytes = int(diff.sum().item())
+                    total = int(now.numel())
+                    per_page = diff.reshape(now.shape[0], -1).any(dim=1)
+                    first_bad = int(torch.nonzero(per_page)[0].item())
+                    # Classify differing-byte column offsets within the padded
+                    # page to separate "padding artifact" from "real data diff".
+                    # The page is SoA (segmented), NOT AoS:
+                    #   [0:nr_bytes)               = nope+rope segment (data)
+                    #   [nr_bytes:useful_bytes)    = scale segment (+per-token pad)
+                    #   [useful_bytes:padded)      = page-tail padding
+                    # where nr_bytes = sub*576, useful_bytes = sub*584.
+                    col = torch.nonzero(diff.any(dim=0)).flatten()  # bad columns
+                    n_tail_pad = int((col >= useful_bytes).sum().item())
+                    in_token = col[col < useful_bytes]
+                    if bpt == 584:
+                        _sub = useful_bytes // bpt
+                        nr_bytes = _sub * 576
+                        n_data = int((in_token < nr_bytes).sum().item())
+                        n_scale = int((in_token >= nr_bytes).sum().item())
+                    else:
+                        n_data = int(in_token.numel())
+                        n_scale = 0
+                    detail = (
+                        f"layer{li}: {nbytes}/{total} bytes differ, "
+                        f"first_bad_page_id={int(fetched_page_ids[first_bad].item())}, "
+                        f"bad_cols={int(col.numel())} "
+                        f"[data(nope+rope)={n_data}, scale={n_scale}, "
+                        f"tail_pad(>={useful_bytes})={n_tail_pad}], "
+                        f"col_range=[{int(col.min().item())},{int(col.max().item())}], "
+                        f"useful={useful_bytes}/padded={bytes_per_page_padded}"
+                    )
+                    # [FLEXKV-VERIFY-BYTES] H2D-not-done check + per-field decode.
+                    # now/ref are the full [P, padded] page tensors. now_bad==0
+                    # would mean H2D never overwrote (stayed at the zero from
+                    # step 2); nonzero means real data that simply differs.
+                    now_bad = now[diff]
+                    n_now_zero = int((now_bad == 0).sum().item())
+                    # Per-field numeric comparison (fp8 nope / bf16 rope / fp8
+                    # scale decoded with their own dtype, never cross-misread).
+                    field_report = self._field_diff_report(
+                        now, ref, bpt, useful_bytes
+                    )
+                    detail += (
+                        f" | now_bad_zero={n_now_zero}/{int(now_bad.numel())} | "
+                        f"{field_report}"
+                    )
+                    break
+            results[name] = (ok_all, detail)
+
+        # 7. Compare SWA.
+        if swa_ref is not None and "swa" not in results:
+            swa_now = self._extract_swa_from_gpu(kv_indices)
+            if swa_now is None:
+                results["swa"] = (False, "extract returned None after restore")
+            else:
+                ok = torch.equal(swa_now, swa_ref)
+                detail = ""
+                if not ok:
+                    diff = swa_now != swa_ref
+                    # [FLEXKV-VERIFY-BYTES] same H2D-not-done vs value-differs
+                    # discriminator as the main-pool branch above. For SWA the
+                    # "restore" is the in-process scatter in _restore_swa_to_gpu;
+                    # swa_now is re-extracted after that restore.
+                    now_bad = swa_now[diff]
+                    n_now_zero = int((now_bad == 0).sum().item())
+                    # first differing flat offset (maps to layer/token/byte for
+                    # the [num_layers, window, bpt] SoA-host layout)
+                    first_off = int(torch.nonzero(diff.flatten())[0].item())
+                    # Per-field decode. SWA host layout is [num_layers, window,
+                    # bpt] with bpt=584 and no page padding, so reshape to
+                    # [rows, 584] and treat every byte as useful.
+                    swa_bpt = 584
+                    n_el = swa_now.numel()
+                    if n_el % swa_bpt == 0:
+                        n2 = swa_now.reshape(-1, swa_bpt)
+                        r2 = swa_ref.reshape(-1, swa_bpt)
+                        # useful_bytes is PER-ROW; each 584-byte row is one token
+                        # with no padding.
+                        field_report = self._field_diff_report(
+                            n2, r2, swa_bpt, swa_bpt
+                        )
+                    else:
+                        field_report = f"(numel {n_el} not divisible by {swa_bpt})"
+                    detail = (
+                        f"{int(diff.sum().item())}/{n_el} bytes differ | "
+                        f"first_off={first_off} | "
+                        f"now_bad_zero={n_now_zero}/{int(now_bad.numel())} | "
+                        f"{field_report}"
+                    )
+                results["swa"] = (ok, detail)
+
+        # 8. Report. Loud banner on ANY mismatch.
+        all_ok = bool(results) and all(ok for ok, _ in results.values())
+        report = "\n".join(
+            f"    [{'PASS' if ok else 'FAIL'}] {name:<12} {detail}"
+            for name, (ok, detail) in results.items()
+        )
+        header = (
+            f"[FLEXKV-VERIFY] put->get roundtrip  "
+            f"tokens={len(token_ids_np)} stored_pages={int(page_ids.numel())} "
+            f"fetched_pages={int(fetched_page_ids.numel())}"
+        )
+        if all_ok:
+            logger.info("\n%s\n  %s  => ALL POOLS MATCH\n%s\n%s",
+                        "=" * 76, header, report, "=" * 76)
+        else:
+            logger.error("\n%s\n  %s  => MISMATCH DETECTED\n%s\n%s",
+                         BANNER, header, report, BANNER)
 
     @property
     def swa_enabled(self) -> bool:
