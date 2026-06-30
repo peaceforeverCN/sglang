@@ -1,0 +1,1096 @@
+; ModuleID = 'LLVMDialectModule'
+source_filename = "LLVMDialectModule"
+target datalayout = "e-m:e-p:64:64-p1:64:64-p2:32:32-p3:32:32-p4:64:64-p5:32:32-p6:32:32-p7:160:256:256:32-p8:128:128:128:48-p9:192:256:256:32-i64:64-v16:16-v24:32-v32:32-v48:64-v96:128-v192:256-v256:256-v512:512-v1024:1024-v2048:2048-n32:64-S32-A5-G1-ni:7:8:9"
+target triple = "amdgcn-amd-amdhsa"
+
+@global_smem = external addrspace(3) global [0 x i8], align 16
+
+; Function Attrs: nofree norecurse nounwind
+define amdgpu_kernel void @_gemm_a8w8_blockscale_kernel_GROUP_K_128_GROUP_N_128_BLOCK_SIZE_M_16_BLOCK_SIZE_N_16_BLOCK_SIZE_K_128_GROUP_SIZE_M_1_NUM_KSPLIT_8_SPLITK_BLOCK_SIZE_2048_EVEN_K_1_GRID_MN_448_cache_modifier_CG(ptr addrspace(1) inreg readonly captures(none) %0, ptr addrspace(1) inreg readonly captures(none) %1, ptr addrspace(1) inreg writeonly captures(none) %2, ptr addrspace(1) inreg readonly captures(none) %3, ptr addrspace(1) inreg readonly captures(none) %4, i32 inreg %5, i32 inreg %6, i32 inreg %7, i32 inreg %8, i32 inreg %9, i32 inreg %10, i32 inreg %11, i32 inreg %12, i32 inreg %13, ptr addrspace(1) inreg readnone captures(none) %14, ptr addrspace(1) inreg readnone captures(none) %15) local_unnamed_addr #0 !dbg !4 {
+  %17 = tail call i32 @llvm.amdgcn.workgroup.id.x(), !dbg !12
+  %18 = sdiv i32 %17, 8, !dbg !13
+  %19 = mul i32 %18, 8, !dbg !14
+  %.decomposed = sub i32 %17, %19, !dbg !14
+  %20 = shl nsw i32 %.decomposed, 11, !dbg !15
+  %21 = icmp slt i32 %20, %7, !dbg !16
+  br i1 %21, label %.lr.ph, label %865, !dbg !17
+
+.lr.ph:                                           ; preds = %16
+  %22 = add i32 %6, 15, !dbg !18
+  %23 = sdiv i32 %22, 16, !dbg !23
+  %.frozen = freeze i32 %23, !dbg !24
+  %24 = sdiv i32 %18, %.frozen, !dbg !24
+  %25 = mul i32 %24, %.frozen, !dbg !25
+  %.decomposed198 = sub i32 %18, %25, !dbg !25
+  %26 = tail call i32 @llvm.amdgcn.workitem.id.x(), !dbg !26
+  %27 = and i32 %26, 63, !dbg !26
+  %28 = shl nuw nsw i32 %26, 4, !dbg !26
+  %29 = and i32 %28, 112, !dbg !26
+  %30 = shl i32 %24, 4, !dbg !27
+  %31 = lshr i32 %26, 3, !dbg !28
+  %32 = and i32 %31, 7, !dbg !28
+  %33 = or disjoint i32 %32, 8, !dbg !28
+  %34 = and i32 %26, 48, !dbg !28
+  %35 = or disjoint i32 %30, %32, !dbg !29
+  %36 = or disjoint i32 %30, %33, !dbg !29
+  %37 = srem i32 %35, %5, !dbg !30
+  %38 = srem i32 %36, %5, !dbg !30
+  %39 = shl nsw i32 %.decomposed198, 4, !dbg !31
+  %40 = or disjoint i32 %39, %32, !dbg !32
+  %41 = or disjoint i32 %39, %33, !dbg !32
+  %42 = srem i32 %40, %6, !dbg !33
+  %43 = srem i32 %41, %6, !dbg !33
+  %44 = mul i32 %37, %8, !dbg !34
+  %45 = mul i32 %38, %8, !dbg !34
+  %46 = or disjoint i32 %20, %29, !dbg !34
+  %47 = add i32 %46, %44, !dbg !34
+  %48 = add i32 %46, %45, !dbg !34
+  %49 = mul i32 %42, %9, !dbg !35
+  %50 = mul i32 %43, %9, !dbg !35
+  %51 = add i32 %46, %49, !dbg !35
+  %52 = add i32 %46, %50, !dbg !35
+  %53 = shl nuw nsw i32 %27, 4, !dbg !36
+  %54 = xor i32 %53, %34, !dbg !36
+  %55 = sub nsw i32 %54, %53, !dbg !36
+  %56 = ashr exact i32 %55, 4, !dbg !36
+  %57 = xor i32 %54, 1088, !dbg !36
+  %reass.sub = sub nuw nsw i32 %57, %53, !dbg !36
+  %58 = add nsw i32 %reass.sub, -1024, !dbg !36
+  %59 = ashr exact i32 %58, 4, !dbg !36
+  %60 = tail call ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) %0, i16 0, i64 2147483646, i32 159744), !dbg !36
+  %61 = add nsw i32 %56, %27, !dbg !36
+  %62 = shl nsw i32 %61, 2, !dbg !36
+  %63 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %47), !dbg !36
+  %64 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %65 = zext i32 %61 to i64, !dbg !36
+  %66 = lshr i64 %64, %65, !dbg !36
+  %67 = trunc i64 %66 to i1, !dbg !36
+  %68 = select i1 %67, i32 %63, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) @global_smem, i32 16, i32 %68, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %69 = add nsw i32 %59, %27, !dbg !36
+  %70 = shl nsw i32 %69, 2, !dbg !36
+  %71 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %48), !dbg !36
+  %72 = zext i32 %69 to i64, !dbg !36
+  %73 = lshr i64 %64, %72, !dbg !36
+  %74 = trunc i64 %73 to i1, !dbg !36
+  %75 = select i1 %74, i32 %71, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr inbounds nuw (i8, ptr addrspace(3) @global_smem, i32 1024), i32 16, i32 %75, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %76 = tail call ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) %1, i16 0, i64 2147483646, i32 159744), !dbg !40
+  %77 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %51), !dbg !40
+  %78 = select i1 %67, i32 %77, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 16, i32 %78, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %79 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %52), !dbg !40
+  %80 = select i1 %74, i32 %79, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 5120), i32 16, i32 %80, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %81 = shl nuw nsw i32 %26, 3
+  %82 = and i32 %81, 112
+  %83 = xor i32 %82, %34
+  %84 = and i32 %26, 15, !dbg !28
+  %85 = shl nuw nsw i32 %84, 7
+  %86 = or disjoint i32 %83, %85
+  %87 = xor i32 %86, 64
+  %88 = tail call ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) %3, i16 0, i64 2147483646, i32 159744), !dbg !41
+  %89 = or disjoint i32 %30, %84, !dbg !29
+  %90 = srem i32 %89, %5, !dbg !30
+  %91 = mul i32 %90, %12, !dbg !42
+  %92 = shl nsw i32 %.decomposed, 4, !dbg !43
+  %93 = add i32 %91, %92, !dbg !42
+  %94 = shl i32 %93, 2, !dbg !41
+  %95 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %94, i32 0, i32 0), !dbg !41
+  %96 = bitcast float %95 to <1 x float>, !dbg !41
+  %97 = tail call ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) %4, i16 0, i64 2147483646, i32 159744), !dbg !44
+  %98 = lshr exact i32 %34, 2, !dbg !28
+  %99 = or disjoint i32 %39, %98, !dbg !32
+  %100 = srem i32 %99, %6, !dbg !33
+  %101 = sdiv i32 %100, 128, !dbg !45
+  %102 = mul i32 %101, %13, !dbg !46
+  %103 = add i32 %102, %92, !dbg !46
+  %104 = shl i32 %103, 2, !dbg !44
+  %105 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %104, i32 0, i32 0), !dbg !44
+  %106 = bitcast float %105 to <1 x float>, !dbg !44
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %107 = add i32 %47, 128, !dbg !47
+  %108 = add i32 %48, 128, !dbg !47
+  %109 = add i32 %51, 128, !dbg !48
+  %110 = add i32 %52, 128, !dbg !48
+  %111 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %107), !dbg !36
+  %112 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %113 = lshr i64 %112, %65, !dbg !36
+  %114 = trunc i64 %113 to i1, !dbg !36
+  %115 = select i1 %114, i32 %111, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 16, i32 %115, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %116 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %108), !dbg !36
+  %117 = lshr i64 %112, %72, !dbg !36
+  %118 = trunc i64 %117 to i1, !dbg !36
+  %119 = select i1 %118, i32 %116, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 3072), i32 16, i32 %119, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %120 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %86, !dbg !36
+  %121 = load <16 x i8>, ptr addrspace(3) %120, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %122 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %87, !dbg !36
+  %123 = load <16 x i8>, ptr addrspace(3) %122, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %124 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %109), !dbg !40
+  %125 = select i1 %114, i32 %124, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 16, i32 %125, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %126 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %110), !dbg !40
+  %127 = select i1 %118, i32 %126, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 7168), i32 16, i32 %127, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %128 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %86, !dbg !40
+  %129 = load <16 x i8>, ptr addrspace(3) %128, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %130 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %87, !dbg !40
+  %131 = load <16 x i8>, ptr addrspace(3) %130, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %132 = shl i32 %93, 2, !dbg !41
+  %133 = add i32 %132, 4, !dbg !41
+  %134 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %133, i32 0, i32 0), !dbg !41
+  %135 = bitcast float %134 to <1 x float>, !dbg !41
+  %136 = shl i32 %103, 2, !dbg !44
+  %137 = add i32 %136, 4, !dbg !44
+  %138 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %137, i32 0, i32 0), !dbg !44
+  %139 = bitcast float %138 to <1 x float>, !dbg !44
+  %140 = shufflevector <16 x i8> %121, <16 x i8> %123, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %141 = bitcast <32 x i8> %140 to <8 x i32>, !dbg !51
+  %142 = shufflevector <16 x i8> %129, <16 x i8> %131, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %143 = bitcast <32 x i8> %142 to <8 x i32>, !dbg !51
+  %144 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %143, <8 x i32> %141, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %145 = shufflevector <1 x float> %96, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %146 = shufflevector <4 x float> %144, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %147 = fmul <2 x float> %145, %146, !dbg !52
+  %148 = shufflevector <1 x float> %106, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %149 = fmul <2 x float> %148, %147, !dbg !53
+  %150 = shufflevector <4 x float> %144, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %151 = fmul <2 x float> %145, %150, !dbg !52
+  %152 = fmul <2 x float> %148, %151, !dbg !53
+  %153 = fadd <2 x float> %149, zeroinitializer, !dbg !54
+  %154 = fadd <2 x float> %152, zeroinitializer, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %155 = add i32 %47, 256, !dbg !47
+  %156 = add i32 %48, 256, !dbg !47
+  %157 = add i32 %51, 256, !dbg !48
+  %158 = add i32 %52, 256, !dbg !48
+  %159 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %155), !dbg !36
+  %160 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %161 = lshr i64 %160, %65, !dbg !36
+  %162 = trunc i64 %161 to i1, !dbg !36
+  %163 = select i1 %162, i32 %159, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) @global_smem, i32 16, i32 %163, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %164 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %156), !dbg !36
+  %165 = lshr i64 %160, %72, !dbg !36
+  %166 = trunc i64 %165 to i1, !dbg !36
+  %167 = select i1 %166, i32 %164, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr inbounds nuw (i8, ptr addrspace(3) @global_smem, i32 1024), i32 16, i32 %167, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %168 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %86, !dbg !36
+  %169 = load <16 x i8>, ptr addrspace(3) %168, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %170 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %87, !dbg !36
+  %171 = load <16 x i8>, ptr addrspace(3) %170, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %172 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %157), !dbg !40
+  %173 = select i1 %162, i32 %172, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 16, i32 %173, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %174 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %158), !dbg !40
+  %175 = select i1 %166, i32 %174, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 5120), i32 16, i32 %175, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %176 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %86, !dbg !40
+  %177 = load <16 x i8>, ptr addrspace(3) %176, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %178 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %87, !dbg !40
+  %179 = load <16 x i8>, ptr addrspace(3) %178, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %180 = shl i32 %93, 2, !dbg !41
+  %181 = add i32 %180, 8, !dbg !41
+  %182 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %181, i32 0, i32 0), !dbg !41
+  %183 = bitcast float %182 to <1 x float>, !dbg !41
+  %184 = shl i32 %103, 2, !dbg !44
+  %185 = add i32 %184, 8, !dbg !44
+  %186 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %185, i32 0, i32 0), !dbg !44
+  %187 = bitcast float %186 to <1 x float>, !dbg !44
+  %188 = shufflevector <16 x i8> %169, <16 x i8> %171, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %189 = bitcast <32 x i8> %188 to <8 x i32>, !dbg !51
+  %190 = shufflevector <16 x i8> %177, <16 x i8> %179, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %191 = bitcast <32 x i8> %190 to <8 x i32>, !dbg !51
+  %192 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %191, <8 x i32> %189, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %193 = shufflevector <1 x float> %135, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %194 = shufflevector <4 x float> %192, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %195 = fmul <2 x float> %193, %194, !dbg !52
+  %196 = shufflevector <1 x float> %139, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %197 = fmul <2 x float> %196, %195, !dbg !53
+  %198 = shufflevector <4 x float> %192, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %199 = fmul <2 x float> %193, %198, !dbg !52
+  %200 = fmul <2 x float> %196, %199, !dbg !53
+  %201 = fadd <2 x float> %153, %197, !dbg !54
+  %202 = fadd <2 x float> %154, %200, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %203 = add i32 %47, 384, !dbg !47
+  %204 = add i32 %48, 384, !dbg !47
+  %205 = add i32 %51, 384, !dbg !48
+  %206 = add i32 %52, 384, !dbg !48
+  %207 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %203), !dbg !36
+  %208 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %209 = lshr i64 %208, %65, !dbg !36
+  %210 = trunc i64 %209 to i1, !dbg !36
+  %211 = select i1 %210, i32 %207, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 16, i32 %211, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %212 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %204), !dbg !36
+  %213 = lshr i64 %208, %72, !dbg !36
+  %214 = trunc i64 %213 to i1, !dbg !36
+  %215 = select i1 %214, i32 %212, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 3072), i32 16, i32 %215, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %216 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %86, !dbg !36
+  %217 = load <16 x i8>, ptr addrspace(3) %216, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %218 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %87, !dbg !36
+  %219 = load <16 x i8>, ptr addrspace(3) %218, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %220 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %205), !dbg !40
+  %221 = select i1 %210, i32 %220, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 16, i32 %221, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %222 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %206), !dbg !40
+  %223 = select i1 %214, i32 %222, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 7168), i32 16, i32 %223, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %224 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %86, !dbg !40
+  %225 = load <16 x i8>, ptr addrspace(3) %224, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %226 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %87, !dbg !40
+  %227 = load <16 x i8>, ptr addrspace(3) %226, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %228 = shl i32 %93, 2, !dbg !41
+  %229 = add i32 %228, 12, !dbg !41
+  %230 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %229, i32 0, i32 0), !dbg !41
+  %231 = bitcast float %230 to <1 x float>, !dbg !41
+  %232 = shl i32 %103, 2, !dbg !44
+  %233 = add i32 %232, 12, !dbg !44
+  %234 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %233, i32 0, i32 0), !dbg !44
+  %235 = bitcast float %234 to <1 x float>, !dbg !44
+  %236 = shufflevector <16 x i8> %217, <16 x i8> %219, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %237 = bitcast <32 x i8> %236 to <8 x i32>, !dbg !51
+  %238 = shufflevector <16 x i8> %225, <16 x i8> %227, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %239 = bitcast <32 x i8> %238 to <8 x i32>, !dbg !51
+  %240 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %239, <8 x i32> %237, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %241 = shufflevector <1 x float> %183, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %242 = shufflevector <4 x float> %240, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %243 = fmul <2 x float> %241, %242, !dbg !52
+  %244 = shufflevector <1 x float> %187, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %245 = fmul <2 x float> %244, %243, !dbg !53
+  %246 = shufflevector <4 x float> %240, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %247 = fmul <2 x float> %241, %246, !dbg !52
+  %248 = fmul <2 x float> %244, %247, !dbg !53
+  %249 = fadd <2 x float> %201, %245, !dbg !54
+  %250 = fadd <2 x float> %202, %248, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %251 = add i32 %47, 512, !dbg !47
+  %252 = add i32 %48, 512, !dbg !47
+  %253 = add i32 %51, 512, !dbg !48
+  %254 = add i32 %52, 512, !dbg !48
+  %255 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %251), !dbg !36
+  %256 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %257 = lshr i64 %256, %65, !dbg !36
+  %258 = trunc i64 %257 to i1, !dbg !36
+  %259 = select i1 %258, i32 %255, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) @global_smem, i32 16, i32 %259, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %260 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %252), !dbg !36
+  %261 = lshr i64 %256, %72, !dbg !36
+  %262 = trunc i64 %261 to i1, !dbg !36
+  %263 = select i1 %262, i32 %260, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr inbounds nuw (i8, ptr addrspace(3) @global_smem, i32 1024), i32 16, i32 %263, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %264 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %86, !dbg !36
+  %265 = load <16 x i8>, ptr addrspace(3) %264, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %266 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %87, !dbg !36
+  %267 = load <16 x i8>, ptr addrspace(3) %266, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %268 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %253), !dbg !40
+  %269 = select i1 %258, i32 %268, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 16, i32 %269, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %270 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %254), !dbg !40
+  %271 = select i1 %262, i32 %270, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 5120), i32 16, i32 %271, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %272 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %86, !dbg !40
+  %273 = load <16 x i8>, ptr addrspace(3) %272, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %274 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %87, !dbg !40
+  %275 = load <16 x i8>, ptr addrspace(3) %274, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %276 = shl i32 %93, 2, !dbg !41
+  %277 = add i32 %276, 16, !dbg !41
+  %278 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %277, i32 0, i32 0), !dbg !41
+  %279 = bitcast float %278 to <1 x float>, !dbg !41
+  %280 = shl i32 %103, 2, !dbg !44
+  %281 = add i32 %280, 16, !dbg !44
+  %282 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %281, i32 0, i32 0), !dbg !44
+  %283 = bitcast float %282 to <1 x float>, !dbg !44
+  %284 = shufflevector <16 x i8> %265, <16 x i8> %267, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %285 = bitcast <32 x i8> %284 to <8 x i32>, !dbg !51
+  %286 = shufflevector <16 x i8> %273, <16 x i8> %275, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %287 = bitcast <32 x i8> %286 to <8 x i32>, !dbg !51
+  %288 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %287, <8 x i32> %285, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %289 = shufflevector <1 x float> %231, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %290 = shufflevector <4 x float> %288, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %291 = fmul <2 x float> %289, %290, !dbg !52
+  %292 = shufflevector <1 x float> %235, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %293 = fmul <2 x float> %292, %291, !dbg !53
+  %294 = shufflevector <4 x float> %288, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %295 = fmul <2 x float> %289, %294, !dbg !52
+  %296 = fmul <2 x float> %292, %295, !dbg !53
+  %297 = fadd <2 x float> %249, %293, !dbg !54
+  %298 = fadd <2 x float> %250, %296, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %299 = add i32 %47, 640, !dbg !47
+  %300 = add i32 %48, 640, !dbg !47
+  %301 = add i32 %51, 640, !dbg !48
+  %302 = add i32 %52, 640, !dbg !48
+  %303 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %299), !dbg !36
+  %304 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %305 = lshr i64 %304, %65, !dbg !36
+  %306 = trunc i64 %305 to i1, !dbg !36
+  %307 = select i1 %306, i32 %303, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 16, i32 %307, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %308 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %300), !dbg !36
+  %309 = lshr i64 %304, %72, !dbg !36
+  %310 = trunc i64 %309 to i1, !dbg !36
+  %311 = select i1 %310, i32 %308, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 3072), i32 16, i32 %311, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %312 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %86, !dbg !36
+  %313 = load <16 x i8>, ptr addrspace(3) %312, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %314 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %87, !dbg !36
+  %315 = load <16 x i8>, ptr addrspace(3) %314, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %316 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %301), !dbg !40
+  %317 = select i1 %306, i32 %316, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 16, i32 %317, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %318 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %302), !dbg !40
+  %319 = select i1 %310, i32 %318, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 7168), i32 16, i32 %319, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %320 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %86, !dbg !40
+  %321 = load <16 x i8>, ptr addrspace(3) %320, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %322 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %87, !dbg !40
+  %323 = load <16 x i8>, ptr addrspace(3) %322, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %324 = shl i32 %93, 2, !dbg !41
+  %325 = add i32 %324, 20, !dbg !41
+  %326 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %325, i32 0, i32 0), !dbg !41
+  %327 = bitcast float %326 to <1 x float>, !dbg !41
+  %328 = shl i32 %103, 2, !dbg !44
+  %329 = add i32 %328, 20, !dbg !44
+  %330 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %329, i32 0, i32 0), !dbg !44
+  %331 = bitcast float %330 to <1 x float>, !dbg !44
+  %332 = shufflevector <16 x i8> %313, <16 x i8> %315, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %333 = bitcast <32 x i8> %332 to <8 x i32>, !dbg !51
+  %334 = shufflevector <16 x i8> %321, <16 x i8> %323, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %335 = bitcast <32 x i8> %334 to <8 x i32>, !dbg !51
+  %336 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %335, <8 x i32> %333, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %337 = shufflevector <1 x float> %279, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %338 = shufflevector <4 x float> %336, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %339 = fmul <2 x float> %337, %338, !dbg !52
+  %340 = shufflevector <1 x float> %283, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %341 = fmul <2 x float> %340, %339, !dbg !53
+  %342 = shufflevector <4 x float> %336, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %343 = fmul <2 x float> %337, %342, !dbg !52
+  %344 = fmul <2 x float> %340, %343, !dbg !53
+  %345 = fadd <2 x float> %297, %341, !dbg !54
+  %346 = fadd <2 x float> %298, %344, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %347 = add i32 %47, 768, !dbg !47
+  %348 = add i32 %48, 768, !dbg !47
+  %349 = add i32 %51, 768, !dbg !48
+  %350 = add i32 %52, 768, !dbg !48
+  %351 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %347), !dbg !36
+  %352 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %353 = lshr i64 %352, %65, !dbg !36
+  %354 = trunc i64 %353 to i1, !dbg !36
+  %355 = select i1 %354, i32 %351, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) @global_smem, i32 16, i32 %355, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %356 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %348), !dbg !36
+  %357 = lshr i64 %352, %72, !dbg !36
+  %358 = trunc i64 %357 to i1, !dbg !36
+  %359 = select i1 %358, i32 %356, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr inbounds nuw (i8, ptr addrspace(3) @global_smem, i32 1024), i32 16, i32 %359, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %360 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %86, !dbg !36
+  %361 = load <16 x i8>, ptr addrspace(3) %360, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %362 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %87, !dbg !36
+  %363 = load <16 x i8>, ptr addrspace(3) %362, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %364 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %349), !dbg !40
+  %365 = select i1 %354, i32 %364, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 16, i32 %365, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %366 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %350), !dbg !40
+  %367 = select i1 %358, i32 %366, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 5120), i32 16, i32 %367, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %368 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %86, !dbg !40
+  %369 = load <16 x i8>, ptr addrspace(3) %368, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %370 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %87, !dbg !40
+  %371 = load <16 x i8>, ptr addrspace(3) %370, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %372 = shl i32 %93, 2, !dbg !41
+  %373 = add i32 %372, 24, !dbg !41
+  %374 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %373, i32 0, i32 0), !dbg !41
+  %375 = bitcast float %374 to <1 x float>, !dbg !41
+  %376 = shl i32 %103, 2, !dbg !44
+  %377 = add i32 %376, 24, !dbg !44
+  %378 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %377, i32 0, i32 0), !dbg !44
+  %379 = bitcast float %378 to <1 x float>, !dbg !44
+  %380 = shufflevector <16 x i8> %361, <16 x i8> %363, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %381 = bitcast <32 x i8> %380 to <8 x i32>, !dbg !51
+  %382 = shufflevector <16 x i8> %369, <16 x i8> %371, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %383 = bitcast <32 x i8> %382 to <8 x i32>, !dbg !51
+  %384 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %383, <8 x i32> %381, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %385 = shufflevector <1 x float> %327, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %386 = shufflevector <4 x float> %384, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %387 = fmul <2 x float> %385, %386, !dbg !52
+  %388 = shufflevector <1 x float> %331, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %389 = fmul <2 x float> %388, %387, !dbg !53
+  %390 = shufflevector <4 x float> %384, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %391 = fmul <2 x float> %385, %390, !dbg !52
+  %392 = fmul <2 x float> %388, %391, !dbg !53
+  %393 = fadd <2 x float> %345, %389, !dbg !54
+  %394 = fadd <2 x float> %346, %392, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %395 = add i32 %47, 896, !dbg !47
+  %396 = add i32 %48, 896, !dbg !47
+  %397 = add i32 %51, 896, !dbg !48
+  %398 = add i32 %52, 896, !dbg !48
+  %399 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %395), !dbg !36
+  %400 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %401 = lshr i64 %400, %65, !dbg !36
+  %402 = trunc i64 %401 to i1, !dbg !36
+  %403 = select i1 %402, i32 %399, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 16, i32 %403, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %404 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %396), !dbg !36
+  %405 = lshr i64 %400, %72, !dbg !36
+  %406 = trunc i64 %405 to i1, !dbg !36
+  %407 = select i1 %406, i32 %404, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 3072), i32 16, i32 %407, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %408 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %86, !dbg !36
+  %409 = load <16 x i8>, ptr addrspace(3) %408, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %410 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %87, !dbg !36
+  %411 = load <16 x i8>, ptr addrspace(3) %410, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %412 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %397), !dbg !40
+  %413 = select i1 %402, i32 %412, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 16, i32 %413, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %414 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %398), !dbg !40
+  %415 = select i1 %406, i32 %414, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 7168), i32 16, i32 %415, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %416 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %86, !dbg !40
+  %417 = load <16 x i8>, ptr addrspace(3) %416, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %418 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %87, !dbg !40
+  %419 = load <16 x i8>, ptr addrspace(3) %418, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %420 = shl i32 %93, 2, !dbg !41
+  %421 = add i32 %420, 28, !dbg !41
+  %422 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %421, i32 0, i32 0), !dbg !41
+  %423 = bitcast float %422 to <1 x float>, !dbg !41
+  %424 = shl i32 %103, 2, !dbg !44
+  %425 = add i32 %424, 28, !dbg !44
+  %426 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %425, i32 0, i32 0), !dbg !44
+  %427 = bitcast float %426 to <1 x float>, !dbg !44
+  %428 = shufflevector <16 x i8> %409, <16 x i8> %411, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %429 = bitcast <32 x i8> %428 to <8 x i32>, !dbg !51
+  %430 = shufflevector <16 x i8> %417, <16 x i8> %419, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %431 = bitcast <32 x i8> %430 to <8 x i32>, !dbg !51
+  %432 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %431, <8 x i32> %429, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %433 = shufflevector <1 x float> %375, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %434 = shufflevector <4 x float> %432, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %435 = fmul <2 x float> %433, %434, !dbg !52
+  %436 = shufflevector <1 x float> %379, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %437 = fmul <2 x float> %436, %435, !dbg !53
+  %438 = shufflevector <4 x float> %432, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %439 = fmul <2 x float> %433, %438, !dbg !52
+  %440 = fmul <2 x float> %436, %439, !dbg !53
+  %441 = fadd <2 x float> %393, %437, !dbg !54
+  %442 = fadd <2 x float> %394, %440, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %443 = add i32 %47, 1024, !dbg !47
+  %444 = add i32 %48, 1024, !dbg !47
+  %445 = add i32 %51, 1024, !dbg !48
+  %446 = add i32 %52, 1024, !dbg !48
+  %447 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %443), !dbg !36
+  %448 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %449 = lshr i64 %448, %65, !dbg !36
+  %450 = trunc i64 %449 to i1, !dbg !36
+  %451 = select i1 %450, i32 %447, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) @global_smem, i32 16, i32 %451, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %452 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %444), !dbg !36
+  %453 = lshr i64 %448, %72, !dbg !36
+  %454 = trunc i64 %453 to i1, !dbg !36
+  %455 = select i1 %454, i32 %452, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr inbounds nuw (i8, ptr addrspace(3) @global_smem, i32 1024), i32 16, i32 %455, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %456 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %86, !dbg !36
+  %457 = load <16 x i8>, ptr addrspace(3) %456, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %458 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %87, !dbg !36
+  %459 = load <16 x i8>, ptr addrspace(3) %458, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %460 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %445), !dbg !40
+  %461 = select i1 %450, i32 %460, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 16, i32 %461, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %462 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %446), !dbg !40
+  %463 = select i1 %454, i32 %462, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 5120), i32 16, i32 %463, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %464 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %86, !dbg !40
+  %465 = load <16 x i8>, ptr addrspace(3) %464, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %466 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %87, !dbg !40
+  %467 = load <16 x i8>, ptr addrspace(3) %466, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %468 = shl i32 %93, 2, !dbg !41
+  %469 = add i32 %468, 32, !dbg !41
+  %470 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %469, i32 0, i32 0), !dbg !41
+  %471 = bitcast float %470 to <1 x float>, !dbg !41
+  %472 = shl i32 %103, 2, !dbg !44
+  %473 = add i32 %472, 32, !dbg !44
+  %474 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %473, i32 0, i32 0), !dbg !44
+  %475 = bitcast float %474 to <1 x float>, !dbg !44
+  %476 = shufflevector <16 x i8> %457, <16 x i8> %459, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %477 = bitcast <32 x i8> %476 to <8 x i32>, !dbg !51
+  %478 = shufflevector <16 x i8> %465, <16 x i8> %467, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %479 = bitcast <32 x i8> %478 to <8 x i32>, !dbg !51
+  %480 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %479, <8 x i32> %477, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %481 = shufflevector <1 x float> %423, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %482 = shufflevector <4 x float> %480, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %483 = fmul <2 x float> %481, %482, !dbg !52
+  %484 = shufflevector <1 x float> %427, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %485 = fmul <2 x float> %484, %483, !dbg !53
+  %486 = shufflevector <4 x float> %480, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %487 = fmul <2 x float> %481, %486, !dbg !52
+  %488 = fmul <2 x float> %484, %487, !dbg !53
+  %489 = fadd <2 x float> %441, %485, !dbg !54
+  %490 = fadd <2 x float> %442, %488, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %491 = add i32 %47, 1152, !dbg !47
+  %492 = add i32 %48, 1152, !dbg !47
+  %493 = add i32 %51, 1152, !dbg !48
+  %494 = add i32 %52, 1152, !dbg !48
+  %495 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %491), !dbg !36
+  %496 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %497 = lshr i64 %496, %65, !dbg !36
+  %498 = trunc i64 %497 to i1, !dbg !36
+  %499 = select i1 %498, i32 %495, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 16, i32 %499, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %500 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %492), !dbg !36
+  %501 = lshr i64 %496, %72, !dbg !36
+  %502 = trunc i64 %501 to i1, !dbg !36
+  %503 = select i1 %502, i32 %500, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 3072), i32 16, i32 %503, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %504 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %86, !dbg !36
+  %505 = load <16 x i8>, ptr addrspace(3) %504, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %506 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %87, !dbg !36
+  %507 = load <16 x i8>, ptr addrspace(3) %506, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %508 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %493), !dbg !40
+  %509 = select i1 %498, i32 %508, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 16, i32 %509, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %510 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %494), !dbg !40
+  %511 = select i1 %502, i32 %510, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 7168), i32 16, i32 %511, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %512 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %86, !dbg !40
+  %513 = load <16 x i8>, ptr addrspace(3) %512, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %514 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %87, !dbg !40
+  %515 = load <16 x i8>, ptr addrspace(3) %514, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %516 = shl i32 %93, 2, !dbg !41
+  %517 = add i32 %516, 36, !dbg !41
+  %518 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %517, i32 0, i32 0), !dbg !41
+  %519 = bitcast float %518 to <1 x float>, !dbg !41
+  %520 = shl i32 %103, 2, !dbg !44
+  %521 = add i32 %520, 36, !dbg !44
+  %522 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %521, i32 0, i32 0), !dbg !44
+  %523 = bitcast float %522 to <1 x float>, !dbg !44
+  %524 = shufflevector <16 x i8> %505, <16 x i8> %507, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %525 = bitcast <32 x i8> %524 to <8 x i32>, !dbg !51
+  %526 = shufflevector <16 x i8> %513, <16 x i8> %515, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %527 = bitcast <32 x i8> %526 to <8 x i32>, !dbg !51
+  %528 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %527, <8 x i32> %525, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %529 = shufflevector <1 x float> %471, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %530 = shufflevector <4 x float> %528, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %531 = fmul <2 x float> %529, %530, !dbg !52
+  %532 = shufflevector <1 x float> %475, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %533 = fmul <2 x float> %532, %531, !dbg !53
+  %534 = shufflevector <4 x float> %528, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %535 = fmul <2 x float> %529, %534, !dbg !52
+  %536 = fmul <2 x float> %532, %535, !dbg !53
+  %537 = fadd <2 x float> %489, %533, !dbg !54
+  %538 = fadd <2 x float> %490, %536, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %539 = add i32 %47, 1280, !dbg !47
+  %540 = add i32 %48, 1280, !dbg !47
+  %541 = add i32 %51, 1280, !dbg !48
+  %542 = add i32 %52, 1280, !dbg !48
+  %543 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %539), !dbg !36
+  %544 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %545 = lshr i64 %544, %65, !dbg !36
+  %546 = trunc i64 %545 to i1, !dbg !36
+  %547 = select i1 %546, i32 %543, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) @global_smem, i32 16, i32 %547, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %548 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %540), !dbg !36
+  %549 = lshr i64 %544, %72, !dbg !36
+  %550 = trunc i64 %549 to i1, !dbg !36
+  %551 = select i1 %550, i32 %548, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr inbounds nuw (i8, ptr addrspace(3) @global_smem, i32 1024), i32 16, i32 %551, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %552 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %86, !dbg !36
+  %553 = load <16 x i8>, ptr addrspace(3) %552, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %554 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %87, !dbg !36
+  %555 = load <16 x i8>, ptr addrspace(3) %554, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %556 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %541), !dbg !40
+  %557 = select i1 %546, i32 %556, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 16, i32 %557, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %558 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %542), !dbg !40
+  %559 = select i1 %550, i32 %558, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 5120), i32 16, i32 %559, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %560 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %86, !dbg !40
+  %561 = load <16 x i8>, ptr addrspace(3) %560, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %562 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %87, !dbg !40
+  %563 = load <16 x i8>, ptr addrspace(3) %562, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %564 = shl i32 %93, 2, !dbg !41
+  %565 = add i32 %564, 40, !dbg !41
+  %566 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %565, i32 0, i32 0), !dbg !41
+  %567 = bitcast float %566 to <1 x float>, !dbg !41
+  %568 = shl i32 %103, 2, !dbg !44
+  %569 = add i32 %568, 40, !dbg !44
+  %570 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %569, i32 0, i32 0), !dbg !44
+  %571 = bitcast float %570 to <1 x float>, !dbg !44
+  %572 = shufflevector <16 x i8> %553, <16 x i8> %555, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %573 = bitcast <32 x i8> %572 to <8 x i32>, !dbg !51
+  %574 = shufflevector <16 x i8> %561, <16 x i8> %563, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %575 = bitcast <32 x i8> %574 to <8 x i32>, !dbg !51
+  %576 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %575, <8 x i32> %573, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %577 = shufflevector <1 x float> %519, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %578 = shufflevector <4 x float> %576, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %579 = fmul <2 x float> %577, %578, !dbg !52
+  %580 = shufflevector <1 x float> %523, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %581 = fmul <2 x float> %580, %579, !dbg !53
+  %582 = shufflevector <4 x float> %576, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %583 = fmul <2 x float> %577, %582, !dbg !52
+  %584 = fmul <2 x float> %580, %583, !dbg !53
+  %585 = fadd <2 x float> %537, %581, !dbg !54
+  %586 = fadd <2 x float> %538, %584, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %587 = add i32 %47, 1408, !dbg !47
+  %588 = add i32 %48, 1408, !dbg !47
+  %589 = add i32 %51, 1408, !dbg !48
+  %590 = add i32 %52, 1408, !dbg !48
+  %591 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %587), !dbg !36
+  %592 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %593 = lshr i64 %592, %65, !dbg !36
+  %594 = trunc i64 %593 to i1, !dbg !36
+  %595 = select i1 %594, i32 %591, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 16, i32 %595, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %596 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %588), !dbg !36
+  %597 = lshr i64 %592, %72, !dbg !36
+  %598 = trunc i64 %597 to i1, !dbg !36
+  %599 = select i1 %598, i32 %596, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 3072), i32 16, i32 %599, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %600 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %86, !dbg !36
+  %601 = load <16 x i8>, ptr addrspace(3) %600, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %602 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %87, !dbg !36
+  %603 = load <16 x i8>, ptr addrspace(3) %602, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %604 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %589), !dbg !40
+  %605 = select i1 %594, i32 %604, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 16, i32 %605, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %606 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %590), !dbg !40
+  %607 = select i1 %598, i32 %606, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 7168), i32 16, i32 %607, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %608 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %86, !dbg !40
+  %609 = load <16 x i8>, ptr addrspace(3) %608, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %610 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %87, !dbg !40
+  %611 = load <16 x i8>, ptr addrspace(3) %610, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %612 = shl i32 %93, 2, !dbg !41
+  %613 = add i32 %612, 44, !dbg !41
+  %614 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %613, i32 0, i32 0), !dbg !41
+  %615 = bitcast float %614 to <1 x float>, !dbg !41
+  %616 = shl i32 %103, 2, !dbg !44
+  %617 = add i32 %616, 44, !dbg !44
+  %618 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %617, i32 0, i32 0), !dbg !44
+  %619 = bitcast float %618 to <1 x float>, !dbg !44
+  %620 = shufflevector <16 x i8> %601, <16 x i8> %603, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %621 = bitcast <32 x i8> %620 to <8 x i32>, !dbg !51
+  %622 = shufflevector <16 x i8> %609, <16 x i8> %611, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %623 = bitcast <32 x i8> %622 to <8 x i32>, !dbg !51
+  %624 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %623, <8 x i32> %621, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %625 = shufflevector <1 x float> %567, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %626 = shufflevector <4 x float> %624, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %627 = fmul <2 x float> %625, %626, !dbg !52
+  %628 = shufflevector <1 x float> %571, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %629 = fmul <2 x float> %628, %627, !dbg !53
+  %630 = shufflevector <4 x float> %624, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %631 = fmul <2 x float> %625, %630, !dbg !52
+  %632 = fmul <2 x float> %628, %631, !dbg !53
+  %633 = fadd <2 x float> %585, %629, !dbg !54
+  %634 = fadd <2 x float> %586, %632, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %635 = add i32 %47, 1536, !dbg !47
+  %636 = add i32 %48, 1536, !dbg !47
+  %637 = add i32 %51, 1536, !dbg !48
+  %638 = add i32 %52, 1536, !dbg !48
+  %639 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %635), !dbg !36
+  %640 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %641 = lshr i64 %640, %65, !dbg !36
+  %642 = trunc i64 %641 to i1, !dbg !36
+  %643 = select i1 %642, i32 %639, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) @global_smem, i32 16, i32 %643, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %644 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %636), !dbg !36
+  %645 = lshr i64 %640, %72, !dbg !36
+  %646 = trunc i64 %645 to i1, !dbg !36
+  %647 = select i1 %646, i32 %644, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr inbounds nuw (i8, ptr addrspace(3) @global_smem, i32 1024), i32 16, i32 %647, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %648 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %86, !dbg !36
+  %649 = load <16 x i8>, ptr addrspace(3) %648, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %650 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %87, !dbg !36
+  %651 = load <16 x i8>, ptr addrspace(3) %650, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %652 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %637), !dbg !40
+  %653 = select i1 %642, i32 %652, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 16, i32 %653, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %654 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %638), !dbg !40
+  %655 = select i1 %646, i32 %654, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 5120), i32 16, i32 %655, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %656 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %86, !dbg !40
+  %657 = load <16 x i8>, ptr addrspace(3) %656, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %658 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %87, !dbg !40
+  %659 = load <16 x i8>, ptr addrspace(3) %658, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %660 = shl i32 %93, 2, !dbg !41
+  %661 = add i32 %660, 48, !dbg !41
+  %662 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %661, i32 0, i32 0), !dbg !41
+  %663 = bitcast float %662 to <1 x float>, !dbg !41
+  %664 = shl i32 %103, 2, !dbg !44
+  %665 = add i32 %664, 48, !dbg !44
+  %666 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %665, i32 0, i32 0), !dbg !44
+  %667 = bitcast float %666 to <1 x float>, !dbg !44
+  %668 = shufflevector <16 x i8> %649, <16 x i8> %651, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %669 = bitcast <32 x i8> %668 to <8 x i32>, !dbg !51
+  %670 = shufflevector <16 x i8> %657, <16 x i8> %659, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %671 = bitcast <32 x i8> %670 to <8 x i32>, !dbg !51
+  %672 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %671, <8 x i32> %669, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %673 = shufflevector <1 x float> %615, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %674 = shufflevector <4 x float> %672, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %675 = fmul <2 x float> %673, %674, !dbg !52
+  %676 = shufflevector <1 x float> %619, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %677 = fmul <2 x float> %676, %675, !dbg !53
+  %678 = shufflevector <4 x float> %672, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %679 = fmul <2 x float> %673, %678, !dbg !52
+  %680 = fmul <2 x float> %676, %679, !dbg !53
+  %681 = fadd <2 x float> %633, %677, !dbg !54
+  %682 = fadd <2 x float> %634, %680, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %683 = add i32 %47, 1664, !dbg !47
+  %684 = add i32 %48, 1664, !dbg !47
+  %685 = add i32 %51, 1664, !dbg !48
+  %686 = add i32 %52, 1664, !dbg !48
+  %687 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %683), !dbg !36
+  %688 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %689 = lshr i64 %688, %65, !dbg !36
+  %690 = trunc i64 %689 to i1, !dbg !36
+  %691 = select i1 %690, i32 %687, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 16, i32 %691, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %692 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %684), !dbg !36
+  %693 = lshr i64 %688, %72, !dbg !36
+  %694 = trunc i64 %693 to i1, !dbg !36
+  %695 = select i1 %694, i32 %692, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 3072), i32 16, i32 %695, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %696 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %86, !dbg !36
+  %697 = load <16 x i8>, ptr addrspace(3) %696, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %698 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %87, !dbg !36
+  %699 = load <16 x i8>, ptr addrspace(3) %698, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %700 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %685), !dbg !40
+  %701 = select i1 %690, i32 %700, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 16, i32 %701, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %702 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %686), !dbg !40
+  %703 = select i1 %694, i32 %702, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 7168), i32 16, i32 %703, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %704 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %86, !dbg !40
+  %705 = load <16 x i8>, ptr addrspace(3) %704, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %706 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %87, !dbg !40
+  %707 = load <16 x i8>, ptr addrspace(3) %706, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %708 = shl i32 %93, 2, !dbg !41
+  %709 = add i32 %708, 52, !dbg !41
+  %710 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %709, i32 0, i32 0), !dbg !41
+  %711 = bitcast float %710 to <1 x float>, !dbg !41
+  %712 = shl i32 %103, 2, !dbg !44
+  %713 = add i32 %712, 52, !dbg !44
+  %714 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %713, i32 0, i32 0), !dbg !44
+  %715 = bitcast float %714 to <1 x float>, !dbg !44
+  %716 = shufflevector <16 x i8> %697, <16 x i8> %699, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %717 = bitcast <32 x i8> %716 to <8 x i32>, !dbg !51
+  %718 = shufflevector <16 x i8> %705, <16 x i8> %707, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %719 = bitcast <32 x i8> %718 to <8 x i32>, !dbg !51
+  %720 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %719, <8 x i32> %717, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %721 = shufflevector <1 x float> %663, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %722 = shufflevector <4 x float> %720, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %723 = fmul <2 x float> %721, %722, !dbg !52
+  %724 = shufflevector <1 x float> %667, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %725 = fmul <2 x float> %724, %723, !dbg !53
+  %726 = shufflevector <4 x float> %720, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %727 = fmul <2 x float> %721, %726, !dbg !52
+  %728 = fmul <2 x float> %724, %727, !dbg !53
+  %729 = fadd <2 x float> %681, %725, !dbg !54
+  %730 = fadd <2 x float> %682, %728, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %731 = add i32 %47, 1792, !dbg !47
+  %732 = add i32 %48, 1792, !dbg !47
+  %733 = add i32 %51, 1792, !dbg !48
+  %734 = add i32 %52, 1792, !dbg !48
+  %735 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %731), !dbg !36
+  %736 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %737 = lshr i64 %736, %65, !dbg !36
+  %738 = trunc i64 %737 to i1, !dbg !36
+  %739 = select i1 %738, i32 %735, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) @global_smem, i32 16, i32 %739, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %740 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %732), !dbg !36
+  %741 = lshr i64 %736, %72, !dbg !36
+  %742 = trunc i64 %741 to i1, !dbg !36
+  %743 = select i1 %742, i32 %740, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr inbounds nuw (i8, ptr addrspace(3) @global_smem, i32 1024), i32 16, i32 %743, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %744 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %86, !dbg !36
+  %745 = load <16 x i8>, ptr addrspace(3) %744, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %746 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %87, !dbg !36
+  %747 = load <16 x i8>, ptr addrspace(3) %746, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %748 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %733), !dbg !40
+  %749 = select i1 %738, i32 %748, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 16, i32 %749, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %750 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %734), !dbg !40
+  %751 = select i1 %742, i32 %750, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 5120), i32 16, i32 %751, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %752 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %86, !dbg !40
+  %753 = load <16 x i8>, ptr addrspace(3) %752, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %754 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %87, !dbg !40
+  %755 = load <16 x i8>, ptr addrspace(3) %754, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %756 = shl i32 %93, 2, !dbg !41
+  %757 = add i32 %756, 56, !dbg !41
+  %758 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %757, i32 0, i32 0), !dbg !41
+  %759 = bitcast float %758 to <1 x float>, !dbg !41
+  %760 = shl i32 %103, 2, !dbg !44
+  %761 = add i32 %760, 56, !dbg !44
+  %762 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %761, i32 0, i32 0), !dbg !44
+  %763 = bitcast float %762 to <1 x float>, !dbg !44
+  %764 = shufflevector <16 x i8> %745, <16 x i8> %747, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %765 = bitcast <32 x i8> %764 to <8 x i32>, !dbg !51
+  %766 = shufflevector <16 x i8> %753, <16 x i8> %755, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %767 = bitcast <32 x i8> %766 to <8 x i32>, !dbg !51
+  %768 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %767, <8 x i32> %765, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %769 = shufflevector <1 x float> %711, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %770 = shufflevector <4 x float> %768, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %771 = fmul <2 x float> %769, %770, !dbg !52
+  %772 = shufflevector <1 x float> %715, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %773 = fmul <2 x float> %772, %771, !dbg !53
+  %774 = shufflevector <4 x float> %768, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %775 = fmul <2 x float> %769, %774, !dbg !52
+  %776 = fmul <2 x float> %772, %775, !dbg !53
+  %777 = fadd <2 x float> %729, %773, !dbg !54
+  %778 = fadd <2 x float> %730, %776, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %779 = add i32 %47, 1920, !dbg !47
+  %780 = add i32 %48, 1920, !dbg !47
+  %781 = add i32 %51, 1920, !dbg !48
+  %782 = add i32 %52, 1920, !dbg !48
+  %783 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %779), !dbg !36
+  %784 = tail call i64 @llvm.amdgcn.ballot.i64(i1 true), !dbg !36
+  %785 = lshr i64 %784, %65, !dbg !36
+  %786 = trunc i64 %785 to i1, !dbg !36
+  %787 = select i1 %786, i32 %783, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 16, i32 %787, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %788 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %780), !dbg !36
+  %789 = lshr i64 %784, %72, !dbg !36
+  %790 = trunc i64 %789 to i1, !dbg !36
+  %791 = select i1 %790, i32 %788, i32 -2147483648, !dbg !36
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %60, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 3072), i32 16, i32 %791, i32 0, i32 0, i32 0), !dbg !36, !alias.scope !37
+  %792 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %86, !dbg !36
+  %793 = load <16 x i8>, ptr addrspace(3) %792, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %794 = getelementptr inbounds nuw i8, ptr addrspace(3) @global_smem, i32 %87, !dbg !36
+  %795 = load <16 x i8>, ptr addrspace(3) %794, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %796 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %62, i32 %781), !dbg !40
+  %797 = select i1 %786, i32 %796, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 16, i32 %797, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %798 = tail call i32 @llvm.amdgcn.ds.bpermute(i32 %70, i32 %782), !dbg !40
+  %799 = select i1 %790, i32 %798, i32 -2147483648, !dbg !40
+  tail call void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) %76, ptr addrspace(3) nonnull getelementptr (i8, ptr addrspace(3) @global_smem, i32 7168), i32 16, i32 %799, i32 0, i32 0, i32 3), !dbg !40, !alias.scope !37
+  %800 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %86, !dbg !40
+  %801 = load <16 x i8>, ptr addrspace(3) %800, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %802 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 4096), i32 %87, !dbg !40
+  %803 = load <16 x i8>, ptr addrspace(3) %802, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %804 = shl i32 %93, 2, !dbg !41
+  %805 = add i32 %804, 60, !dbg !41
+  %806 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %88, i32 %805, i32 0, i32 0), !dbg !41
+  %807 = bitcast float %806 to <1 x float>, !dbg !41
+  %808 = shl i32 %103, 2, !dbg !44
+  %809 = add i32 %808, 60, !dbg !44
+  %810 = tail call float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) %97, i32 %809, i32 0, i32 0), !dbg !44
+  %811 = bitcast float %810 to <1 x float>, !dbg !44
+  %812 = shufflevector <16 x i8> %793, <16 x i8> %795, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %813 = bitcast <32 x i8> %812 to <8 x i32>, !dbg !51
+  %814 = shufflevector <16 x i8> %801, <16 x i8> %803, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %815 = bitcast <32 x i8> %814 to <8 x i32>, !dbg !51
+  %816 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %815, <8 x i32> %813, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %817 = shufflevector <1 x float> %759, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !52
+  %818 = shufflevector <4 x float> %816, <4 x float> poison, <2 x i32> <i32 0, i32 1>, !dbg !52
+  %819 = fmul <2 x float> %817, %818, !dbg !52
+  %820 = shufflevector <1 x float> %763, <1 x float> poison, <2 x i32> zeroinitializer, !dbg !53
+  %821 = fmul <2 x float> %820, %819, !dbg !53
+  %822 = shufflevector <4 x float> %816, <4 x float> poison, <2 x i32> <i32 2, i32 3>, !dbg !52
+  %823 = fmul <2 x float> %817, %822, !dbg !52
+  %824 = fmul <2 x float> %820, %823, !dbg !53
+  %825 = fadd <2 x float> %777, %821, !dbg !54
+  %826 = fadd <2 x float> %778, %824, !dbg !54
+  tail call void @llvm.amdgcn.s.waitcnt(i32 -49168), !dbg !36
+  tail call void @llvm.amdgcn.s.waitcnt(i32 49279), !dbg !36
+  tail call void @llvm.amdgcn.s.barrier(), !dbg !36
+  %827 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %87, !dbg !40
+  %828 = load <16 x i8>, ptr addrspace(3) %827, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %829 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 6144), i32 %86, !dbg !40
+  %830 = load <16 x i8>, ptr addrspace(3) %829, align 16, !dbg !40, !alias.scope !49, !noalias !37
+  %831 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %87, !dbg !36
+  %832 = load <16 x i8>, ptr addrspace(3) %831, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %833 = getelementptr inbounds nuw i8, ptr addrspace(3) getelementptr (i8, ptr addrspace(3) @global_smem, i32 2048), i32 %86, !dbg !36
+  %834 = load <16 x i8>, ptr addrspace(3) %833, align 16, !dbg !36, !alias.scope !49, !noalias !37
+  %835 = shufflevector <16 x i8> %834, <16 x i8> %832, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %836 = bitcast <32 x i8> %835 to <8 x i32>, !dbg !51
+  %837 = shufflevector <16 x i8> %830, <16 x i8> %828, <32 x i32> <i32 0, i32 1, i32 2, i32 3, i32 4, i32 5, i32 6, i32 7, i32 8, i32 9, i32 10, i32 11, i32 12, i32 13, i32 14, i32 15, i32 16, i32 17, i32 18, i32 19, i32 20, i32 21, i32 22, i32 23, i32 24, i32 25, i32 26, i32 27, i32 28, i32 29, i32 30, i32 31>, !dbg !51
+  %838 = bitcast <32 x i8> %837 to <8 x i32>, !dbg !51
+  %839 = tail call <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32> %838, <8 x i32> %836, <4 x float> zeroinitializer, i32 0, i32 0, i32 0, i32 0, i32 0, i32 0), !dbg !51
+  %840 = zext nneg i32 %84 to i64, !dbg !55
+  %841 = zext nneg i32 %98 to i64, !dbg !55
+  %842 = sext i32 %30 to i64, !dbg !56
+  %843 = or disjoint i64 %842, %840, !dbg !56
+  %844 = sext i32 %39 to i64, !dbg !57
+  %845 = or disjoint i64 %844, %841, !dbg !57
+  %846 = mul i32 %89, %11, !dbg !58
+  %847 = mul i32 %10, %.decomposed, !dbg !59
+  %848 = add i32 %847, %98, !dbg !60
+  %849 = add i32 %848, %39, !dbg !60
+  %850 = add i32 %849, %846, !dbg !61
+  %851 = sext i32 %5 to i64, !dbg !62
+  %852 = icmp slt i64 %843, %851, !dbg !62
+  %853 = sext i32 %6 to i64, !dbg !63
+  %854 = icmp slt i64 %845, %853, !dbg !63
+  %855 = and i1 %854, %852, !dbg !64
+  %856 = tail call ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) %2, i16 0, i64 2147483646, i32 159744), !dbg !65
+  %857 = shufflevector <2 x float> %825, <2 x float> %826, <4 x i32> <i32 0, i32 1, i32 2, i32 3>, !dbg !65
+  %858 = shufflevector <1 x float> %811, <1 x float> poison, <4 x i32> zeroinitializer, !dbg !65
+  %859 = shufflevector <1 x float> %807, <1 x float> poison, <4 x i32> zeroinitializer, !dbg !65
+  %860 = fmul <4 x float> %859, %839, !dbg !65
+  %861 = fmul <4 x float> %858, %860, !dbg !65
+  %862 = fadd <4 x float> %857, %861, !dbg !65
+  %863 = shl i32 %850, 2, !dbg !65
+  %864 = select i1 %855, i32 %863, i32 -2147483648, !dbg !65
+  tail call void @llvm.amdgcn.raw.ptr.buffer.store.v4f32(<4 x float> %862, ptr addrspace(8) %856, i32 %864, i32 0, i32 0), !dbg !65
+  br label %865, !dbg !17
+
+865:                                              ; preds = %.lr.ph, %16
+  ret void, !dbg !66
+}
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none)
+declare noundef i32 @llvm.amdgcn.workgroup.id.x() #1
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none)
+declare noundef range(i32 0, 1024) i32 @llvm.amdgcn.workitem.id.x() #1
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none)
+declare ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) readnone, i16, i64, i32) #1
+
+; Function Attrs: convergent mustprogress nocallback nofree nounwind willreturn memory(none)
+declare i32 @llvm.amdgcn.ds.bpermute(i32, i32) #2
+
+; Function Attrs: convergent mustprogress nocallback nofree nounwind willreturn memory(none)
+declare i64 @llvm.amdgcn.ballot.i64(i1) #2
+
+; Function Attrs: mustprogress nocallback nofree nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.amdgcn.raw.ptr.buffer.load.lds(ptr addrspace(8) readonly captures(none), ptr addrspace(3) writeonly captures(none), i32 immarg, i32, i32, i32 immarg, i32 immarg) #3
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: read)
+declare float @llvm.amdgcn.raw.ptr.buffer.load.f32(ptr addrspace(8) readonly captures(none), i32, i32, i32 immarg) #4
+
+; Function Attrs: mustprogress nocallback nofree nounwind willreturn
+declare void @llvm.amdgcn.s.waitcnt(i32 immarg) #5
+
+; Function Attrs: convergent mustprogress nocallback nofree nounwind willreturn
+declare void @llvm.amdgcn.s.barrier() #6
+
+; Function Attrs: convergent mustprogress nocallback nofree nosync nounwind willreturn memory(none)
+declare <4 x float> @llvm.amdgcn.mfma.scale.f32.16x16x128.f8f6f4.v8i32.v8i32(<8 x i32>, <8 x i32>, <4 x float>, i32 immarg, i32 immarg, i32 immarg, i32, i32 immarg, i32) #7
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: write)
+declare void @llvm.amdgcn.raw.ptr.buffer.store.v4f32(<4 x float>, ptr addrspace(8) writeonly captures(none), i32, i32, i32 immarg) #8
+
+attributes #0 = { nofree norecurse nounwind "amdgpu-agpr-alloc"="0" "amdgpu-flat-work-group-size"="1,64" "amdgpu-no-cluster-id-x" "amdgpu-no-cluster-id-y" "amdgpu-no-cluster-id-z" "amdgpu-no-completion-action" "amdgpu-no-default-queue" "amdgpu-no-dispatch-id" "amdgpu-no-dispatch-ptr" "amdgpu-no-flat-scratch-init" "amdgpu-no-heap-ptr" "amdgpu-no-hostcall-ptr" "amdgpu-no-implicitarg-ptr" "amdgpu-no-lds-kernel-id" "amdgpu-no-multigrid-sync-arg" "amdgpu-no-queue-ptr" "amdgpu-no-workgroup-id-x" "amdgpu-no-workgroup-id-y" "amdgpu-no-workgroup-id-z" "amdgpu-no-workitem-id-x" "amdgpu-no-workitem-id-y" "amdgpu-no-workitem-id-z" "amdgpu-waves-per-eu"="6, 6" "denormal-fp-math-f32"="ieee" "uniform-work-group-size"="true" }
+attributes #1 = { mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none) }
+attributes #2 = { convergent mustprogress nocallback nofree nounwind willreturn memory(none) }
+attributes #3 = { mustprogress nocallback nofree nounwind willreturn memory(argmem: readwrite) }
+attributes #4 = { mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: read) }
+attributes #5 = { mustprogress nocallback nofree nounwind willreturn }
+attributes #6 = { convergent mustprogress nocallback nofree nounwind willreturn }
+attributes #7 = { convergent mustprogress nocallback nofree nosync nounwind willreturn memory(none) }
+attributes #8 = { mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: write) }
+
+!llvm.dbg.cu = !{!0}
+!llvm.module.flags = !{!2, !3}
+
+!0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "triton", isOptimized: true, runtimeVersion: 0, emissionKind: LineTablesOnly)
+!1 = !DIFile(filename: "gemm_a8w8_blockscale.py", directory: "/sgl-workspace/aiter/aiter/ops/triton/_triton_kernels/gemm/basic")
+!2 = !{i32 2, !"Debug Info Version", i32 3}
+!3 = !{i32 1, !"amdhsa_code_object_version", i32 500}
+!4 = distinct !DISubprogram(name: "_gemm_a8w8_blockscale_kernel_GROUP_K_128_GROUP_N_128_BLOCK_SIZE_M_16_BLOCK_SIZE_N_16_BLOCK_SIZE_K_128_GROUP_SIZE_M_1_NUM_KSPLIT_8_SPLITK_BLOCK_SIZE_2048_EVEN_K_1_GRID_MN_448_cache_modifier_CG", linkageName: "_gemm_a8w8_blockscale_kernel_GROUP_K_128_GROUP_N_128_BLOCK_SIZE_M_16_BLOCK_SIZE_N_16_BLOCK_SIZE_K_128_GROUP_SIZE_M_1_NUM_KSPLIT_8_SPLITK_BLOCK_SIZE_2048_EVEN_K_1_GRID_MN_448_cache_modifier_CG", scope: !1, file: !1, line: 36, type: !5, scopeLine: 36, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !0)
+!5 = !DISubroutineType(cc: DW_CC_normal, types: !6)
+!6 = !{null, !7, !7, !9, !9, !9, !11, !11, !11, !11, !11, !11, !11, !11, !11, !7, !7}
+!7 = !DIDerivedType(tag: DW_TAG_pointer_type, name: "pointer", baseType: !8, size: 64, dwarfAddressSpace: 1)
+!8 = !DIBasicType(name: "unknown_type", encoding: DW_ATE_signed)
+!9 = !DIDerivedType(tag: DW_TAG_pointer_type, name: "pointer", baseType: !10, size: 64, dwarfAddressSpace: 1)
+!10 = !DIBasicType(name: "float", size: 32, encoding: DW_ATE_float)
+!11 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!12 = !DILocation(line: 110, column: 32, scope: !4)
+!13 = !DILocation(line: 112, column: 25, scope: !4)
+!14 = !DILocation(line: 111, column: 26, scope: !4)
+!15 = !DILocation(line: 128, column: 16, scope: !4)
+!16 = !DILocation(line: 128, column: 37, scope: !4)
+!17 = !DILocation(line: 128, column: 7, scope: !4)
+!18 = !DILocation(line: 43, column: 17, scope: !19, inlinedAt: !21)
+!19 = distinct !DILexicalBlockFile(scope: !4, file: !20, discriminator: 0)
+!20 = !DIFile(filename: "standard.py", directory: "/sgl-workspace/triton-custom/python/triton/language")
+!21 = !DILocation(line: 114, column: 27, scope: !22)
+!22 = distinct !DILexicalBlockFile(scope: !4, file: !1, discriminator: 0)
+!23 = !DILocation(line: 43, column: 30, scope: !19, inlinedAt: !21)
+!24 = !DILocation(line: 121, column: 23, scope: !4)
+!25 = !DILocation(line: 122, column: 22, scope: !4)
+!26 = !DILocation(line: 135, column: 30, scope: !4)
+!27 = !DILocation(line: 137, column: 27, scope: !4)
+!28 = !DILocation(line: 137, column: 55, scope: !4)
+!29 = !DILocation(line: 137, column: 42, scope: !4)
+!30 = !DILocation(line: 137, column: 72, scope: !4)
+!31 = !DILocation(line: 138, column: 27, scope: !4)
+!32 = !DILocation(line: 138, column: 42, scope: !4)
+!33 = !DILocation(line: 138, column: 72, scope: !4)
+!34 = !DILocation(line: 140, column: 12, scope: !4)
+!35 = !DILocation(line: 143, column: 12, scope: !4)
+!36 = !DILocation(line: 168, column: 28, scope: !4)
+!37 = !{!38}
+!38 = !{!"amdg.AsyncCopies", !39, !"Scope containing all AsyncCopyGlobalToLocal and BufferLoadToLocal ops"}
+!39 = !{!"amdg.AsyncOps", !"Domain to hold alias scopes to specify aliasing information between AsyncCopyGlobalToLocal, BufferLoadToLocal and LocalLoad ops"}
+!40 = !DILocation(line: 169, column: 28, scope: !4)
+!41 = !DILocation(line: 178, column: 30, scope: !4)
+!42 = !DILocation(line: 149, column: 54, scope: !4)
+!43 = !DILocation(line: 147, column: 54, scope: !4)
+!44 = !DILocation(line: 179, column: 30, scope: !4)
+!45 = !DILocation(line: 151, column: 36, scope: !4)
+!46 = !DILocation(line: 155, column: 14, scope: !4)
+!47 = !DILocation(line: 185, column: 22, scope: !4)
+!48 = !DILocation(line: 186, column: 22, scope: !4)
+!49 = !{!50}
+!50 = !{!"amdg.LocalLoads", !39, !"Scope containing all LocalLoad ops"}
+!51 = !DILocation(line: 182, column: 37, scope: !4)
+!52 = !DILocation(line: 182, column: 42, scope: !4)
+!53 = !DILocation(line: 182, column: 61, scope: !4)
+!54 = !DILocation(line: 182, column: 27, scope: !4)
+!55 = !DILocation(line: 194, column: 71, scope: !4)
+!56 = !DILocation(line: 194, column: 41, scope: !4)
+!57 = !DILocation(line: 195, column: 41, scope: !4)
+!58 = !DILocation(line: 198, column: 14, scope: !4)
+!59 = !DILocation(line: 200, column: 22, scope: !4)
+!60 = !DILocation(line: 199, column: 14, scope: !4)
+!61 = !DILocation(line: 200, column: 14, scope: !4)
+!62 = !DILocation(line: 202, column: 37, scope: !4)
+!63 = !DILocation(line: 202, column: 62, scope: !4)
+!64 = !DILocation(line: 202, column: 43, scope: !4)
+!65 = !DILocation(line: 203, column: 25, scope: !4)
+!66 = !DILocation(line: 128, column: 4, scope: !4)

@@ -1,0 +1,177 @@
+; ModuleID = 'LLVMDialectModule'
+source_filename = "LLVMDialectModule"
+target datalayout = "e-m:e-p:64:64-p1:64:64-p2:32:32-p3:32:32-p4:64:64-p5:32:32-p6:32:32-p7:160:256:256:32-p8:128:128:128:48-p9:192:256:256:32-i64:64-v16:16-v24:32-v32:32-v48:64-v96:128-v192:256-v256:256-v512:512-v1024:1024-v2048:2048-n32:64-S32-A5-G1-ni:7:8:9"
+target triple = "amdgcn-amd-amdhsa"
+
+; Function Attrs: mustprogress nocallback nocreateundeforpoison nofree nosync nounwind speculatable willreturn memory(none)
+declare !dbg !4 float @llvm.exp2.f32(float) #0
+
+; Function Attrs: mustprogress nofree norecurse nounwind willreturn memory(argmem: readwrite)
+define amdgpu_kernel void @_hash_topk_triton_kernel(ptr addrspace(1) inreg readonly captures(none) %0, ptr addrspace(1) inreg readonly captures(none) %1, ptr addrspace(1) inreg readonly captures(none) %2, ptr addrspace(1) inreg writeonly captures(none) %3, ptr addrspace(1) inreg writeonly captures(none) %4, float inreg %5, ptr addrspace(1) inreg readnone captures(none) %6, ptr addrspace(1) inreg readnone captures(none) %7) local_unnamed_addr #1 !dbg !8 {
+  %9 = tail call i32 @llvm.amdgcn.workgroup.id.x(), !dbg !18
+  %10 = sext i32 %9 to i64, !dbg !19
+  %11 = getelementptr i64, ptr addrspace(1) %1, i64 %10, !dbg !19
+  %12 = load <2 x i32>, ptr addrspace(1) %11, align 8, !dbg !19
+  %13 = tail call i32 @llvm.amdgcn.workitem.id.x(), !dbg !20
+  %14 = and i32 %13, 7, !dbg !20
+  %15 = icmp samesign ult i32 %14, 6, !dbg !21
+  %16 = icmp samesign ugt i32 %14, 5, !dbg !22
+  %17 = extractelement <2 x i32> %12, i64 0, !dbg !23
+  %18 = mul i32 %17, 6, !dbg !23
+  %19 = add i32 %18, %14, !dbg !24
+  %20 = tail call ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) %2, i16 0, i64 2147483646, i32 159744), !dbg !25
+  %21 = shl i32 %19, 2, !dbg !25
+  %22 = select i1 %15, i32 %21, i32 -2147483648, !dbg !25
+  %23 = tail call i32 @llvm.amdgcn.raw.ptr.buffer.load.i32(ptr addrspace(8) %20, i32 %22, i32 0, i32 0), !dbg !25
+  %24 = mul i32 %9, 384, !dbg !26
+  %25 = add i32 %23, %24, !dbg !27
+  %26 = tail call ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) %0, i16 0, i64 2147483646, i32 159744), !dbg !28
+  %27 = shl i32 %25, 1, !dbg !28
+  %28 = select i1 %15, i32 %27, i32 -2147483648, !dbg !28
+  %29 = tail call i16 @llvm.amdgcn.raw.ptr.buffer.load.i16(ptr addrspace(8) %26, i32 %28, i32 0, i32 0), !dbg !28
+  %30 = zext i16 %29 to i32, !dbg !29
+  %31 = shl nuw i32 %30, 16, !dbg !29
+  %32 = bitcast i32 %31 to float, !dbg !29
+  %33 = tail call float @llvm.maxnum.f32(float %32, float 0.000000e+00), !dbg !30
+  %34 = tail call float @llvm.fabs.f32(float %32), !dbg !31
+  %35 = fsub float 0.000000e+00, %34, !dbg !32
+  %36 = fmul float %35, 0x3FF7154760000000, !dbg !33
+  %37 = tail call float @llvm.exp2.f32(float %36), !dbg !33
+  %38 = fadd float %37, 1.000000e+00, !dbg !34
+  %39 = tail call float @llvm.log.f32(float %38), !dbg !35
+  %40 = fadd float %33, %39, !dbg !36
+  %41 = tail call float @llvm.amdgcn.sqrt.f32(float %40), !dbg !37
+  %42 = select i1 %15, float %41, float 0.000000e+00, !dbg !38
+  %43 = bitcast float %42 to i32, !dbg !39
+  %44 = tail call i32 @llvm.amdgcn.update.dpp.i32(i32 %43, i32 %43, i32 276, i32 15, i32 10, i1 false), !dbg !39
+  %45 = tail call i32 @llvm.amdgcn.update.dpp.i32(i32 %44, i32 %43, i32 260, i32 15, i32 5, i1 false), !dbg !39
+  %46 = bitcast i32 %45 to float, !dbg !39
+  %47 = fadd float %42, %46, !dbg !44
+  %48 = bitcast float %47 to i32, !dbg !39
+  %49 = tail call i32 @llvm.amdgcn.update.dpp.i32(i32 %48, i32 %48, i32 78, i32 15, i32 15, i1 false), !dbg !39
+  %50 = bitcast i32 %49 to float, !dbg !39
+  %51 = fadd float %47, %50, !dbg !44
+  %52 = bitcast float %51 to i32, !dbg !39
+  %53 = tail call i32 @llvm.amdgcn.update.dpp.i32(i32 %52, i32 %52, i32 177, i32 15, i32 15, i1 false), !dbg !39
+  %54 = bitcast i32 %53 to float, !dbg !39
+  %55 = fadd float %51, %54, !dbg !44
+  %56 = fdiv float 1.000000e+00, %5, !dbg !45
+  %57 = fdiv float %42, %55, !dbg !46
+  %58 = select i1 %16, float %56, float %57, !dbg !47
+  %59 = add nuw nsw i32 %14, 378, !dbg !48
+  %60 = select i1 %16, i32 %59, i32 %23, !dbg !49
+  %61 = mul i32 %9, 6, !dbg !50
+  %62 = add i32 %61, %14, !dbg !51
+  %63 = tail call ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) %3, i16 0, i64 2147483646, i32 159744), !dbg !52
+  %64 = and i32 %13, 56, !dbg !52
+  %65 = icmp eq i32 %64, 0, !dbg !52
+  %66 = and i1 %65, %15, !dbg !52
+  %67 = shl i32 %62, 2, !dbg !52
+  %68 = select i1 %66, i32 %67, i32 -2147483648, !dbg !52
+  tail call void @llvm.amdgcn.raw.ptr.buffer.store.f32(float %58, ptr addrspace(8) %63, i32 %68, i32 0, i32 0), !dbg !52
+  %69 = tail call ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) %4, i16 0, i64 2147483646, i32 159744), !dbg !53
+  tail call void @llvm.amdgcn.raw.ptr.buffer.store.i32(i32 %60, ptr addrspace(8) %69, i32 %68, i32 0, i32 0), !dbg !53
+  ret void, !dbg !54
+}
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none)
+declare noundef i32 @llvm.amdgcn.workgroup.id.x() #2
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none)
+declare noundef range(i32 0, 1024) i32 @llvm.amdgcn.workitem.id.x() #2
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none)
+declare ptr addrspace(8) @llvm.amdgcn.make.buffer.rsrc.p8.p1(ptr addrspace(1) readnone, i16, i64, i32) #2
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: read)
+declare i32 @llvm.amdgcn.raw.ptr.buffer.load.i32(ptr addrspace(8) readonly captures(none), i32, i32, i32 immarg) #3
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: read)
+declare i16 @llvm.amdgcn.raw.ptr.buffer.load.i16(ptr addrspace(8) readonly captures(none), i32, i32, i32 immarg) #3
+
+; Function Attrs: mustprogress nocallback nocreateundeforpoison nofree nosync nounwind speculatable willreturn memory(none)
+declare float @llvm.maxnum.f32(float, float) #0
+
+; Function Attrs: mustprogress nocallback nocreateundeforpoison nofree nosync nounwind speculatable willreturn memory(none)
+declare float @llvm.fabs.f32(float) #0
+
+; Function Attrs: mustprogress nocallback nocreateundeforpoison nofree nosync nounwind speculatable willreturn memory(none)
+declare float @llvm.log.f32(float) #0
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none)
+declare float @llvm.amdgcn.sqrt.f32(float) #2
+
+; Function Attrs: convergent mustprogress nocallback nofree nounwind willreturn memory(none)
+declare i32 @llvm.amdgcn.update.dpp.i32(i32, i32, i32 immarg, i32 immarg, i32 immarg, i1 immarg) #4
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: write)
+declare void @llvm.amdgcn.raw.ptr.buffer.store.f32(float, ptr addrspace(8) writeonly captures(none), i32, i32, i32 immarg) #5
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: write)
+declare void @llvm.amdgcn.raw.ptr.buffer.store.i32(i32, ptr addrspace(8) writeonly captures(none), i32, i32, i32 immarg) #5
+
+attributes #0 = { mustprogress nocallback nocreateundeforpoison nofree nosync nounwind speculatable willreturn memory(none) }
+attributes #1 = { mustprogress nofree norecurse nounwind willreturn memory(argmem: readwrite) "amdgpu-agpr-alloc"="0" "amdgpu-flat-work-group-size"="1,64" "amdgpu-no-cluster-id-x" "amdgpu-no-cluster-id-y" "amdgpu-no-cluster-id-z" "amdgpu-no-completion-action" "amdgpu-no-default-queue" "amdgpu-no-dispatch-id" "amdgpu-no-dispatch-ptr" "amdgpu-no-flat-scratch-init" "amdgpu-no-heap-ptr" "amdgpu-no-hostcall-ptr" "amdgpu-no-implicitarg-ptr" "amdgpu-no-lds-kernel-id" "amdgpu-no-multigrid-sync-arg" "amdgpu-no-queue-ptr" "amdgpu-no-workgroup-id-x" "amdgpu-no-workgroup-id-y" "amdgpu-no-workgroup-id-z" "amdgpu-no-workitem-id-x" "amdgpu-no-workitem-id-y" "amdgpu-no-workitem-id-z" "amdgpu-waves-per-eu"="0, 0" "denormal-fp-math-f32"="ieee" "uniform-work-group-size"="true" }
+attributes #2 = { mustprogress nocallback nofree nosync nounwind speculatable willreturn memory(none) }
+attributes #3 = { mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: read) }
+attributes #4 = { convergent mustprogress nocallback nofree nounwind willreturn memory(none) }
+attributes #5 = { mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: write) }
+
+!llvm.dbg.cu = !{!0}
+!llvm.module.flags = !{!2, !3}
+
+!0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "triton", isOptimized: true, runtimeVersion: 0, emissionKind: LineTablesOnly)
+!1 = !DIFile(filename: "hash_topk.py", directory: "/sgl-workspace/sglang/python/sglang/jit_kernel/triton")
+!2 = !{i32 2, !"Debug Info Version", i32 3}
+!3 = !{i32 1, !"amdhsa_code_object_version", i32 500}
+!4 = !DISubprogram(name: "llvm.exp2.f32", linkageName: "llvm.exp2.f32", scope: !1, file: !1, line: 46, type: !5, scopeLine: 46, spFlags: DISPFlagOptimized)
+!5 = !DISubroutineType(cc: DW_CC_normal, types: !6)
+!6 = !{!7, !7}
+!7 = !DIBasicType(name: "float", size: 32, encoding: DW_ATE_float)
+!8 = distinct !DISubprogram(name: "_hash_topk_triton_kernel", linkageName: "_hash_topk_triton_kernel", scope: !1, file: !1, line: 15, type: !9, scopeLine: 15, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !0)
+!9 = !DISubroutineType(cc: DW_CC_normal, types: !10)
+!10 = !{null, !11, !13, !15, !17, !15, !7, !11, !11}
+!11 = !DIDerivedType(tag: DW_TAG_pointer_type, name: "pointer", baseType: !12, size: 64, dwarfAddressSpace: 1)
+!12 = !DIBasicType(name: "unknown_type", encoding: DW_ATE_signed)
+!13 = !DIDerivedType(tag: DW_TAG_pointer_type, name: "pointer", baseType: !14, size: 64, dwarfAddressSpace: 1)
+!14 = !DIBasicType(name: "int", size: 64, encoding: DW_ATE_signed)
+!15 = !DIDerivedType(tag: DW_TAG_pointer_type, name: "pointer", baseType: !16, size: 64, dwarfAddressSpace: 1)
+!16 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!17 = !DIDerivedType(tag: DW_TAG_pointer_type, name: "pointer", baseType: !7, size: 64, dwarfAddressSpace: 1)
+!18 = !DILocation(line: 27, column: 30, scope: !8)
+!19 = !DILocation(line: 28, column: 23, scope: !8)
+!20 = !DILocation(line: 30, column: 25, scope: !8)
+!21 = !DILocation(line: 31, column: 26, scope: !8)
+!22 = !DILocation(line: 33, column: 25, scope: !8)
+!23 = !DILocation(line: 36, column: 22, scope: !8)
+!24 = !DILocation(line: 36, column: 47, scope: !8)
+!25 = !DILocation(line: 36, column: 8, scope: !8)
+!26 = !DILocation(line: 41, column: 40, scope: !8)
+!27 = !DILocation(line: 41, column: 61, scope: !8)
+!28 = !DILocation(line: 41, column: 8, scope: !8)
+!29 = !DILocation(line: 44, column: 9, scope: !8)
+!30 = !DILocation(line: 46, column: 33, scope: !8)
+!31 = !DILocation(line: 46, column: 68, scope: !8)
+!32 = !DILocation(line: 46, column: 61, scope: !8)
+!33 = !DILocation(line: 46, column: 60, scope: !8)
+!34 = !DILocation(line: 46, column: 53, scope: !8)
+!35 = !DILocation(line: 46, column: 47, scope: !8)
+!36 = !DILocation(line: 46, column: 40, scope: !8)
+!37 = !DILocation(line: 47, column: 21, scope: !8)
+!38 = !DILocation(line: 48, column: 43, scope: !8)
+!39 = !DILocation(line: 293, column: 36, scope: !40, inlinedAt: !42)
+!40 = distinct !DILexicalBlockFile(scope: !8, file: !41, discriminator: 0)
+!41 = !DIFile(filename: "standard.py", directory: "/sgl-workspace/triton-custom/python/triton/language")
+!42 = !DILocation(line: 49, column: 24, scope: !43)
+!43 = distinct !DILexicalBlockFile(scope: !8, file: !1, discriminator: 0)
+!44 = !DILocation(line: 263, column: 15, scope: !40, inlinedAt: !39)
+!45 = !DILocation(line: 51, column: 26, scope: !8)
+!46 = !DILocation(line: 52, column: 63, scope: !8)
+!47 = !DILocation(line: 52, column: 54, scope: !8)
+!48 = !DILocation(line: 53, column: 38, scope: !8)
+!49 = !DILocation(line: 54, column: 46, scope: !8)
+!50 = !DILocation(line: 56, column: 26, scope: !8)
+!51 = !DILocation(line: 57, column: 32, scope: !8)
+!52 = !DILocation(line: 57, column: 41, scope: !8)
+!53 = !DILocation(line: 58, column: 37, scope: !8)
+!54 = !DILocation(line: 58, column: 4, scope: !8)

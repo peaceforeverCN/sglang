@@ -874,6 +874,24 @@ class Fp8LinearMethod(LinearMethodBase):
         )
 
 
+########### opforge aiter adapter ###########
+try:
+    from opforge.adapter.sglang import (
+        fp8_fused_moe_aiter_apply,
+        fp8_fused_moe_aiter_process_weights,
+    )
+except ImportError:
+
+    def fp8_fused_moe_aiter_process_weights(fn):
+        return fn
+
+    def fp8_fused_moe_aiter_apply(fn):
+        return fn
+
+
+########### opforge aiter adapter ###########
+
+
 class Fp8MoEMethod(FusedMoEMethodBase):
     """MoE method for FP8.
     Supports loading FP8 checkpoints with static weight scale and
@@ -1231,10 +1249,12 @@ class Fp8MoEMethod(FusedMoEMethodBase):
             gu_intv = envs.SGLANG_USE_AITER_MOE_GU_ITLV.get()
             fp4_weight_dtype = _require_fp4_dtype()
 
-            # CK FP4 MoE kernel requires K_packed divisible by 128
-            # (i.e., K_logical divisible by 256).
-            # Pad intermediate_size_per_partition if needed.
-            fp4_k_align = 256
+
+            # CK FP4 MoE kernel K-dim alignment (logical elements). Defaults to
+            # 256 (K_packed divisible by 128, i.e. K_logical divisible by 256).
+            # Lower to 128 via SGLANG_OPT_FP4_MOE_K_ALIGN on aiter builds that
+            # accept K_logical % 128 == 0, to avoid padding e.g. 384 -> 512.
+            fp4_k_align = envs.SGLANG_OPT_FP4_MOE_K_ALIGN.get()
             E, w13_N, w13_K_packed = layer.w13_weight.shape
             _, w2_N, w2_K_packed = layer.w2_weight.shape
             inter_per_part = w13_N // 2
@@ -1633,6 +1653,7 @@ class Fp8MoEMethod(FusedMoEMethodBase):
 
             align_mxfp8_moe_weights_for_flashinfer_trtllm(layer)
 
+    @fp8_fused_moe_aiter_process_weights
     def process_weights_after_loading(self, layer: Module) -> None:
         if _is_hip and _use_hip_int4:
             self.process_weights_hip_int4(layer)
@@ -1889,6 +1910,7 @@ class Fp8MoEMethod(FusedMoEMethodBase):
             block_shape=self.quant_config.weight_block_size,
         )
 
+    @fp8_fused_moe_aiter_apply
     def apply(
         self,
         layer: torch.nn.Module,

@@ -1,0 +1,820 @@
+	.amdgcn_target "amdgcn-amd-amdhsa--gfx950"
+	.amdhsa_code_object_version 5
+	.text
+	.globl	_fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1 ; -- Begin function _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1
+	.p2align	8
+	.type	_fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1,@function
+_fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1: ; @_fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1
+.Lfunc_begin0:
+	.cfi_sections .debug_frame
+	.cfi_startproc
+; %bb.1:
+	.file	1 "/sgl-workspace/aiter/aiter/ops/triton/_triton_kernels/fusions" "fused_clamp_act_mul.py"
+	.loc	1 36 0 prologue_end             ; fused_clamp_act_mul.py:36:0
+	s_load_dwordx2 s[2:3], s[0:1], 0x0
+	s_load_dwordx8 s[4:11], s[0:1], 0x8
+	s_load_dwordx4 s[12:15], s[0:1], 0x28
+	s_waitcnt lgkmcnt(0)
+	s_branch .LBB0_0
+	.loc	1 0 0 is_stmt 0                 ; :0:0
+.Ltmp0:
+	.p2align	8
+; %bb.2:
+.LBB0_0:
+	s_mov_b64 s[8:9], s[6:7]
+	s_mov_b64 s[20:21], s[2:3]
+.Ltmp1:
+	.loc	1 36 0 is_stmt 1                ; fused_clamp_act_mul.py:36
+	s_setreg_imm32_b32 hwreg(HW_REG_MODE, 23, 1), 1
+	.loc	1 66 26                         ; fused_clamp_act_mul.py:66:26
+	v_lshlrev_b32_e32 v1, 3, v0
+	.loc	1 70 26                         ; fused_clamp_act_mul.py:70:26
+	s_mul_i32 s11, s11, s16
+	.loc	1 70 41 is_stmt 0               ; fused_clamp_act_mul.py:70:41
+	v_add_u32_e32 v6, s11, v1
+	.loc	1 70 8                          ; fused_clamp_act_mul.py:70:8
+	v_lshlrev_b32_e32 v2, 1, v6
+	v_bfrev_b32_e32 v10, 1
+	.loc	1 67 20 is_stmt 1               ; fused_clamp_act_mul.py:67:20
+	v_cmp_gt_i32_e64 s[0:1], s10, v1
+	.loc	1 76 8                          ; fused_clamp_act_mul.py:76:8
+	v_add_lshl_u32 v6, v6, s10, 1
+	.loc	1 70 8                          ; fused_clamp_act_mul.py:70:8
+	s_and_b32 s21, s21, 0xffff
+	s_mov_b32 s23, 0x27000
+	s_mov_b32 s22, 0x7ffffffe
+	v_cndmask_b32_e64 v2, v10, v2, s[0:1]
+	.loc	1 76 8                          ; fused_clamp_act_mul.py:76:8
+	v_cndmask_b32_e64 v6, v10, v6, s[0:1]
+	.loc	1 70 8                          ; fused_clamp_act_mul.py:70:8
+	buffer_load_dwordx4 v[2:5], v2, s[20:23], 0 offen sc0 nt
+	.loc	1 83 41                         ; fused_clamp_act_mul.py:83:41
+	v_max_f32_e64 v11, s15, s15
+	.loc	1 76 8                          ; fused_clamp_act_mul.py:76:8
+	buffer_load_dwordx4 v[6:9], v6, s[20:23], 0 offen sc0 nt
+	s_mov_b32 s2, 0xbfb8aa3b
+	s_mov_b32 s6, 0x43e00000
+	.loc	1 132 30                        ; fused_clamp_act_mul.py:132:30
+	s_mul_i32 s12, s12, s16
+	.loc	1 132 45 is_stmt 0              ; fused_clamp_act_mul.py:132:45
+	v_add_u32_e32 v1, s12, v1
+	.loc	1 133 12 is_stmt 1              ; fused_clamp_act_mul.py:133:12
+	s_and_b32 s5, s5, 0xffff
+	s_mov_b32 s7, s23
+	v_cndmask_b32_e64 v1, v10, v1, s[0:1]
+.Ltmp2:
+	.file	2 "/sgl-workspace/triton-custom/python/triton/language" "standard.py"
+	.loc	2 43 17                         ; standard.py:43:17 @[ fused_clamp_act_mul.py:137:33 ]
+	s_add_i32 s0, s10, 0x7f
+	.loc	2 43 30 is_stmt 0               ; standard.py:43:30 @[ fused_clamp_act_mul.py:137:33 ]
+	s_ashr_i32 s1, s0, 31
+	s_lshr_b32 s1, s1, 25
+	s_add_i32 s0, s0, s1
+	s_ashr_i32 s0, s0, 7
+.Ltmp3:
+	.loc	1 165 16 is_stmt 1              ; fused_clamp_act_mul.py:165:16
+	s_and_b32 s9, s9, 0xffff
+	s_mov_b32 s10, s22
+	s_mov_b32 s11, s23
+	.loc	1 74 9                          ; fused_clamp_act_mul.py:74:9
+	s_waitcnt vmcnt(1)
+	v_lshlrev_b32_e32 v12, 16, v2
+	v_and_b32_e32 v2, 0xffff0000, v2
+	.loc	1 80 9                          ; fused_clamp_act_mul.py:80:9
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b32_e32 v16, 16, v6
+	v_and_b32_e32 v6, 0xffff0000, v6
+	v_lshlrev_b32_e32 v17, 16, v7
+	v_and_b32_e32 v7, 0xffff0000, v7
+	v_lshlrev_b32_e32 v18, 16, v8
+	v_and_b32_e32 v8, 0xffff0000, v8
+	v_lshlrev_b32_e32 v19, 16, v9
+	v_and_b32_e32 v9, 0xffff0000, v9
+	.loc	1 74 9                          ; fused_clamp_act_mul.py:74:9
+	v_lshlrev_b32_e32 v13, 16, v3
+	v_and_b32_e32 v3, 0xffff0000, v3
+	v_lshlrev_b32_e32 v14, 16, v4
+	v_and_b32_e32 v4, 0xffff0000, v4
+	v_lshlrev_b32_e32 v15, 16, v5
+	v_and_b32_e32 v5, 0xffff0000, v5
+	.loc	1 83 41                         ; fused_clamp_act_mul.py:83:41
+	v_max_f32_e32 v16, v16, v16
+	v_max_f32_e32 v6, v6, v6
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v7, v7, v7
+	v_max_f32_e32 v18, v18, v18
+	v_max_f32_e32 v8, v8, v8
+	v_max_f32_e32 v19, v19, v19
+	v_max_f32_e32 v9, v9, v9
+	.loc	1 84 32                         ; fused_clamp_act_mul.py:84:32
+	v_max_f32_e32 v12, v12, v12
+	v_max_f32_e32 v2, v2, v2
+	v_max_f32_e32 v13, v13, v13
+	v_max_f32_e32 v3, v3, v3
+	v_max_f32_e32 v14, v14, v14
+	v_max_f32_e32 v4, v4, v4
+	v_max_f32_e32 v15, v15, v15
+	v_max_f32_e32 v5, v5, v5
+	.loc	1 83 41                         ; fused_clamp_act_mul.py:83:41
+	v_max_f32_e64 v16, v16, -s15
+	v_max_f32_e64 v6, v6, -s15
+	v_max_f32_e64 v17, v17, -s15
+	v_max_f32_e64 v7, v7, -s15
+	v_max_f32_e64 v18, v18, -s15
+	v_max_f32_e64 v8, v8, -s15
+	v_max_f32_e64 v19, v19, -s15
+	v_max_f32_e64 v9, v9, -s15
+	.loc	1 84 32                         ; fused_clamp_act_mul.py:84:32
+	v_min_f32_e32 v12, v12, v11
+	v_min_f32_e32 v2, v2, v11
+	v_min_f32_e32 v13, v13, v11
+	v_min_f32_e32 v3, v3, v11
+	v_min_f32_e32 v14, v14, v11
+	v_min_f32_e32 v4, v4, v11
+	v_min_f32_e32 v15, v15, v11
+	v_min_f32_e32 v5, v5, v11
+	.loc	1 83 41                         ; fused_clamp_act_mul.py:83:41
+	v_min_f32_e32 v16, v16, v11
+	v_min_f32_e32 v6, v6, v11
+	v_min_f32_e32 v17, v17, v11
+	v_min_f32_e32 v7, v7, v11
+	v_min_f32_e32 v18, v18, v11
+	v_min_f32_e32 v8, v8, v11
+	v_min_f32_e32 v19, v19, v11
+	v_min_f32_e32 v9, v9, v11
+.Ltmp4:
+	.file	3 "/sgl-workspace/aiter/aiter/ops/triton/_triton_kernels" "activation.py"
+	.loc	3 9 32                          ; activation.py:9:32 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fma_f32 v11, v12, s2, 0
+	.loc	3 9 30 is_stmt 0                ; activation.py:9:30 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_exp_f32_e32 v11, v11
+	.loc	3 9 32                          ; activation.py:9:32 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fma_f32 v20, v2, s2, 0
+	v_fma_f32 v21, v13, s2, 0
+	v_fma_f32 v22, v3, s2, 0
+	.loc	3 9 22                          ; activation.py:9:22 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_add_f32_e32 v11, 1.0, v11
+	.loc	3 9 32                          ; activation.py:9:32 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fma_f32 v23, v14, s2, 0
+	v_fma_f32 v24, v4, s2, 0
+	v_fma_f32 v25, v15, s2, 0
+	v_fma_f32 v26, v5, s2, 0
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_div_scale_f32 v27, s[2:3], v11, v11, v12
+	v_rcp_f32_e32 v28, v27
+	.loc	3 9 30                          ; activation.py:9:30 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_exp_f32_e32 v20, v20
+	v_exp_f32_e32 v21, v21
+	v_exp_f32_e32 v22, v22
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fma_f32 v29, -v27, v28, 1.0
+	v_fmac_f32_e32 v28, v29, v28
+	v_div_scale_f32 v29, vcc, v12, v11, v12
+	v_mul_f32_e32 v30, v29, v28
+	v_fma_f32 v31, -v27, v30, v29
+	.loc	3 9 22                          ; activation.py:9:22 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_add_f32_e32 v20, 1.0, v20
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fmac_f32_e32 v30, v31, v28
+	v_fma_f32 v27, -v27, v30, v29
+	v_div_scale_f32 v29, s[2:3], v20, v20, v2
+	v_rcp_f32_e32 v31, v29
+	v_div_fmas_f32 v27, v27, v28, v30
+	v_div_fixup_f32 v11, v27, v11, v12
+	.loc	3 9 22                          ; activation.py:9:22 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_add_f32_e32 v21, 1.0, v21
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fma_f32 v12, -v29, v31, 1.0
+	v_fmac_f32_e32 v31, v12, v31
+	v_div_scale_f32 v12, vcc, v2, v20, v2
+	v_mul_f32_e32 v27, v12, v31
+	v_fma_f32 v28, -v29, v27, v12
+	v_fmac_f32_e32 v27, v28, v31
+	v_div_scale_f32 v28, s[2:3], v21, v21, v13
+	v_fma_f32 v12, -v29, v27, v12
+	v_rcp_f32_e32 v29, v28
+	v_div_fmas_f32 v12, v12, v31, v27
+	v_div_fixup_f32 v2, v12, v20, v2
+	.loc	3 9 22                          ; activation.py:9:22 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_add_f32_e32 v22, 1.0, v22
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fma_f32 v12, -v28, v29, 1.0
+	v_fmac_f32_e32 v29, v12, v29
+	v_div_scale_f32 v12, vcc, v13, v21, v13
+	v_mul_f32_e32 v20, v12, v29
+	v_fma_f32 v27, -v28, v20, v12
+	v_fmac_f32_e32 v20, v27, v29
+	v_div_scale_f32 v27, s[2:3], v22, v22, v3
+	v_fma_f32 v12, -v28, v20, v12
+	v_rcp_f32_e32 v28, v27
+	.loc	3 9 30                          ; activation.py:9:30 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_exp_f32_e32 v23, v23
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_div_fmas_f32 v12, v12, v29, v20
+	v_div_fixup_f32 v12, v12, v21, v13
+	v_fma_f32 v13, -v27, v28, 1.0
+	v_fmac_f32_e32 v28, v13, v28
+	v_div_scale_f32 v13, vcc, v3, v22, v3
+	v_mul_f32_e32 v20, v13, v28
+	.loc	3 9 22                          ; activation.py:9:22 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_add_f32_e32 v23, 1.0, v23
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fma_f32 v21, -v27, v20, v13
+	v_fmac_f32_e32 v20, v21, v28
+	v_div_scale_f32 v21, s[2:3], v23, v23, v14
+	v_fma_f32 v13, -v27, v20, v13
+	v_rcp_f32_e32 v27, v21
+	v_div_fmas_f32 v13, v13, v28, v20
+	.loc	3 9 30                          ; activation.py:9:30 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_exp_f32_e32 v24, v24
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_div_fixup_f32 v3, v13, v22, v3
+	v_fma_f32 v13, -v21, v27, 1.0
+	v_fmac_f32_e32 v27, v13, v27
+	v_div_scale_f32 v13, vcc, v14, v23, v14
+	v_mul_f32_e32 v20, v13, v27
+	v_fma_f32 v22, -v21, v20, v13
+	.loc	3 9 22                          ; activation.py:9:22 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_add_f32_e32 v24, 1.0, v24
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fmac_f32_e32 v20, v22, v27
+	v_fma_f32 v13, -v21, v20, v13
+	v_div_scale_f32 v21, s[2:3], v24, v24, v4
+	v_rcp_f32_e32 v22, v21
+	v_div_fmas_f32 v13, v13, v27, v20
+	.loc	3 9 30                          ; activation.py:9:30 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_exp_f32_e32 v25, v25
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_div_fixup_f32 v13, v13, v23, v14
+	v_fma_f32 v14, -v21, v22, 1.0
+	v_fmac_f32_e32 v22, v14, v22
+	v_div_scale_f32 v14, vcc, v4, v24, v4
+	v_mul_f32_e32 v20, v14, v22
+	v_fma_f32 v23, -v21, v20, v14
+	.loc	3 9 22                          ; activation.py:9:22 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_add_f32_e32 v25, 1.0, v25
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fmac_f32_e32 v20, v23, v22
+	v_fma_f32 v14, -v21, v20, v14
+	v_div_scale_f32 v21, s[2:3], v25, v25, v15
+	v_rcp_f32_e32 v23, v21
+	v_div_fmas_f32 v14, v14, v22, v20
+	.loc	3 9 30                          ; activation.py:9:30 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_exp_f32_e32 v26, v26
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_div_fixup_f32 v4, v14, v24, v4
+	v_fma_f32 v14, -v21, v23, 1.0
+	v_fmac_f32_e32 v23, v14, v23
+	v_div_scale_f32 v14, vcc, v15, v25, v15
+	v_mul_f32_e32 v20, v14, v23
+	v_fma_f32 v22, -v21, v20, v14
+	.loc	3 9 22                          ; activation.py:9:22 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_add_f32_e32 v26, 1.0, v26
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fmac_f32_e32 v20, v22, v23
+	v_fma_f32 v14, -v21, v20, v14
+	v_div_scale_f32 v21, s[2:3], v26, v26, v5
+	v_rcp_f32_e32 v22, v21
+	v_div_fmas_f32 v14, v14, v23, v20
+	v_div_fixup_f32 v14, v14, v25, v15
+.Ltmp5:
+	.loc	1 86 57 is_stmt 1               ; fused_clamp_act_mul.py:86:57
+	v_mul_f32_e32 v11, v16, v11
+.Ltmp6:
+	.loc	3 9 16                          ; activation.py:9:16 @[ activation.py:14:22 @[ activation.py:105:21 @[ fused_clamp_act_mul.py:86:43 ] ] ]
+	v_fma_f32 v15, -v21, v22, 1.0
+	v_fmac_f32_e32 v22, v15, v22
+	v_div_scale_f32 v15, vcc, v5, v26, v5
+	v_mul_f32_e32 v20, v15, v22
+	v_fma_f32 v23, -v21, v20, v15
+	v_fmac_f32_e32 v20, v23, v22
+	v_fma_f32 v15, -v21, v20, v15
+	v_div_fmas_f32 v15, v15, v22, v20
+	v_div_fixup_f32 v5, v15, v26, v5
+.Ltmp7:
+	.loc	1 86 57                         ; fused_clamp_act_mul.py:86:57
+	v_mul_f32_e32 v2, v6, v2
+	v_mul_f32_e32 v6, v17, v12
+	v_mul_f32_e32 v3, v7, v3
+	v_mul_f32_e32 v5, v9, v5
+.Ltmp8:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_fp8_quant.py:34:26 @[ fused_clamp_act_mul.py:126:67 ] ] ]
+	v_max_f32_e64 v9, |v11|, |v2|
+.Ltmp9:
+	.loc	1 86 57                         ; fused_clamp_act_mul.py:86:57
+	v_mul_f32_e32 v7, v18, v13
+	v_mul_f32_e32 v4, v8, v4
+.Ltmp10:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_fp8_quant.py:34:26 @[ fused_clamp_act_mul.py:126:67 ] ] ]
+	v_max3_f32 v9, v9, |v6|, |v3|
+.Ltmp11:
+	.loc	1 86 57                         ; fused_clamp_act_mul.py:86:57
+	v_mul_f32_e32 v8, v19, v14
+.Ltmp12:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_fp8_quant.py:34:26 @[ fused_clamp_act_mul.py:126:67 ] ] ]
+	v_max3_f32 v9, v9, |v7|, |v4|
+	v_max3_f32 v9, v9, |v8|, |v5|
+.Ltmp13:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_fp8_quant.py:34:26 @[ fused_clamp_act_mul.py:126:67 ] ]
+	v_mov_b32_e32 v12, v9
+	s_mov_b32 s2, 0x2edbe6ff
+	s_nop 0
+	v_mov_b32_dpp v12, v12 row_shr:8 row_mask:0xf bank_mask:0xc
+	s_nop 1
+	v_mov_b32_dpp v12, v9 row_shl:8 row_mask:0xf bank_mask:0x3
+.Ltmp14:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_fp8_quant.py:34:26 @[ fused_clamp_act_mul.py:126:67 ] ] ]
+	v_max_f32_e32 v12, v12, v12
+	v_max_f32_e32 v9, v9, v12
+.Ltmp15:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_fp8_quant.py:34:26 @[ fused_clamp_act_mul.py:126:67 ] ]
+	v_mov_b32_e32 v12, v9
+	s_nop 1
+	v_mov_b32_dpp v12, v12 row_shr:4 row_mask:0xf bank_mask:0xa
+	s_nop 1
+	v_mov_b32_dpp v12, v9 row_shl:4 row_mask:0xf bank_mask:0x5
+.Ltmp16:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_fp8_quant.py:34:26 @[ fused_clamp_act_mul.py:126:67 ] ] ]
+	v_max_f32_e32 v12, v12, v12
+	v_max_f32_e32 v9, v9, v12
+.Ltmp17:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_fp8_quant.py:34:26 @[ fused_clamp_act_mul.py:126:67 ] ]
+	v_mov_b32_e32 v12, v9
+	s_nop 1
+	v_mov_b32_dpp v12, v12 quad_perm:[2,3,0,1] row_mask:0xf bank_mask:0xf
+.Ltmp18:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_fp8_quant.py:34:26 @[ fused_clamp_act_mul.py:126:67 ] ] ]
+	v_max_f32_e32 v12, v12, v12
+	v_max_f32_e32 v9, v9, v12
+.Ltmp19:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_fp8_quant.py:34:26 @[ fused_clamp_act_mul.py:126:67 ] ]
+	v_mov_b32_e32 v12, v9
+	s_nop 1
+	v_mov_b32_dpp v12, v12 quad_perm:[1,0,3,2] row_mask:0xf bank_mask:0xf
+.Ltmp20:
+	.file	4 "/sgl-workspace/aiter/aiter/ops/triton/_triton_kernels/quant" "fused_fp8_quant.py"
+	.loc	4 34 47                         ; fused_fp8_quant.py:34:47 @[ fused_clamp_act_mul.py:126:67 ]
+	v_max3_f32 v9, v9, v12, s2
+	.loc	4 35 35                         ; fused_fp8_quant.py:35:35 @[ fused_clamp_act_mul.py:126:67 ]
+	v_div_scale_f32 v12, s[2:3], s6, s6, v9
+	v_rcp_f32_e32 v13, v12
+	s_nop 0
+	v_fma_f32 v14, -v12, v13, 1.0
+	v_fmac_f32_e32 v13, v14, v13
+	v_div_scale_f32 v14, vcc, v9, s6, v9
+	v_mul_f32_e32 v15, v14, v13
+	v_fma_f32 v16, -v12, v15, v14
+	v_fmac_f32_e32 v15, v16, v13
+	v_fma_f32 v12, -v12, v15, v14
+	v_div_fmas_f32 v12, v12, v13, v15
+	v_div_fixup_f32 v9, v12, s6, v9
+	.loc	4 36 24                         ; fused_fp8_quant.py:36:24 @[ fused_clamp_act_mul.py:126:67 ]
+	v_div_scale_f32 v12, s[2:3], v9, v9, 1.0
+	v_rcp_f32_e32 v13, v12
+	s_mov_b32 s2, 0xc3e00000
+.Ltmp21:
+	.loc	1 133 12                        ; fused_clamp_act_mul.py:133:12
+	s_mov_b32 s6, s22
+.Ltmp22:
+	.loc	4 36 24                         ; fused_fp8_quant.py:36:24 @[ fused_clamp_act_mul.py:126:67 ]
+	v_fma_f32 v14, -v12, v13, 1.0
+	v_fmac_f32_e32 v13, v14, v13
+	v_div_scale_f32 v14, vcc, 1.0, v9, 1.0
+	v_mul_f32_e32 v15, v14, v13
+	v_fma_f32 v16, -v12, v15, v14
+	v_fmac_f32_e32 v15, v16, v13
+	v_fma_f32 v12, -v12, v15, v14
+	v_div_fmas_f32 v12, v12, v13, v15
+	v_div_fixup_f32 v12, v12, v9, 1.0
+	.loc	4 37 21                         ; fused_fp8_quant.py:37:21 @[ fused_clamp_act_mul.py:126:67 ]
+	v_mul_f32_e32 v11, v11, v12
+	v_mul_f32_e32 v2, v2, v12
+	v_mul_f32_e32 v6, v6, v12
+	v_mul_f32_e32 v3, v3, v12
+	v_mul_f32_e32 v7, v7, v12
+	v_mul_f32_e32 v4, v4, v12
+	v_mul_f32_e32 v8, v8, v12
+	v_mul_f32_e32 v5, v5, v12
+	.loc	4 37 45 is_stmt 0               ; fused_fp8_quant.py:37:45 @[ fused_clamp_act_mul.py:126:67 ]
+	v_mov_b32_e32 v12, 0x43e00000
+	v_med3_f32 v11, v11, s2, v12
+	v_med3_f32 v2, v2, s2, v12
+	v_med3_f32 v6, v6, s2, v12
+	v_med3_f32 v3, v3, s2, v12
+	v_med3_f32 v7, v7, s2, v12
+	v_med3_f32 v4, v4, s2, v12
+.Ltmp23:
+	.loc	1 133 21 is_stmt 1              ; fused_clamp_act_mul.py:133:21
+	v_cvt_scalef32_pk_fp8_f32 v2, v11, v2, 1.0
+.Ltmp24:
+	.loc	4 37 45                         ; fused_fp8_quant.py:37:45 @[ fused_clamp_act_mul.py:126:67 ]
+	v_med3_f32 v8, v8, s2, v12
+	v_med3_f32 v5, v5, s2, v12
+.Ltmp25:
+	.loc	1 133 21                        ; fused_clamp_act_mul.py:133:21
+	v_cvt_scalef32_pk_fp8_f32 v2, v6, v3, 1.0 op_sel:[0,0,0,1]
+	v_cvt_scalef32_pk_fp8_f32 v3, v7, v4, 1.0
+	v_cvt_scalef32_pk_fp8_f32 v3, v8, v5, 1.0 op_sel:[0,0,0,1]
+	.loc	1 133 12 is_stmt 0              ; fused_clamp_act_mul.py:133:12
+	buffer_store_dwordx2 v[2:3], v1, s[4:7], 0 offen
+	.loc	1 139 30 is_stmt 1              ; fused_clamp_act_mul.py:139:30
+	v_and_b32_e32 v1, 3, v0
+	.loc	1 165 16                        ; fused_clamp_act_mul.py:165:16
+	v_lshlrev_b32_e32 v2, 4, v1
+	v_and_b32_e32 v3, 12, v0
+	v_lshrrev_b32_e32 v4, 4, v0
+	v_or3_b32 v2, v2, v3, v4
+	v_lshlrev_b32_e32 v2, 2, v2
+	ds_bpermute_b32 v2, v2, v9
+	v_and_b32_e32 v0, 60, v0
+	.loc	1 166 30                        ; fused_clamp_act_mul.py:166:30
+	v_cmp_gt_i32_e32 vcc, s0, v1
+	.loc	1 165 16                        ; fused_clamp_act_mul.py:165:16
+	v_cmp_eq_u32_e64 s[0:1], 0, v0
+	v_add_lshl_u32 v0, v1, s16, 2
+	s_and_b64 vcc, s[0:1], vcc
+	v_cndmask_b32_e32 v0, v10, v0, vcc
+	s_waitcnt lgkmcnt(0)
+	buffer_store_dword v2, v0, s[8:11], 0 offen
+	.loc	1 101 4                         ; fused_clamp_act_mul.py:101:4
+	s_endpgm
+.Ltmp26:
+	.section	.rodata,"a",@progbits
+	.p2align	6, 0x0
+	.amdhsa_kernel _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1
+		.amdhsa_group_segment_fixed_size 0
+		.amdhsa_private_segment_fixed_size 0
+		.amdhsa_kernarg_size 72
+		.amdhsa_user_sgpr_count 16
+		.amdhsa_user_sgpr_dispatch_ptr 0
+		.amdhsa_user_sgpr_queue_ptr 0
+		.amdhsa_user_sgpr_kernarg_segment_ptr 1
+		.amdhsa_user_sgpr_dispatch_id 0
+		.amdhsa_user_sgpr_kernarg_preload_length 14
+		.amdhsa_user_sgpr_kernarg_preload_offset 0
+		.amdhsa_user_sgpr_private_segment_size 0
+		.amdhsa_uses_dynamic_stack 0
+		.amdhsa_enable_private_segment 0
+		.amdhsa_system_sgpr_workgroup_id_x 1
+		.amdhsa_system_sgpr_workgroup_id_y 0
+		.amdhsa_system_sgpr_workgroup_id_z 0
+		.amdhsa_system_sgpr_workgroup_info 0
+		.amdhsa_system_vgpr_workitem_id 0
+		.amdhsa_next_free_vgpr 32
+		.amdhsa_next_free_sgpr 24
+		.amdhsa_accum_offset 32
+		.amdhsa_reserve_vcc 1
+		.amdhsa_reserve_xnack_mask 1
+		.amdhsa_float_round_mode_32 0
+		.amdhsa_float_round_mode_16_64 0
+		.amdhsa_float_denorm_mode_32 3
+		.amdhsa_float_denorm_mode_16_64 3
+		.amdhsa_dx10_clamp 1
+		.amdhsa_ieee_mode 1
+		.amdhsa_fp16_overflow 0
+		.amdhsa_tg_split 0
+		.amdhsa_exception_fp_ieee_invalid_op 0
+		.amdhsa_exception_fp_denorm_src 0
+		.amdhsa_exception_fp_ieee_div_zero 0
+		.amdhsa_exception_fp_ieee_overflow 0
+		.amdhsa_exception_fp_ieee_underflow 0
+		.amdhsa_exception_fp_ieee_inexact 0
+		.amdhsa_exception_int_div_zero 0
+	.end_amdhsa_kernel
+	.text
+.Lfunc_end0:
+	.size	_fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1, .Lfunc_end0-_fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1
+	.cfi_endproc
+                                        ; -- End function
+	.set _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.num_vgpr, 32
+	.set _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.num_agpr, 0
+	.set _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.numbered_sgpr, 24
+	.set _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.num_named_barrier, 0
+	.set _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.private_seg_size, 0
+	.set _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.uses_vcc, 1
+	.set _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.uses_flat_scratch, 0
+	.set _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.has_dyn_sized_stack, 0
+	.set _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.has_recursion, 0
+	.set _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.has_indirect_call, 0
+	.section	.AMDGPU.csdata,"",@progbits
+; Kernel info:
+; codeLenInByte = 2036
+; TotalNumSgprs: 30
+; NumVgprs: 32
+; NumAgprs: 0
+; TotalNumVgprs: 32
+; ScratchSize: 0
+; MemoryBound: 0
+; FloatMode: 240
+; IeeeMode: 1
+; LDSByteSize: 0 bytes/workgroup (compile time only)
+; SGPRBlocks: 3
+; VGPRBlocks: 3
+; NumSGPRsForWavesPerEU: 30
+; NumVGPRsForWavesPerEU: 32
+; AccumOffset: 32
+; Occupancy: 8
+; WaveLimiterHint : 0
+; COMPUTE_PGM_RSRC2:SCRATCH_EN: 0
+; COMPUTE_PGM_RSRC2:USER_SGPR: 16
+; COMPUTE_PGM_RSRC2:TRAP_HANDLER: 0
+; COMPUTE_PGM_RSRC2:TGID_X_EN: 1
+; COMPUTE_PGM_RSRC2:TGID_Y_EN: 0
+; COMPUTE_PGM_RSRC2:TGID_Z_EN: 0
+; COMPUTE_PGM_RSRC2:TIDIG_COMP_CNT: 0
+; COMPUTE_PGM_RSRC3_GFX90A:ACCUM_OFFSET: 7
+; COMPUTE_PGM_RSRC3_GFX90A:TG_SPLIT: 0
+	.text
+	.p2alignl 6, 3212836864
+	.fill 256, 4, 3212836864
+	.section	.AMDGPU.gpr_maximums,"",@progbits
+	.set amdgpu.max_num_vgpr, 0
+	.set amdgpu.max_num_agpr, 0
+	.set amdgpu.max_num_sgpr, 0
+	.set amdgpu.max_num_named_barrier, 0
+	.text
+	.section	.debug_abbrev,"",@progbits
+	.byte	1                               ; Abbreviation Code
+	.byte	17                              ; DW_TAG_compile_unit
+	.byte	1                               ; DW_CHILDREN_yes
+	.byte	37                              ; DW_AT_producer
+	.byte	14                              ; DW_FORM_strp
+	.byte	19                              ; DW_AT_language
+	.byte	5                               ; DW_FORM_data2
+	.byte	3                               ; DW_AT_name
+	.byte	14                              ; DW_FORM_strp
+	.byte	16                              ; DW_AT_stmt_list
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	27                              ; DW_AT_comp_dir
+	.byte	14                              ; DW_FORM_strp
+	.byte	17                              ; DW_AT_low_pc
+	.byte	1                               ; DW_FORM_addr
+	.byte	18                              ; DW_AT_high_pc
+	.byte	6                               ; DW_FORM_data4
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	2                               ; Abbreviation Code
+	.byte	46                              ; DW_TAG_subprogram
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	3                               ; DW_AT_name
+	.byte	14                              ; DW_FORM_strp
+	.byte	32                              ; DW_AT_inline
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	3                               ; Abbreviation Code
+	.byte	46                              ; DW_TAG_subprogram
+	.byte	1                               ; DW_CHILDREN_yes
+	.byte	17                              ; DW_AT_low_pc
+	.byte	1                               ; DW_FORM_addr
+	.byte	18                              ; DW_AT_high_pc
+	.byte	6                               ; DW_FORM_data4
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	4                               ; Abbreviation Code
+	.byte	29                              ; DW_TAG_inlined_subroutine
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	17                              ; DW_AT_low_pc
+	.byte	1                               ; DW_FORM_addr
+	.byte	18                              ; DW_AT_high_pc
+	.byte	6                               ; DW_FORM_data4
+	.byte	88                              ; DW_AT_call_file
+	.byte	11                              ; DW_FORM_data1
+	.byte	89                              ; DW_AT_call_line
+	.byte	11                              ; DW_FORM_data1
+	.byte	87                              ; DW_AT_call_column
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	5                               ; Abbreviation Code
+	.byte	29                              ; DW_TAG_inlined_subroutine
+	.byte	1                               ; DW_CHILDREN_yes
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	85                              ; DW_AT_ranges
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	88                              ; DW_AT_call_file
+	.byte	11                              ; DW_FORM_data1
+	.byte	89                              ; DW_AT_call_line
+	.byte	11                              ; DW_FORM_data1
+	.byte	87                              ; DW_AT_call_column
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	6                               ; Abbreviation Code
+	.byte	29                              ; DW_TAG_inlined_subroutine
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	85                              ; DW_AT_ranges
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	88                              ; DW_AT_call_file
+	.byte	11                              ; DW_FORM_data1
+	.byte	89                              ; DW_AT_call_line
+	.byte	11                              ; DW_FORM_data1
+	.byte	87                              ; DW_AT_call_column
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	0                               ; EOM(3)
+	.section	.debug_info,"",@progbits
+.Lcu_begin0:
+	.long	.Ldebug_info_end0-.Ldebug_info_start0 ; Length of Unit
+.Ldebug_info_start0:
+	.short	4                               ; DWARF version number
+	.long	.debug_abbrev                   ; Offset Into Abbrev. Section
+	.byte	8                               ; Address Size (in bytes)
+	.byte	1                               ; Abbrev [1] 0xb:0x98 DW_TAG_compile_unit
+	.long	.Linfo_string0                  ; DW_AT_producer
+	.short	2                               ; DW_AT_language
+	.long	.Linfo_string1                  ; DW_AT_name
+	.long	.Lline_table_start0             ; DW_AT_stmt_list
+	.long	.Linfo_string2                  ; DW_AT_comp_dir
+	.quad	.Lfunc_begin0                   ; DW_AT_low_pc
+	.long	.Lfunc_end0-.Lfunc_begin0       ; DW_AT_high_pc
+	.byte	2                               ; Abbrev [2] 0x2a:0x6 DW_TAG_subprogram
+	.long	.Linfo_string3                  ; DW_AT_name
+	.byte	1                               ; DW_AT_inline
+	.byte	3                               ; Abbrev [3] 0x30:0x72 DW_TAG_subprogram
+	.quad	.Lfunc_begin0                   ; DW_AT_low_pc
+	.long	.Lfunc_end0-.Lfunc_begin0       ; DW_AT_high_pc
+	.long	42                              ; DW_AT_abstract_origin
+	.byte	4                               ; Abbrev [4] 0x41:0x14 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.quad	.Ltmp2                          ; DW_AT_low_pc
+	.long	.Ltmp3-.Ltmp2                   ; DW_AT_high_pc
+	.byte	1                               ; DW_AT_call_file
+	.byte	137                             ; DW_AT_call_line
+	.byte	33                              ; DW_AT_call_column
+	.byte	5                               ; Abbrev [5] 0x55:0x26 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges0                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	86                              ; DW_AT_call_line
+	.byte	43                              ; DW_AT_call_column
+	.byte	5                               ; Abbrev [5] 0x61:0x19 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges0                 ; DW_AT_ranges
+	.byte	3                               ; DW_AT_call_file
+	.byte	105                             ; DW_AT_call_line
+	.byte	21                              ; DW_AT_call_column
+	.byte	6                               ; Abbrev [6] 0x6d:0xc DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges0                 ; DW_AT_ranges
+	.byte	3                               ; DW_AT_call_file
+	.byte	14                              ; DW_AT_call_line
+	.byte	22                              ; DW_AT_call_column
+	.byte	0                               ; End Of Children Mark
+	.byte	0                               ; End Of Children Mark
+	.byte	5                               ; Abbrev [5] 0x7b:0x26 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges1                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	126                             ; DW_AT_call_line
+	.byte	67                              ; DW_AT_call_column
+	.byte	5                               ; Abbrev [5] 0x87:0x19 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges2                 ; DW_AT_ranges
+	.byte	4                               ; DW_AT_call_file
+	.byte	34                              ; DW_AT_call_line
+	.byte	26                              ; DW_AT_call_column
+	.byte	6                               ; Abbrev [6] 0x93:0xc DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges3                 ; DW_AT_ranges
+	.byte	2                               ; DW_AT_call_file
+	.byte	191                             ; DW_AT_call_line
+	.byte	40                              ; DW_AT_call_column
+	.byte	0                               ; End Of Children Mark
+	.byte	0                               ; End Of Children Mark
+	.byte	0                               ; End Of Children Mark
+	.byte	0                               ; End Of Children Mark
+.Ldebug_info_end0:
+	.section	.debug_ranges,"",@progbits
+.Ldebug_ranges0:
+	.quad	.Ltmp4-.Lfunc_begin0
+	.quad	.Ltmp5-.Lfunc_begin0
+	.quad	.Ltmp6-.Lfunc_begin0
+	.quad	.Ltmp7-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges1:
+	.quad	.Ltmp8-.Lfunc_begin0
+	.quad	.Ltmp9-.Lfunc_begin0
+	.quad	.Ltmp10-.Lfunc_begin0
+	.quad	.Ltmp11-.Lfunc_begin0
+	.quad	.Ltmp12-.Lfunc_begin0
+	.quad	.Ltmp21-.Lfunc_begin0
+	.quad	.Ltmp22-.Lfunc_begin0
+	.quad	.Ltmp23-.Lfunc_begin0
+	.quad	.Ltmp24-.Lfunc_begin0
+	.quad	.Ltmp25-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges2:
+	.quad	.Ltmp8-.Lfunc_begin0
+	.quad	.Ltmp9-.Lfunc_begin0
+	.quad	.Ltmp10-.Lfunc_begin0
+	.quad	.Ltmp11-.Lfunc_begin0
+	.quad	.Ltmp12-.Lfunc_begin0
+	.quad	.Ltmp20-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges3:
+	.quad	.Ltmp8-.Lfunc_begin0
+	.quad	.Ltmp9-.Lfunc_begin0
+	.quad	.Ltmp10-.Lfunc_begin0
+	.quad	.Ltmp11-.Lfunc_begin0
+	.quad	.Ltmp12-.Lfunc_begin0
+	.quad	.Ltmp13-.Lfunc_begin0
+	.quad	.Ltmp14-.Lfunc_begin0
+	.quad	.Ltmp15-.Lfunc_begin0
+	.quad	.Ltmp16-.Lfunc_begin0
+	.quad	.Ltmp17-.Lfunc_begin0
+	.quad	.Ltmp18-.Lfunc_begin0
+	.quad	.Ltmp19-.Lfunc_begin0
+	.quad	0
+	.quad	0
+	.section	.debug_str,"MS",@progbits,1
+.Linfo_string0:
+	.asciz	"triton"                        ; string offset=0
+.Linfo_string1:
+	.asciz	"fused_clamp_act_mul.py"        ; string offset=7
+.Linfo_string2:
+	.asciz	"/sgl-workspace/aiter/aiter/ops/triton/_triton_kernels/fusions" ; string offset=30
+.Linfo_string3:
+	.asciz	"_fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1" ; string offset=92
+	.section	".note.GNU-stack","",@progbits
+	.amdgpu_metadata
+---
+amdhsa.kernels:
+  - .agpr_count:     0
+    .args:
+      - .address_space:  global
+        .offset:         0
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         8
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         16
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         24
+        .size:           8
+        .value_kind:     global_buffer
+      - .offset:         32
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         36
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         40
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         44
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         48
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         52
+        .size:           4
+        .value_kind:     by_value
+      - .address_space:  global
+        .offset:         56
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         64
+        .size:           8
+        .value_kind:     global_buffer
+    .group_segment_fixed_size: 0
+    .kernarg_segment_align: 8
+    .kernarg_segment_size: 72
+    .max_flat_workgroup_size: 64
+    .name:           _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1
+    .private_segment_fixed_size: 0
+    .sgpr_count:     30
+    .sgpr_spill_count: 0
+    .symbol:         _fused_clamp_silu_mul_kernel_BLOCK_SIZE_N_512_QUANT_BLOCK_SIZE_128_SCALE_FMT_FP32_HAVE_WEIGHTS_0_WEIGHT_BROADCAST_0_HAVE_SWIGLU_CLAMP_1_HAS_QUANT_1.kd
+    .uniform_work_group_size: 1
+    .uses_dynamic_stack: false
+    .vgpr_count:     32
+    .vgpr_spill_count: 0
+    .wavefront_size: 64
+amdhsa.target:   amdgcn-amd-amdhsa--gfx950
+amdhsa.version:
+  - 1
+  - 2
+...
+
+	.end_amdgpu_metadata
+	.section	.debug_line,"",@progbits
+.Lline_table_start0:

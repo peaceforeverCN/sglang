@@ -1,0 +1,1038 @@
+	.amdgcn_target "amdgcn-amd-amdhsa--gfx950"
+	.amdhsa_code_object_version 5
+	.text
+	.globl	_combine_splitk_kernel          ; -- Begin function _combine_splitk_kernel
+	.p2align	8
+	.type	_combine_splitk_kernel,@function
+_combine_splitk_kernel:                 ; @_combine_splitk_kernel
+.Lfunc_begin0:
+	.cfi_sections .debug_frame
+	.cfi_startproc
+; %bb.1:
+	.file	1 "/sgl-workspace/sglang/python/sglang/srt/layers/attention/nsa/triton_decode" "triton_mla_kernels_decode_fused.py"
+	.loc	1 2202 0 prologue_end           ; triton_mla_kernels_decode_fused.py:2202:0
+	s_load_dwordx2 s[2:3], s[0:1], 0x0
+	s_load_dwordx8 s[4:11], s[0:1], 0x8
+	s_load_dwordx4 s[12:15], s[0:1], 0x28
+	s_waitcnt lgkmcnt(0)
+	s_branch .LBB0_0
+	.loc	1 0 0 is_stmt 0                 ; :0:0
+.Ltmp0:
+	.p2align	8
+; %bb.2:
+.LBB0_0:
+	s_load_dwordx4 s[28:31], s[0:1], 0x38
+	s_load_dwordx2 s[18:19], s[0:1], 0x48
+.Ltmp1:
+	.loc	1 2388 23 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2388:23
+	v_readfirstlane_b32 s0, v0
+	s_bfe_u32 s33, s0, 0x20006
+	.loc	1 2238 44                       ; triton_mla_kernels_decode_fused.py:2238:44
+	v_and_b32_e32 v3, 48, v0
+	v_lshl_or_b32 v1, s33, 6, v3
+	.loc	1 2238 21 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2238:21
+	s_lshl_b32 s26, s17, 4
+	.loc	1 2238 44                       ; triton_mla_kernels_decode_fused.py:2238:44
+	v_lshrrev_b32_e32 v1, 4, v1
+	s_mov_b64 s[24:25], s[2:3]
+	.loc	1 2238 31                       ; triton_mla_kernels_decode_fused.py:2238:31
+	v_or_b32_e32 v49, s26, v1
+	.loc	1 2248 21 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2248:21
+	s_waitcnt lgkmcnt(0)
+	s_mul_i32 s2, s30, s16
+	s_mov_b64 s[20:21], s[10:11]
+	.loc	1 2246 8                        ; triton_mla_kernels_decode_fused.py:2246:8
+	v_add_lshl_u32 v2, v49, s2, 2
+	v_bfrev_b32_e32 v5, 1
+	.loc	1 2239 22                       ; triton_mla_kernels_decode_fused.py:2239:22
+	v_cmp_gt_i32_e64 s[0:1], s12, v49
+	.loc	1 0 0 is_stmt 0                 ; triton_mla_kernels_decode_fused.py:0
+	s_add_i32 s10, s29, s2
+	s_lshl1_add_u32 s11, s29, s2
+	s_mov_b64 s[36:37], s[6:7]
+	.loc	1 2246 8 is_stmt 1              ; triton_mla_kernels_decode_fused.py:2246:8
+	s_and_b32 s5, s5, 0xffff
+	s_mov_b32 s7, 0x27000
+	s_mov_b32 s6, 0x7ffffffe
+	v_cndmask_b32_e64 v2, v5, v2, s[0:1]
+	.loc	1 2254 8                        ; triton_mla_kernels_decode_fused.py:2254:8
+	v_add_lshl_u32 v4, v49, s10, 2
+	.loc	1 2262 8                        ; triton_mla_kernels_decode_fused.py:2262:8
+	v_add_lshl_u32 v6, v49, s11, 2
+	.loc	1 0 0 is_stmt 0                 ; triton_mla_kernels_decode_fused.py:0
+	s_add_i32 s13, s11, s29
+	.loc	1 2254 8 is_stmt 1              ; triton_mla_kernels_decode_fused.py:2254:8
+	v_cndmask_b32_e64 v4, v5, v4, s[0:1]
+	.loc	1 2262 8                        ; triton_mla_kernels_decode_fused.py:2262:8
+	v_cndmask_b32_e64 v6, v5, v6, s[0:1]
+	.loc	1 2246 8                        ; triton_mla_kernels_decode_fused.py:2246:8
+	buffer_load_dword v8, v2, s[4:7], 0 offen
+	.loc	1 2254 8                        ; triton_mla_kernels_decode_fused.py:2254:8
+	buffer_load_dword v15, v4, s[4:7], 0 offen
+	.loc	1 2262 8                        ; triton_mla_kernels_decode_fused.py:2262:8
+	buffer_load_dword v16, v6, s[4:7], 0 offen
+	.loc	1 2270 8                        ; triton_mla_kernels_decode_fused.py:2270:8
+	v_add_lshl_u32 v2, v49, s13, 2
+	v_cndmask_b32_e64 v2, v5, v2, s[0:1]
+	buffer_load_dword v2, v2, s[4:7], 0 offen
+	.loc	1 2305 33                       ; triton_mla_kernels_decode_fused.py:2305:33
+	v_lshlrev_b32_e32 v4, 2, v49
+	s_and_b32 s37, s37, 0xffff
+	s_mov_b32 s38, s6
+	s_mov_b32 s39, s7
+	v_cndmask_b32_e64 v4, v5, v4, s[0:1]
+	buffer_load_dword v4, v4, s[36:39], 0 offen
+	.loc	1 2238 44                       ; triton_mla_kernels_decode_fused.py:2238:44
+	v_and_b32_e32 v0, 15, v0
+	.loc	1 2238 31 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2238:31
+	v_or_b32_e32 v9, s26, v0
+	.loc	1 2246 8 is_stmt 1              ; triton_mla_kernels_decode_fused.py:2246:8
+	v_add_lshl_u32 v6, v9, s2, 2
+	.loc	1 2239 22                       ; triton_mla_kernels_decode_fused.py:2239:22
+	v_cmp_gt_i32_e64 s[2:3], s12, v9
+	.loc	1 2254 8                        ; triton_mla_kernels_decode_fused.py:2254:8
+	v_add_lshl_u32 v11, v9, s10, 2
+	.loc	1 2246 8                        ; triton_mla_kernels_decode_fused.py:2246:8
+	v_mov_b32_e32 v7, 0x7f800000
+	v_cndmask_b32_e64 v6, v5, v6, s[2:3]
+	.loc	1 2262 8                        ; triton_mla_kernels_decode_fused.py:2262:8
+	v_add_lshl_u32 v12, v9, s11, 2
+	.loc	1 2254 8                        ; triton_mla_kernels_decode_fused.py:2254:8
+	v_cndmask_b32_e64 v17, v5, v11, s[2:3]
+	.loc	1 2270 8                        ; triton_mla_kernels_decode_fused.py:2270:8
+	v_add_lshl_u32 v11, v9, s13, 2
+	s_mov_b32 s17, 0x7149f2ca
+	.loc	1 2262 8                        ; triton_mla_kernels_decode_fused.py:2262:8
+	v_cndmask_b32_e64 v18, v5, v12, s[2:3]
+	.loc	1 2270 8                        ; triton_mla_kernels_decode_fused.py:2270:8
+	v_cndmask_b32_e64 v19, v5, v11, s[2:3]
+	.loc	1 2246 8                        ; triton_mla_kernels_decode_fused.py:2246:8
+	buffer_load_dword v14, v6, s[4:7], 0 offen
+	.loc	1 2254 8                        ; triton_mla_kernels_decode_fused.py:2254:8
+	buffer_load_dword v13, v17, s[4:7], 0 offen
+	.loc	1 2262 8                        ; triton_mla_kernels_decode_fused.py:2262:8
+	buffer_load_dword v12, v18, s[4:7], 0 offen
+	.loc	1 2270 8                        ; triton_mla_kernels_decode_fused.py:2270:8
+	buffer_load_dword v11, v19, s[4:7], 0 offen
+	.loc	1 2283 46                       ; triton_mla_kernels_decode_fused.py:2283:46
+	v_mov_b32_e32 v10, 0xff800000
+	s_mov_b32 s22, 0x800000
+	s_mov_b32 s23, 0x3fb8aa3b
+	.loc	1 2337 21                       ; triton_mla_kernels_decode_fused.py:2337:21
+	s_mul_i32 s15, s15, s16
+	.loc	1 2338 10                       ; triton_mla_kernels_decode_fused.py:2338:10
+	s_mul_i32 s30, s28, s26
+	.loc	1 2363 42                       ; triton_mla_kernels_decode_fused.py:2363:42
+	v_lshlrev_b32_e32 v48, 3, v0
+	s_add_i32 s29, s30, s15
+	.loc	1 0 0 is_stmt 0                 ; triton_mla_kernels_decode_fused.py:0
+	s_lshl1_add_u32 s34, s14, s15
+	s_and_b32 s25, s25, 0xffff
+	s_mov_b32 s26, s6
+	s_mov_b32 s27, s7
+	s_add_i32 s15, s29, s14
+	s_and_b32 s9, s9, 0xffff
+	.loc	1 2388 23 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2388:23
+	s_and_b32 s21, s21, 0xffff
+	.loc	1 2246 8                        ; triton_mla_kernels_decode_fused.py:2246:8
+	s_waitcnt vmcnt(8)
+	v_cndmask_b32_e64 v6, v7, v8, s[0:1]
+	.loc	1 2254 8                        ; triton_mla_kernels_decode_fused.py:2254:8
+	s_waitcnt vmcnt(7)
+	v_cndmask_b32_e64 v8, v7, v15, s[0:1]
+	.loc	1 2262 8                        ; triton_mla_kernels_decode_fused.py:2262:8
+	s_waitcnt vmcnt(6)
+	v_cndmask_b32_e64 v15, v7, v16, s[0:1]
+	.loc	1 2280 34                       ; triton_mla_kernels_decode_fused.py:2280:34
+	v_cmp_lt_f32_e64 s[10:11], |v15|, s17
+	.loc	1 2278 34                       ; triton_mla_kernels_decode_fused.py:2278:34
+	v_cmp_lt_f32_e64 vcc, |v6|, s17
+	.loc	1 2270 8                        ; triton_mla_kernels_decode_fused.py:2270:8
+	s_waitcnt vmcnt(5)
+	v_cndmask_b32_e64 v2, v7, v2, s[0:1]
+	.loc	1 2281 34                       ; triton_mla_kernels_decode_fused.py:2281:34
+	v_cmp_lt_f32_e64 s[12:13], |v2|, s17
+	.loc	1 2285 46                       ; triton_mla_kernels_decode_fused.py:2285:46
+	v_cndmask_b32_e64 v15, v10, v15, s[10:11]
+	.loc	1 2279 34                       ; triton_mla_kernels_decode_fused.py:2279:34
+	v_cmp_lt_f32_e64 s[4:5], |v8|, s17
+	.loc	1 2286 46                       ; triton_mla_kernels_decode_fused.py:2286:46
+	v_cndmask_b32_e64 v2, v10, v2, s[12:13]
+	.loc	1 2289 67                       ; triton_mla_kernels_decode_fused.py:2289:67
+	v_max_f32_e32 v16, v15, v15
+	v_max_f32_e32 v17, v2, v2
+	.loc	1 2283 46                       ; triton_mla_kernels_decode_fused.py:2283:46
+	v_cndmask_b32_e32 v6, v10, v6, vcc
+	.loc	1 2284 46                       ; triton_mla_kernels_decode_fused.py:2284:46
+	v_cndmask_b32_e64 v8, v10, v8, s[4:5]
+	.loc	1 2289 67                       ; triton_mla_kernels_decode_fused.py:2289:67
+	v_max_f32_e32 v16, v16, v17
+	.loc	1 2289 44 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2289:44
+	v_max3_f32 v16, v6, v8, v16
+	.loc	1 2292 61 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2292:61
+	v_sub_f32_e32 v6, v6, v16
+	.loc	1 2293 61                       ; triton_mla_kernels_decode_fused.py:2293:61
+	v_sub_f32_e32 v8, v8, v16
+	.loc	1 2294 61                       ; triton_mla_kernels_decode_fused.py:2294:61
+	v_sub_f32_e32 v15, v15, v16
+	.loc	1 2292 72                       ; triton_mla_kernels_decode_fused.py:2292:72
+	v_mul_f32_e32 v6, 0x3fb8aa3b, v6
+	.loc	1 2293 72                       ; triton_mla_kernels_decode_fused.py:2293:72
+	v_mul_f32_e32 v8, 0x3fb8aa3b, v8
+	.loc	1 2295 61                       ; triton_mla_kernels_decode_fused.py:2295:61
+	v_sub_f32_e32 v2, v2, v16
+	.loc	1 2294 72                       ; triton_mla_kernels_decode_fused.py:2294:72
+	v_mul_f32_e32 v15, 0x3fb8aa3b, v15
+	.loc	1 2292 47                       ; triton_mla_kernels_decode_fused.py:2292:47
+	v_exp_f32_e32 v6, v6
+	.loc	1 2293 47                       ; triton_mla_kernels_decode_fused.py:2293:47
+	v_exp_f32_e32 v8, v8
+	.loc	1 2295 72                       ; triton_mla_kernels_decode_fused.py:2295:72
+	v_mul_f32_e32 v2, 0x3fb8aa3b, v2
+	.loc	1 2294 47                       ; triton_mla_kernels_decode_fused.py:2294:47
+	v_exp_f32_e32 v15, v15
+	.loc	1 2295 47                       ; triton_mla_kernels_decode_fused.py:2295:47
+	v_exp_f32_e32 v2, v2
+	.loc	1 2292 80                       ; triton_mla_kernels_decode_fused.py:2292:80
+	v_cndmask_b32_e32 v6, 0, v6, vcc
+	.loc	1 2293 80                       ; triton_mla_kernels_decode_fused.py:2293:80
+	v_cndmask_b32_e64 v8, 0, v8, s[4:5]
+	.loc	1 2294 80                       ; triton_mla_kernels_decode_fused.py:2294:80
+	v_cndmask_b32_e64 v50, 0, v15, s[10:11]
+	.loc	1 2297 22                       ; triton_mla_kernels_decode_fused.py:2297:22
+	v_add_f32_e32 v15, v6, v8
+	.loc	1 2295 80                       ; triton_mla_kernels_decode_fused.py:2295:80
+	v_cndmask_b32_e64 v2, 0, v2, s[12:13]
+	.loc	1 2297 30                       ; triton_mla_kernels_decode_fused.py:2297:30
+	v_add_f32_e32 v15, v50, v15
+	.loc	1 2297 38 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2297:38
+	v_add_f32_e32 v15, v2, v15
+	.loc	1 2298 29 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2298:29
+	v_cmp_eq_f32_e64 s[4:5], 0, v15
+	v_mad_u64_u32 v[0:1], s[12:13], v1, s28, v[48:49]
+	.loc	1 2299 46                       ; triton_mla_kernels_decode_fused.py:2299:46
+	s_nop 0
+	v_cndmask_b32_e64 v51, v15, 1.0, s[4:5]
+	.loc	1 2301 42                       ; triton_mla_kernels_decode_fused.py:2301:42
+	v_cmp_gt_f32_e32 vcc, s22, v51
+	v_add_u32_e32 v1, 4, v0
+	.loc	1 2316 27                       ; triton_mla_kernels_decode_fused.py:2316:27
+	v_div_scale_f32 v52, s[12:13], v51, v51, v6
+	.loc	1 2301 42                       ; triton_mla_kernels_decode_fused.py:2301:42
+	v_cndmask_b32_e64 v15, 0, 32, vcc
+	v_ldexp_f32 v15, v51, v15
+	v_log_f32_e32 v17, v15
+	v_mov_b32_e32 v15, 0x42000000
+	v_cndmask_b32_e32 v18, 0, v15, vcc
+	.loc	1 2368 12                       ; triton_mla_kernels_decode_fused.py:2368:12
+	v_add_lshl_u32 v36, s15, v1, 2
+	.loc	1 2301 42                       ; triton_mla_kernels_decode_fused.py:2301:42
+	v_sub_f32_e32 v17, v17, v18
+	.loc	1 2301 58 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2301:58
+	v_div_scale_f32 v18, s[10:11], s23, s23, v17
+	v_rcp_f32_e32 v19, v18
+	v_div_scale_f32 v20, vcc, v17, s23, v17
+	.loc	1 2368 12 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2368:12
+	v_cndmask_b32_e64 v36, v5, v36, s[0:1]
+	.loc	1 2301 58                       ; triton_mla_kernels_decode_fused.py:2301:58
+	v_fma_f32 v21, -v18, v19, 1.0
+	v_fmac_f32_e32 v19, v21, v19
+	v_mul_f32_e32 v21, v20, v19
+	v_fma_f32 v22, -v18, v21, v20
+	v_fmac_f32_e32 v21, v22, v19
+	v_fma_f32 v18, -v18, v21, v20
+	v_div_fmas_f32 v18, v18, v19, v21
+	v_div_fixup_f32 v17, v18, s23, v17
+	.loc	1 2301 29 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2301:29
+	v_add_f32_e32 v16, v16, v17
+	.loc	1 2302 50 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2302:50
+	v_cndmask_b32_e64 v16, v16, v7, s[4:5]
+	.loc	1 2306 35                       ; triton_mla_kernels_decode_fused.py:2306:35
+	v_cmp_lt_f32_e64 s[10:11], s17, v16
+	.loc	1 2368 12                       ; triton_mla_kernels_decode_fused.py:2368:12
+	buffer_load_dwordx4 v[36:39], v36, s[24:27], 0 offen
+	.loc	1 2316 27                       ; triton_mla_kernels_decode_fused.py:2316:27
+	v_rcp_f32_e32 v53, v52
+	.loc	1 2307 53                       ; triton_mla_kernels_decode_fused.py:2307:53
+	v_cndmask_b32_e64 v16, v16, 0, s[10:11]
+	.loc	1 2308 32                       ; triton_mla_kernels_decode_fused.py:2308:32
+	s_waitcnt vmcnt(5)
+	v_sub_f32_e32 v4, v4, v16
+	.loc	1 2309 51                       ; triton_mla_kernels_decode_fused.py:2309:51
+	v_max_f32_e32 v4, 0xc2c80000, v4
+	.loc	1 2309 60 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2309:60
+	v_min_f32_e32 v4, 0x42c80000, v4
+	.loc	1 2310 47 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2310:47
+	v_mul_f32_e32 v4, 0x3fb8aa3b, v4
+	.loc	1 2310 32 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2310:32
+	v_exp_f32_e32 v4, v4
+	.loc	1 2316 27 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2316:27
+	v_fma_f32 v54, -v52, v53, 1.0
+	v_fmac_f32_e32 v53, v54, v53
+	v_mul_lo_u32 v49, v49, s18
+	.loc	1 2312 28                       ; triton_mla_kernels_decode_fused.py:2312:28
+	v_add_f32_e32 v4, 1.0, v4
+	.loc	1 2313 27                       ; triton_mla_kernels_decode_fused.py:2313:27
+	v_div_scale_f32 v16, s[12:13], v4, v4, 1.0
+	v_rcp_f32_e32 v17, v16
+	v_div_scale_f32 v18, vcc, 1.0, v4, 1.0
+	s_add_i32 s13, s30, s34
+	v_fma_f32 v19, -v16, v17, 1.0
+	v_fmac_f32_e32 v17, v19, v17
+	v_mul_f32_e32 v19, v18, v17
+	v_fma_f32 v20, -v16, v19, v18
+	v_fmac_f32_e32 v19, v20, v17
+	v_fma_f32 v16, -v16, v19, v18
+	v_div_fmas_f32 v16, v16, v17, v19
+	v_div_fixup_f32 v4, v16, v4, 1.0
+	.loc	1 2365 12                       ; triton_mla_kernels_decode_fused.py:2365:12
+	v_add_lshl_u32 v16, s29, v0, 2
+	v_cndmask_b32_e64 v24, v5, v16, s[0:1]
+	v_add_lshl_u32 v16, s29, v1, 2
+	v_cndmask_b32_e64 v25, v5, v16, s[0:1]
+	buffer_load_dwordx4 v[16:19], v24, s[24:27], 0 offen
+	buffer_load_dwordx4 v[20:23], v25, s[24:27], 0 offen
+	.loc	1 2368 12                       ; triton_mla_kernels_decode_fused.py:2368:12
+	v_add_lshl_u32 v24, s15, v0, 2
+	s_add_i32 s12, s13, s14
+	v_cndmask_b32_e64 v24, v5, v24, s[0:1]
+	buffer_load_dwordx4 v[24:27], v24, s[24:27], 0 offen
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	v_add_lshl_u32 v32, s12, v0, 2
+	v_cndmask_b32_e64 v32, v5, v32, s[0:1]
+	buffer_load_dwordx4 v[32:35], v32, s[24:27], 0 offen
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	v_add_lshl_u32 v28, s13, v0, 2
+	v_add_lshl_u32 v40, s13, v1, 2
+	v_cndmask_b32_e64 v28, v5, v28, s[0:1]
+	v_cndmask_b32_e64 v40, v5, v40, s[0:1]
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	v_add_lshl_u32 v44, s12, v1, 2
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	buffer_load_dwordx4 v[28:31], v28, s[24:27], 0 offen
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	v_cndmask_b32_e64 v44, v5, v44, s[0:1]
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	buffer_load_dwordx4 v[40:43], v40, s[24:27], 0 offen
+	.loc	1 2316 27                       ; triton_mla_kernels_decode_fused.py:2316:27
+	v_div_scale_f32 v54, vcc, v6, v51, v6
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	buffer_load_dwordx4 v[44:47], v44, s[24:27], 0 offen
+	.loc	1 2316 27                       ; triton_mla_kernels_decode_fused.py:2316:27
+	v_mul_f32_e32 v55, v54, v53
+	v_fma_f32 v56, -v52, v55, v54
+	v_fmac_f32_e32 v55, v56, v53
+	.loc	1 2314 46                       ; triton_mla_kernels_decode_fused.py:2314:46
+	v_cndmask_b32_e64 v4, v4, 1.0, s[10:11]
+	.loc	1 2316 27                       ; triton_mla_kernels_decode_fused.py:2316:27
+	v_fma_f32 v52, -v52, v55, v54
+	.loc	1 2317 27                       ; triton_mla_kernels_decode_fused.py:2317:27
+	v_div_scale_f32 v54, s[10:11], v51, v51, v8
+	v_rcp_f32_e32 v56, v54
+	.loc	1 2316 27                       ; triton_mla_kernels_decode_fused.py:2316:27
+	v_div_fmas_f32 v52, v52, v53, v55
+	v_div_fixup_f32 v6, v52, v51, v6
+	.loc	1 2316 43 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2316:43
+	v_mul_f32_e32 v6, v6, v4
+	.loc	1 2317 27 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2317:27
+	v_fma_f32 v52, -v54, v56, 1.0
+	v_fmac_f32_e32 v56, v52, v56
+	v_div_scale_f32 v52, vcc, v8, v51, v8
+	v_mul_f32_e32 v53, v52, v56
+	v_fma_f32 v55, -v54, v53, v52
+	v_fmac_f32_e32 v53, v55, v56
+	v_fma_f32 v52, -v54, v53, v52
+	.loc	1 2318 27                       ; triton_mla_kernels_decode_fused.py:2318:27
+	v_div_scale_f32 v54, s[10:11], v51, v51, v50
+	v_rcp_f32_e32 v55, v54
+	.loc	1 2317 27                       ; triton_mla_kernels_decode_fused.py:2317:27
+	v_div_fmas_f32 v52, v52, v56, v53
+	v_div_fixup_f32 v8, v52, v51, v8
+	.loc	1 2317 43 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2317:43
+	v_mul_f32_e32 v8, v8, v4
+	.loc	1 2318 27 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2318:27
+	v_fma_f32 v52, -v54, v55, 1.0
+	v_fmac_f32_e32 v55, v52, v55
+	v_div_scale_f32 v52, vcc, v50, v51, v50
+	v_mul_f32_e32 v53, v52, v55
+	v_fma_f32 v56, -v54, v53, v52
+	v_fmac_f32_e32 v53, v56, v55
+	v_fma_f32 v52, -v54, v53, v52
+	.loc	1 2319 27                       ; triton_mla_kernels_decode_fused.py:2319:27
+	v_div_scale_f32 v54, s[10:11], v51, v51, v2
+	v_rcp_f32_e32 v56, v54
+	.loc	1 2318 27                       ; triton_mla_kernels_decode_fused.py:2318:27
+	v_div_fmas_f32 v52, v52, v55, v53
+	v_div_fixup_f32 v50, v52, v51, v50
+	.loc	1 2327 41                       ; triton_mla_kernels_decode_fused.py:2327:41
+	v_cndmask_b32_e64 v8, v8, 0, s[4:5]
+	.loc	1 2319 27                       ; triton_mla_kernels_decode_fused.py:2319:27
+	v_fma_f32 v52, -v54, v56, 1.0
+	v_fmac_f32_e32 v56, v52, v56
+	v_div_scale_f32 v52, vcc, v2, v51, v2
+	v_mul_f32_e32 v53, v52, v56
+	v_fma_f32 v55, -v54, v53, v52
+	v_fmac_f32_e32 v53, v55, v56
+	v_fma_f32 v52, -v54, v53, v52
+	.loc	1 2326 41                       ; triton_mla_kernels_decode_fused.py:2326:41
+	v_cndmask_b32_e64 v6, v6, 0, s[4:5]
+	.loc	1 2319 27                       ; triton_mla_kernels_decode_fused.py:2319:27
+	v_div_fmas_f32 v52, v52, v56, v53
+	v_div_fixup_f32 v2, v52, v51, v2
+	.loc	1 2318 43                       ; triton_mla_kernels_decode_fused.py:2318:43
+	v_mul_f32_e32 v50, v50, v4
+	.loc	1 2319 43                       ; triton_mla_kernels_decode_fused.py:2319:43
+	v_mul_f32_e32 v2, v2, v4
+	.loc	1 2328 41                       ; triton_mla_kernels_decode_fused.py:2328:41
+	v_cndmask_b32_e64 v4, v50, 0, s[4:5]
+	.loc	1 2329 41                       ; triton_mla_kernels_decode_fused.py:2329:41
+	v_cndmask_b32_e64 v2, v2, 0, s[4:5]
+	.loc	1 2360 33                       ; triton_mla_kernels_decode_fused.py:2360:33
+	s_mul_i32 s4, s31, s16
+	v_add_u32_e32 v48, s4, v48
+	.loc	1 2383 42                       ; triton_mla_kernels_decode_fused.py:2383:42
+	v_add_lshl_u32 v48, v48, v49, 1
+	s_mov_b32 s10, s6
+	s_mov_b32 s11, s7
+	.loc	1 2365 24                       ; triton_mla_kernels_decode_fused.py:2365:24
+	s_add_i32 s4, s29, 0x80
+	.loc	1 2374 24                       ; triton_mla_kernels_decode_fused.py:2374:24
+	s_add_i32 s5, s12, 0x80
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	s_waitcnt vmcnt(4)
+	v_pk_mul_f32 v[24:25], v[8:9], v[24:25] op_sel_hi:[0,1]
+	.loc	1 2378 14 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[16:17], v[6:7], v[16:17], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	v_pk_mul_f32 v[24:25], v[8:9], v[26:27] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[18:19], v[6:7], v[18:19], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	v_pk_mul_f32 v[24:25], v[8:9], v[36:37] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[20:21], v[6:7], v[20:21], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	v_pk_mul_f32 v[24:25], v[8:9], v[38:39] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[22:23], v[6:7], v[22:23], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2379 14 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2379:14
+	s_waitcnt vmcnt(2)
+	v_pk_fma_f32 v[16:17], v[4:5], v[28:29], v[16:17] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[18:19], v[4:5], v[30:31], v[18:19] op_sel_hi:[0,1,1]
+	s_waitcnt vmcnt(1)
+	v_pk_fma_f32 v[20:21], v[4:5], v[40:41], v[20:21] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[22:23], v[4:5], v[42:43], v[22:23] op_sel_hi:[0,1,1]
+	.loc	1 2380 14                       ; triton_mla_kernels_decode_fused.py:2380:14
+	v_pk_fma_f32 v[16:17], v[2:3], v[32:33], v[16:17] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[18:19], v[2:3], v[34:35], v[18:19] op_sel_hi:[0,1,1]
+	s_waitcnt vmcnt(0)
+	v_pk_fma_f32 v[20:21], v[2:3], v[44:45], v[20:21] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[22:23], v[2:3], v[46:47], v[22:23] op_sel_hi:[0,1,1]
+	.loc	1 2383 54                       ; triton_mla_kernels_decode_fused.py:2383:54
+	v_cvt_pk_bf16_f32 v16, v16, v17
+	v_cvt_pk_bf16_f32 v17, v18, v19
+	v_cvt_pk_bf16_f32 v18, v20, v21
+	v_cvt_pk_bf16_f32 v19, v22, v23
+	.loc	1 2383 42 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2383:42
+	v_cndmask_b32_e64 v20, v5, v48, s[0:1]
+	buffer_store_dwordx4 v[16:19], v20, s[8:11], 0 offen
+	.loc	1 2374 12 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2374:12
+	v_add_lshl_u32 v32, s5, v0, 2
+	v_cndmask_b32_e64 v32, v5, v32, s[0:1]
+	.loc	1 2365 12                       ; triton_mla_kernels_decode_fused.py:2365:12
+	v_add_lshl_u32 v16, s4, v0, 2
+	v_cndmask_b32_e64 v24, v5, v16, s[0:1]
+	v_add_lshl_u32 v16, s4, v1, 2
+	.loc	1 2368 24                       ; triton_mla_kernels_decode_fused.py:2368:24
+	s_add_i32 s4, s15, 0x80
+	.loc	1 2365 12                       ; triton_mla_kernels_decode_fused.py:2365:12
+	v_cndmask_b32_e64 v25, v5, v16, s[0:1]
+	buffer_load_dwordx4 v[16:19], v24, s[24:27], 0 offen
+	buffer_load_dwordx4 v[20:23], v25, s[24:27], 0 offen
+	.loc	1 2368 12                       ; triton_mla_kernels_decode_fused.py:2368:12
+	v_add_lshl_u32 v24, s4, v0, 2
+	v_cndmask_b32_e64 v24, v5, v24, s[0:1]
+	buffer_load_dwordx4 v[24:27], v24, s[24:27], 0 offen
+	v_add_lshl_u32 v36, s4, v1, 2
+	.loc	1 2371 24                       ; triton_mla_kernels_decode_fused.py:2371:24
+	s_add_i32 s4, s13, 0x80
+	.loc	1 2368 12                       ; triton_mla_kernels_decode_fused.py:2368:12
+	v_cndmask_b32_e64 v36, v5, v36, s[0:1]
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	v_add_lshl_u32 v28, s4, v0, 2
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	buffer_load_dwordx4 v[32:35], v32, s[24:27], 0 offen
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	v_add_lshl_u32 v40, s4, v1, 2
+	.loc	1 2368 12                       ; triton_mla_kernels_decode_fused.py:2368:12
+	buffer_load_dwordx4 v[36:39], v36, s[24:27], 0 offen
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	v_cndmask_b32_e64 v28, v5, v28, s[0:1]
+	v_cndmask_b32_e64 v40, v5, v40, s[0:1]
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	v_add_lshl_u32 v44, s5, v1, 2
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	buffer_load_dwordx4 v[28:31], v28, s[24:27], 0 offen
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	v_cndmask_b32_e64 v44, v5, v44, s[0:1]
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	buffer_load_dwordx4 v[40:43], v40, s[24:27], 0 offen
+	.loc	1 2365 24                       ; triton_mla_kernels_decode_fused.py:2365:24
+	s_add_i32 s4, s29, 0x100
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	buffer_load_dwordx4 v[44:47], v44, s[24:27], 0 offen
+	.loc	1 2374 24 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2374:24
+	s_add_i32 s5, s12, 0x100
+	.loc	1 2365 24 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2365:24
+	s_addk_i32 s29, 0x180
+	.loc	1 2374 24                       ; triton_mla_kernels_decode_fused.py:2374:24
+	s_addk_i32 s12, 0x180
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	s_waitcnt vmcnt(5)
+	v_pk_mul_f32 v[24:25], v[8:9], v[24:25] op_sel_hi:[0,1]
+	.loc	1 2378 14 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[16:17], v[6:7], v[16:17], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	v_pk_mul_f32 v[24:25], v[8:9], v[26:27] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[18:19], v[6:7], v[18:19], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	s_waitcnt vmcnt(3)
+	v_pk_mul_f32 v[24:25], v[8:9], v[36:37] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[20:21], v[6:7], v[20:21], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	v_pk_mul_f32 v[24:25], v[8:9], v[38:39] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[22:23], v[6:7], v[22:23], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2379 14 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2379:14
+	s_waitcnt vmcnt(2)
+	v_pk_fma_f32 v[16:17], v[4:5], v[28:29], v[16:17] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[18:19], v[4:5], v[30:31], v[18:19] op_sel_hi:[0,1,1]
+	s_waitcnt vmcnt(1)
+	v_pk_fma_f32 v[20:21], v[4:5], v[40:41], v[20:21] op_sel_hi:[0,1,1]
+	.loc	1 2380 14                       ; triton_mla_kernels_decode_fused.py:2380:14
+	v_pk_fma_f32 v[16:17], v[2:3], v[32:33], v[16:17] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[18:19], v[2:3], v[34:35], v[18:19] op_sel_hi:[0,1,1]
+	s_waitcnt vmcnt(0)
+	v_pk_fma_f32 v[20:21], v[2:3], v[44:45], v[20:21] op_sel_hi:[0,1,1]
+	.loc	1 2379 14                       ; triton_mla_kernels_decode_fused.py:2379:14
+	v_pk_fma_f32 v[22:23], v[4:5], v[42:43], v[22:23] op_sel_hi:[0,1,1]
+	.loc	1 2380 14                       ; triton_mla_kernels_decode_fused.py:2380:14
+	v_pk_fma_f32 v[22:23], v[2:3], v[46:47], v[22:23] op_sel_hi:[0,1,1]
+	.loc	1 2383 54                       ; triton_mla_kernels_decode_fused.py:2383:54
+	v_cvt_pk_bf16_f32 v16, v16, v17
+	v_cvt_pk_bf16_f32 v17, v18, v19
+	v_cvt_pk_bf16_f32 v18, v20, v21
+	.loc	1 2383 42 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2383:42
+	v_add_u32_e32 v20, 0x100, v48
+	.loc	1 2383 54                       ; triton_mla_kernels_decode_fused.py:2383:54
+	v_cvt_pk_bf16_f32 v19, v22, v23
+	.loc	1 2383 42                       ; triton_mla_kernels_decode_fused.py:2383:42
+	v_cndmask_b32_e64 v20, v5, v20, s[0:1]
+	buffer_store_dwordx4 v[16:19], v20, s[8:11], 0 offen
+	.loc	1 2374 12 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2374:12
+	v_add_lshl_u32 v32, s5, v0, 2
+	v_cndmask_b32_e64 v32, v5, v32, s[0:1]
+	.loc	1 2365 12                       ; triton_mla_kernels_decode_fused.py:2365:12
+	v_add_lshl_u32 v16, s4, v0, 2
+	v_cndmask_b32_e64 v24, v5, v16, s[0:1]
+	v_add_lshl_u32 v16, s4, v1, 2
+	.loc	1 2368 24                       ; triton_mla_kernels_decode_fused.py:2368:24
+	s_add_i32 s4, s15, 0x100
+	.loc	1 2365 12                       ; triton_mla_kernels_decode_fused.py:2365:12
+	v_cndmask_b32_e64 v25, v5, v16, s[0:1]
+	buffer_load_dwordx4 v[16:19], v24, s[24:27], 0 offen
+	buffer_load_dwordx4 v[20:23], v25, s[24:27], 0 offen
+	.loc	1 2368 12                       ; triton_mla_kernels_decode_fused.py:2368:12
+	v_add_lshl_u32 v24, s4, v0, 2
+	v_cndmask_b32_e64 v24, v5, v24, s[0:1]
+	buffer_load_dwordx4 v[24:27], v24, s[24:27], 0 offen
+	v_add_lshl_u32 v36, s4, v1, 2
+	.loc	1 2371 24                       ; triton_mla_kernels_decode_fused.py:2371:24
+	s_add_i32 s4, s13, 0x100
+	.loc	1 2368 12                       ; triton_mla_kernels_decode_fused.py:2368:12
+	v_cndmask_b32_e64 v36, v5, v36, s[0:1]
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	v_add_lshl_u32 v28, s4, v0, 2
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	buffer_load_dwordx4 v[32:35], v32, s[24:27], 0 offen
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	v_add_lshl_u32 v40, s4, v1, 2
+	.loc	1 2368 12                       ; triton_mla_kernels_decode_fused.py:2368:12
+	buffer_load_dwordx4 v[36:39], v36, s[24:27], 0 offen
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	v_cndmask_b32_e64 v28, v5, v28, s[0:1]
+	v_cndmask_b32_e64 v40, v5, v40, s[0:1]
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	v_add_lshl_u32 v44, s5, v1, 2
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	buffer_load_dwordx4 v[28:31], v28, s[24:27], 0 offen
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	v_cndmask_b32_e64 v44, v5, v44, s[0:1]
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	buffer_load_dwordx4 v[40:43], v40, s[24:27], 0 offen
+	.loc	1 2368 24                       ; triton_mla_kernels_decode_fused.py:2368:24
+	s_addk_i32 s15, 0x180
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	buffer_load_dwordx4 v[44:47], v44, s[24:27], 0 offen
+	.loc	1 2371 24                       ; triton_mla_kernels_decode_fused.py:2371:24
+	s_addk_i32 s13, 0x180
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	s_waitcnt vmcnt(5)
+	v_pk_mul_f32 v[24:25], v[8:9], v[24:25] op_sel_hi:[0,1]
+	.loc	1 2378 14 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[16:17], v[6:7], v[16:17], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	v_pk_mul_f32 v[24:25], v[8:9], v[26:27] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[18:19], v[6:7], v[18:19], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	s_waitcnt vmcnt(3)
+	v_pk_mul_f32 v[24:25], v[8:9], v[36:37] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[20:21], v[6:7], v[20:21], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	v_pk_mul_f32 v[24:25], v[8:9], v[38:39] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[22:23], v[6:7], v[22:23], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2379 14 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2379:14
+	s_waitcnt vmcnt(2)
+	v_pk_fma_f32 v[16:17], v[4:5], v[28:29], v[16:17] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[18:19], v[4:5], v[30:31], v[18:19] op_sel_hi:[0,1,1]
+	s_waitcnt vmcnt(1)
+	v_pk_fma_f32 v[20:21], v[4:5], v[40:41], v[20:21] op_sel_hi:[0,1,1]
+	.loc	1 2380 14                       ; triton_mla_kernels_decode_fused.py:2380:14
+	v_pk_fma_f32 v[16:17], v[2:3], v[32:33], v[16:17] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[18:19], v[2:3], v[34:35], v[18:19] op_sel_hi:[0,1,1]
+	s_waitcnt vmcnt(0)
+	v_pk_fma_f32 v[20:21], v[2:3], v[44:45], v[20:21] op_sel_hi:[0,1,1]
+	.loc	1 2379 14                       ; triton_mla_kernels_decode_fused.py:2379:14
+	v_pk_fma_f32 v[22:23], v[4:5], v[42:43], v[22:23] op_sel_hi:[0,1,1]
+	.loc	1 2380 14                       ; triton_mla_kernels_decode_fused.py:2380:14
+	v_pk_fma_f32 v[22:23], v[2:3], v[46:47], v[22:23] op_sel_hi:[0,1,1]
+	.loc	1 2383 54                       ; triton_mla_kernels_decode_fused.py:2383:54
+	v_cvt_pk_bf16_f32 v16, v16, v17
+	v_cvt_pk_bf16_f32 v17, v18, v19
+	v_cvt_pk_bf16_f32 v18, v20, v21
+	.loc	1 2383 42 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2383:42
+	v_add_u32_e32 v20, 0x200, v48
+	.loc	1 2383 54                       ; triton_mla_kernels_decode_fused.py:2383:54
+	v_cvt_pk_bf16_f32 v19, v22, v23
+	.loc	1 2383 42                       ; triton_mla_kernels_decode_fused.py:2383:42
+	v_cndmask_b32_e64 v20, v5, v20, s[0:1]
+	buffer_store_dwordx4 v[16:19], v20, s[8:11], 0 offen
+	.loc	1 2365 12 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2365:12
+	s_nop 1
+	v_add_lshl_u32 v16, s29, v0, 2
+	v_cndmask_b32_e64 v24, v5, v16, s[0:1]
+	v_add_lshl_u32 v16, s29, v1, 2
+	v_cndmask_b32_e64 v25, v5, v16, s[0:1]
+	buffer_load_dwordx4 v[16:19], v24, s[24:27], 0 offen
+	buffer_load_dwordx4 v[20:23], v25, s[24:27], 0 offen
+	.loc	1 2368 12                       ; triton_mla_kernels_decode_fused.py:2368:12
+	v_add_lshl_u32 v24, s15, v0, 2
+	v_cndmask_b32_e64 v32, v5, v24, s[0:1]
+	v_add_lshl_u32 v24, s15, v1, 2
+	v_cndmask_b32_e64 v33, v5, v24, s[0:1]
+	buffer_load_dwordx4 v[24:27], v32, s[24:27], 0 offen
+	buffer_load_dwordx4 v[28:31], v33, s[24:27], 0 offen
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	v_add_lshl_u32 v32, s13, v0, 2
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	v_add_lshl_u32 v0, s12, v0, 2
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	v_cndmask_b32_e64 v32, v5, v32, s[0:1]
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	v_cndmask_b32_e64 v0, v5, v0, s[0:1]
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	buffer_load_dwordx4 v[32:35], v32, s[24:27], 0 offen
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	s_nop 0
+	buffer_load_dwordx4 v[36:39], v0, s[24:27], 0 offen
+	.loc	1 2371 12                       ; triton_mla_kernels_decode_fused.py:2371:12
+	v_add_lshl_u32 v0, s13, v1, 2
+	v_cndmask_b32_e64 v0, v5, v0, s[0:1]
+	buffer_load_dwordx4 v[40:43], v0, s[24:27], 0 offen
+	.loc	1 2374 12                       ; triton_mla_kernels_decode_fused.py:2374:12
+	v_add_lshl_u32 v0, s12, v1, 2
+	v_cndmask_b32_e64 v0, v5, v0, s[0:1]
+	buffer_load_dwordx4 v[44:47], v0, s[24:27], 0 offen
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	s_waitcnt vmcnt(5)
+	v_pk_mul_f32 v[0:1], v[8:9], v[24:25] op_sel_hi:[0,1]
+	v_pk_mul_f32 v[24:25], v[8:9], v[26:27] op_sel_hi:[0,1]
+	.loc	1 2378 14 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[0:1], v[6:7], v[16:17], v[0:1] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[16:17], v[6:7], v[18:19], v[24:25] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	s_waitcnt vmcnt(4)
+	v_pk_mul_f32 v[18:19], v[8:9], v[28:29] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[18:19], v[6:7], v[20:21], v[18:19] op_sel_hi:[0,1,1]
+	.loc	1 2378 33                       ; triton_mla_kernels_decode_fused.py:2378:33
+	v_pk_mul_f32 v[20:21], v[8:9], v[30:31] op_sel_hi:[0,1]
+	.loc	1 2378 14                       ; triton_mla_kernels_decode_fused.py:2378:14
+	v_pk_fma_f32 v[20:21], v[6:7], v[22:23], v[20:21] op_sel_hi:[0,1,1]
+	.loc	1 2379 14 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2379:14
+	s_waitcnt vmcnt(3)
+	v_pk_fma_f32 v[0:1], v[4:5], v[32:33], v[0:1] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[16:17], v[4:5], v[34:35], v[16:17] op_sel_hi:[0,1,1]
+	.loc	1 2262 8                        ; triton_mla_kernels_decode_fused.py:2262:8
+	v_cndmask_b32_e64 v6, v7, v12, s[2:3]
+	.loc	1 2379 14                       ; triton_mla_kernels_decode_fused.py:2379:14
+	s_waitcnt vmcnt(1)
+	v_pk_fma_f32 v[18:19], v[4:5], v[40:41], v[18:19] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[20:21], v[4:5], v[42:43], v[20:21] op_sel_hi:[0,1,1]
+	.loc	1 2270 8                        ; triton_mla_kernels_decode_fused.py:2270:8
+	v_cndmask_b32_e64 v8, v7, v11, s[2:3]
+	.loc	1 2380 14                       ; triton_mla_kernels_decode_fused.py:2380:14
+	v_pk_fma_f32 v[0:1], v[2:3], v[36:37], v[0:1] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[16:17], v[2:3], v[38:39], v[16:17] op_sel_hi:[0,1,1]
+	s_waitcnt vmcnt(0)
+	v_pk_fma_f32 v[18:19], v[2:3], v[44:45], v[18:19] op_sel_hi:[0,1,1]
+	v_pk_fma_f32 v[20:21], v[2:3], v[46:47], v[20:21] op_sel_hi:[0,1,1]
+	.loc	1 2246 8                        ; triton_mla_kernels_decode_fused.py:2246:8
+	v_cndmask_b32_e64 v2, v7, v14, s[2:3]
+	.loc	1 2254 8                        ; triton_mla_kernels_decode_fused.py:2254:8
+	v_cndmask_b32_e64 v4, v7, v13, s[2:3]
+	.loc	1 2280 34                       ; triton_mla_kernels_decode_fused.py:2280:34
+	v_cmp_lt_f32_e64 s[12:13], |v6|, s17
+	.loc	1 2281 34                       ; triton_mla_kernels_decode_fused.py:2281:34
+	v_cmp_lt_f32_e64 s[14:15], |v8|, s17
+	.loc	1 2278 34                       ; triton_mla_kernels_decode_fused.py:2278:34
+	v_cmp_lt_f32_e64 vcc, |v2|, s17
+	.loc	1 2279 34                       ; triton_mla_kernels_decode_fused.py:2279:34
+	v_cmp_lt_f32_e64 s[4:5], |v4|, s17
+	.loc	1 2285 46                       ; triton_mla_kernels_decode_fused.py:2285:46
+	v_cndmask_b32_e64 v6, v10, v6, s[12:13]
+	.loc	1 2286 46                       ; triton_mla_kernels_decode_fused.py:2286:46
+	v_cndmask_b32_e64 v8, v10, v8, s[14:15]
+	.loc	1 2283 46                       ; triton_mla_kernels_decode_fused.py:2283:46
+	v_cndmask_b32_e32 v2, v10, v2, vcc
+	.loc	1 2284 46                       ; triton_mla_kernels_decode_fused.py:2284:46
+	v_cndmask_b32_e64 v4, v10, v4, s[4:5]
+	.loc	1 2289 67                       ; triton_mla_kernels_decode_fused.py:2289:67
+	v_max_f32_e32 v10, v6, v6
+	v_max_f32_e32 v11, v8, v8
+	v_max_f32_e32 v10, v10, v11
+	.loc	1 2289 44 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2289:44
+	v_max3_f32 v14, v2, v4, v10
+	.loc	1 2292 61 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2292:61
+	v_sub_f32_e32 v2, v2, v14
+	.loc	1 2292 72 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2292:72
+	v_mul_f32_e32 v2, 0x3fb8aa3b, v2
+	.loc	1 2293 61 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2293:61
+	v_sub_f32_e32 v4, v4, v14
+	.loc	1 2292 47                       ; triton_mla_kernels_decode_fused.py:2292:47
+	v_exp_f32_e32 v2, v2
+	.loc	1 2293 72                       ; triton_mla_kernels_decode_fused.py:2293:72
+	v_mul_f32_e32 v4, 0x3fb8aa3b, v4
+	.loc	1 2293 47 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2293:47
+	v_exp_f32_e32 v4, v4
+	.loc	1 2383 54 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2383:54
+	v_cvt_pk_bf16_f32 v10, v0, v1
+	.loc	1 2292 80                       ; triton_mla_kernels_decode_fused.py:2292:80
+	v_cndmask_b32_e32 v0, 0, v2, vcc
+	.loc	1 2294 61                       ; triton_mla_kernels_decode_fused.py:2294:61
+	v_sub_f32_e32 v2, v6, v14
+	.loc	1 2293 80                       ; triton_mla_kernels_decode_fused.py:2293:80
+	v_cndmask_b32_e64 v1, 0, v4, s[4:5]
+	.loc	1 2294 72                       ; triton_mla_kernels_decode_fused.py:2294:72
+	v_mul_f32_e32 v2, 0x3fb8aa3b, v2
+	.loc	1 2295 61                       ; triton_mla_kernels_decode_fused.py:2295:61
+	v_sub_f32_e32 v4, v8, v14
+	.loc	1 2294 47                       ; triton_mla_kernels_decode_fused.py:2294:47
+	v_exp_f32_e32 v2, v2
+	.loc	1 2295 72                       ; triton_mla_kernels_decode_fused.py:2295:72
+	v_mul_f32_e32 v4, 0x3fb8aa3b, v4
+	.loc	1 2295 47 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2295:47
+	v_exp_f32_e32 v4, v4
+	.loc	1 2297 22 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2297:22
+	v_add_f32_e32 v0, v0, v1
+	.loc	1 2294 80                       ; triton_mla_kernels_decode_fused.py:2294:80
+	v_cndmask_b32_e64 v1, 0, v2, s[12:13]
+	.loc	1 2297 30                       ; triton_mla_kernels_decode_fused.py:2297:30
+	v_add_f32_e32 v0, v1, v0
+	.loc	1 2295 80                       ; triton_mla_kernels_decode_fused.py:2295:80
+	v_cndmask_b32_e64 v1, 0, v4, s[14:15]
+	.loc	1 2297 38                       ; triton_mla_kernels_decode_fused.py:2297:38
+	v_add_f32_e32 v0, v1, v0
+	.loc	1 2301 42                       ; triton_mla_kernels_decode_fused.py:2301:42
+	v_cmp_gt_f32_e32 vcc, s22, v0
+	.loc	1 2383 42                       ; triton_mla_kernels_decode_fused.py:2383:42
+	v_add_u32_e32 v6, 0x300, v48
+	.loc	1 2383 54 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2383:54
+	v_cvt_pk_bf16_f32 v11, v16, v17
+	.loc	1 2301 42 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2301:42
+	v_cndmask_b32_e64 v1, 0, 32, vcc
+	v_ldexp_f32 v1, v0, v1
+	v_log_f32_e32 v1, v1
+	v_cndmask_b32_e32 v2, 0, v15, vcc
+	.loc	1 2383 54                       ; triton_mla_kernels_decode_fused.py:2383:54
+	v_cvt_pk_bf16_f32 v12, v18, v19
+	v_cvt_pk_bf16_f32 v13, v20, v21
+	.loc	1 2301 42                       ; triton_mla_kernels_decode_fused.py:2301:42
+	v_sub_f32_e32 v1, v1, v2
+	.loc	1 2301 58 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2301:58
+	v_div_scale_f32 v2, s[4:5], s23, s23, v1
+	v_rcp_f32_e32 v4, v2
+	.loc	1 2383 42 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2383:42
+	v_cndmask_b32_e64 v6, v5, v6, s[0:1]
+	buffer_store_dwordx4 v[10:13], v6, s[8:11], 0 offen
+	.loc	1 2387 32                       ; triton_mla_kernels_decode_fused.py:2387:32
+	s_mul_i32 s0, s19, s16
+	.loc	1 2301 58                       ; triton_mla_kernels_decode_fused.py:2301:58
+	v_fma_f32 v6, -v2, v4, 1.0
+	v_fmac_f32_e32 v4, v6, v4
+	v_div_scale_f32 v6, vcc, v1, s23, v1
+	v_mul_f32_e32 v8, v6, v4
+	v_fma_f32 v10, -v2, v8, v6
+	v_fmac_f32_e32 v8, v10, v4
+	v_fma_f32 v2, -v2, v8, v6
+	v_div_fmas_f32 v2, v2, v4, v8
+	v_div_fixup_f32 v1, v2, s23, v1
+	.loc	1 2301 29 is_stmt 0             ; triton_mla_kernels_decode_fused.py:2301:29
+	v_add_f32_e32 v1, v14, v1
+	.loc	1 2302 50 is_stmt 1             ; triton_mla_kernels_decode_fused.py:2302:50
+	v_cmp_neq_f32_e32 vcc, 0, v0
+	.loc	1 2388 23                       ; triton_mla_kernels_decode_fused.py:2388:23
+	s_mov_b32 s22, s6
+	s_mov_b32 s23, s7
+	.loc	1 2302 50                       ; triton_mla_kernels_decode_fused.py:2302:50
+	v_cndmask_b32_e32 v0, v7, v1, vcc
+	.loc	1 2388 23                       ; triton_mla_kernels_decode_fused.py:2388:23
+	v_or_b32_e32 v1, s33, v3
+	v_cmp_eq_u32_e32 vcc, 0, v1
+	v_add_lshl_u32 v1, v9, s0, 2
+	s_and_b64 vcc, s[2:3], vcc
+	v_cndmask_b32_e32 v1, v5, v1, vcc
+	buffer_store_dword v0, v1, s[20:23], 0 offen
+	.loc	1 2388 4 is_stmt 0              ; triton_mla_kernels_decode_fused.py:2388:4
+	s_endpgm
+.Ltmp2:
+	.section	.rodata,"a",@progbits
+	.p2align	6, 0x0
+	.amdhsa_kernel _combine_splitk_kernel
+		.amdhsa_group_segment_fixed_size 0
+		.amdhsa_private_segment_fixed_size 0
+		.amdhsa_kernarg_size 96
+		.amdhsa_user_sgpr_count 16
+		.amdhsa_user_sgpr_dispatch_ptr 0
+		.amdhsa_user_sgpr_queue_ptr 0
+		.amdhsa_user_sgpr_kernarg_segment_ptr 1
+		.amdhsa_user_sgpr_dispatch_id 0
+		.amdhsa_user_sgpr_kernarg_preload_length 14
+		.amdhsa_user_sgpr_kernarg_preload_offset 0
+		.amdhsa_user_sgpr_private_segment_size 0
+		.amdhsa_uses_dynamic_stack 0
+		.amdhsa_enable_private_segment 0
+		.amdhsa_system_sgpr_workgroup_id_x 1
+		.amdhsa_system_sgpr_workgroup_id_y 1
+		.amdhsa_system_sgpr_workgroup_id_z 0
+		.amdhsa_system_sgpr_workgroup_info 0
+		.amdhsa_system_vgpr_workitem_id 0
+		.amdhsa_next_free_vgpr 57
+		.amdhsa_next_free_sgpr 40
+		.amdhsa_accum_offset 60
+		.amdhsa_reserve_vcc 1
+		.amdhsa_reserve_xnack_mask 1
+		.amdhsa_float_round_mode_32 0
+		.amdhsa_float_round_mode_16_64 0
+		.amdhsa_float_denorm_mode_32 3
+		.amdhsa_float_denorm_mode_16_64 3
+		.amdhsa_dx10_clamp 1
+		.amdhsa_ieee_mode 1
+		.amdhsa_fp16_overflow 0
+		.amdhsa_tg_split 0
+		.amdhsa_exception_fp_ieee_invalid_op 0
+		.amdhsa_exception_fp_denorm_src 0
+		.amdhsa_exception_fp_ieee_div_zero 0
+		.amdhsa_exception_fp_ieee_overflow 0
+		.amdhsa_exception_fp_ieee_underflow 0
+		.amdhsa_exception_fp_ieee_inexact 0
+		.amdhsa_exception_int_div_zero 0
+	.end_amdhsa_kernel
+	.text
+.Lfunc_end0:
+	.size	_combine_splitk_kernel, .Lfunc_end0-_combine_splitk_kernel
+	.cfi_endproc
+                                        ; -- End function
+	.set _combine_splitk_kernel.num_vgpr, 57
+	.set _combine_splitk_kernel.num_agpr, 0
+	.set _combine_splitk_kernel.numbered_sgpr, 40
+	.set _combine_splitk_kernel.num_named_barrier, 0
+	.set _combine_splitk_kernel.private_seg_size, 0
+	.set _combine_splitk_kernel.uses_vcc, 1
+	.set _combine_splitk_kernel.uses_flat_scratch, 0
+	.set _combine_splitk_kernel.has_dyn_sized_stack, 0
+	.set _combine_splitk_kernel.has_recursion, 0
+	.set _combine_splitk_kernel.has_indirect_call, 0
+	.section	.AMDGPU.csdata,"",@progbits
+; Kernel info:
+; codeLenInByte = 3656
+; TotalNumSgprs: 46
+; NumVgprs: 57
+; NumAgprs: 0
+; TotalNumVgprs: 57
+; ScratchSize: 0
+; MemoryBound: 0
+; FloatMode: 240
+; IeeeMode: 1
+; LDSByteSize: 0 bytes/workgroup (compile time only)
+; SGPRBlocks: 5
+; VGPRBlocks: 7
+; NumSGPRsForWavesPerEU: 46
+; NumVGPRsForWavesPerEU: 57
+; AccumOffset: 60
+; Occupancy: 8
+; WaveLimiterHint : 0
+; COMPUTE_PGM_RSRC2:SCRATCH_EN: 0
+; COMPUTE_PGM_RSRC2:USER_SGPR: 16
+; COMPUTE_PGM_RSRC2:TRAP_HANDLER: 0
+; COMPUTE_PGM_RSRC2:TGID_X_EN: 1
+; COMPUTE_PGM_RSRC2:TGID_Y_EN: 1
+; COMPUTE_PGM_RSRC2:TGID_Z_EN: 0
+; COMPUTE_PGM_RSRC2:TIDIG_COMP_CNT: 0
+; COMPUTE_PGM_RSRC3_GFX90A:ACCUM_OFFSET: 14
+; COMPUTE_PGM_RSRC3_GFX90A:TG_SPLIT: 0
+	.text
+	.p2alignl 6, 3212836864
+	.fill 256, 4, 3212836864
+	.section	.AMDGPU.gpr_maximums,"",@progbits
+	.set amdgpu.max_num_vgpr, 0
+	.set amdgpu.max_num_agpr, 0
+	.set amdgpu.max_num_sgpr, 0
+	.set amdgpu.max_num_named_barrier, 0
+	.text
+	.section	.debug_abbrev,"",@progbits
+	.byte	1                               ; Abbreviation Code
+	.byte	17                              ; DW_TAG_compile_unit
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	37                              ; DW_AT_producer
+	.byte	14                              ; DW_FORM_strp
+	.byte	19                              ; DW_AT_language
+	.byte	5                               ; DW_FORM_data2
+	.byte	3                               ; DW_AT_name
+	.byte	14                              ; DW_FORM_strp
+	.byte	16                              ; DW_AT_stmt_list
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	27                              ; DW_AT_comp_dir
+	.byte	14                              ; DW_FORM_strp
+	.byte	17                              ; DW_AT_low_pc
+	.byte	1                               ; DW_FORM_addr
+	.byte	18                              ; DW_AT_high_pc
+	.byte	6                               ; DW_FORM_data4
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	0                               ; EOM(3)
+	.section	.debug_info,"",@progbits
+.Lcu_begin0:
+	.long	.Ldebug_info_end0-.Ldebug_info_start0 ; Length of Unit
+.Ldebug_info_start0:
+	.short	4                               ; DWARF version number
+	.long	.debug_abbrev                   ; Offset Into Abbrev. Section
+	.byte	8                               ; Address Size (in bytes)
+	.byte	1                               ; Abbrev [1] 0xb:0x1f DW_TAG_compile_unit
+	.long	.Linfo_string0                  ; DW_AT_producer
+	.short	2                               ; DW_AT_language
+	.long	.Linfo_string1                  ; DW_AT_name
+	.long	.Lline_table_start0             ; DW_AT_stmt_list
+	.long	.Linfo_string2                  ; DW_AT_comp_dir
+	.quad	.Lfunc_begin0                   ; DW_AT_low_pc
+	.long	.Lfunc_end0-.Lfunc_begin0       ; DW_AT_high_pc
+.Ldebug_info_end0:
+	.section	.debug_str,"MS",@progbits,1
+.Linfo_string0:
+	.asciz	"triton"                        ; string offset=0
+.Linfo_string1:
+	.asciz	"triton_mla_kernels_decode_fused.py" ; string offset=7
+.Linfo_string2:
+	.asciz	"/sgl-workspace/sglang/python/sglang/srt/layers/attention/nsa/triton_decode" ; string offset=42
+	.section	".note.GNU-stack","",@progbits
+	.amdgpu_metadata
+---
+amdhsa.kernels:
+  - .agpr_count:     0
+    .args:
+      - .address_space:  global
+        .offset:         0
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         8
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         16
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         24
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         32
+        .size:           8
+        .value_kind:     global_buffer
+      - .offset:         40
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         44
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         48
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         52
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         56
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         60
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         64
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         68
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         72
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         76
+        .size:           4
+        .value_kind:     by_value
+      - .address_space:  global
+        .offset:         80
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         88
+        .size:           8
+        .value_kind:     global_buffer
+    .group_segment_fixed_size: 0
+    .kernarg_segment_align: 8
+    .kernarg_segment_size: 96
+    .max_flat_workgroup_size: 256
+    .name:           _combine_splitk_kernel
+    .private_segment_fixed_size: 0
+    .sgpr_count:     46
+    .sgpr_spill_count: 0
+    .symbol:         _combine_splitk_kernel.kd
+    .uniform_work_group_size: 1
+    .uses_dynamic_stack: false
+    .vgpr_count:     57
+    .vgpr_spill_count: 0
+    .wavefront_size: 64
+amdhsa.target:   amdgcn-amd-amdhsa--gfx950
+amdhsa.version:
+  - 1
+  - 2
+...
+
+	.end_amdgpu_metadata
+	.section	.debug_line,"",@progbits
+.Lline_table_start0:

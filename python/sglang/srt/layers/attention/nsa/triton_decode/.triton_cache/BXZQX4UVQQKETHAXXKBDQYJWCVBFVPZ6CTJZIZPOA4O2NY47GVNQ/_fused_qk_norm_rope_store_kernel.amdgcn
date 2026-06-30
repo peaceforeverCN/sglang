@@ -1,0 +1,2684 @@
+	.amdgcn_target "amdgcn-amd-amdhsa--gfx950"
+	.amdhsa_code_object_version 5
+	.text
+	.globl	_fused_qk_norm_rope_store_kernel ; -- Begin function _fused_qk_norm_rope_store_kernel
+	.p2align	8
+	.type	_fused_qk_norm_rope_store_kernel,@function
+_fused_qk_norm_rope_store_kernel:       ; @_fused_qk_norm_rope_store_kernel
+.Lfunc_begin0:
+	.cfi_sections .debug_frame
+	.cfi_startproc
+; %bb.5:
+	.file	1 "/sgl-workspace/sglang/python/sglang/srt/layers" "fused_qk_norm_rope_store.py"
+	.loc	1 60 0 prologue_end             ; fused_qk_norm_rope_store.py:60:0
+	s_load_dwordx2 s[2:3], s[0:1], 0x0
+	s_load_dwordx8 s[4:11], s[0:1], 0x8
+	s_load_dwordx4 s[12:15], s[0:1], 0x28
+	s_waitcnt lgkmcnt(0)
+	s_branch .LBB0_0
+	.loc	1 0 0 is_stmt 0                 ; :0:0
+.Ltmp0:
+	.p2align	8
+; %bb.6:
+.LBB0_0:
+	s_mov_b32 s18, s16
+	s_mov_b64 s[40:41], s[6:7]
+	s_load_dword s6, s[0:1], 0x48
+	s_load_dword s16, s[0:1], 0x60
+	s_mov_b64 s[20:21], s[14:15]
+	s_mov_b64 s[28:29], s[10:11]
+	s_mov_b64 s[24:25], s[2:3]
+	s_waitcnt lgkmcnt(0)
+	s_ashr_i32 s7, s6, 31
+.Ltmp1:
+	.loc	1 60 0 is_stmt 1                ; fused_qk_norm_rope_store.py:60
+	s_setreg_imm32_b32 hwreg(HW_REG_MODE, 23, 1), 1
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	v_readfirstlane_b32 s34, v0
+	.loc	1 100 32                        ; fused_qk_norm_rope_store.py:100:32
+	s_ashr_i32 s19, s18, 31
+	.loc	1 105 21                        ; fused_qk_norm_rope_store.py:105:21
+	s_lshl_b64 s[26:27], s[18:19], 2
+	.loc	1 105 49 is_stmt 0              ; fused_qk_norm_rope_store.py:105:49
+	s_bfe_u32 s31, s34, 0x20006
+	v_and_b32_e32 v6, 63, v0
+	s_and_b32 s30, s34, 0xc0
+	.loc	1 105 36                        ; fused_qk_norm_rope_store.py:105:36
+	s_or_b32 s22, s26, s31
+	s_mov_b32 s23, s27
+	.loc	1 106 22 is_stmt 1              ; fused_qk_norm_rope_store.py:106:22
+	v_mov_b64_e32 v[2:3], s[6:7]
+	.loc	1 105 49                        ; fused_qk_norm_rope_store.py:105:49
+	v_or_b32_e32 v7, s30, v6
+	.loc	1 106 22                        ; fused_qk_norm_rope_store.py:106:22
+	v_cmp_lt_i64_e64 s[18:19], s[22:23], v[2:3]
+	.loc	1 108 31                        ; fused_qk_norm_rope_store.py:108:31
+	v_lshlrev_b32_e32 v9, 3, v6
+	.loc	1 109 32                        ; fused_qk_norm_rope_store.py:109:32
+	v_cmp_gt_u32_e64 s[14:15], 56, v6
+	.loc	1 111 29                        ; fused_qk_norm_rope_store.py:111:29
+	v_and_b32_e32 v10, 7, v0
+	.loc	1 112 30                        ; fused_qk_norm_rope_store.py:112:30
+	v_bfe_u32 v8, v0, 1, 5
+	s_mov_b64 s[10:11], -1
+	.loc	1 115 15                        ; fused_qk_norm_rope_store.py:115:15
+	s_cmpk_gt_i32 s17, 0x7f
+	v_lshlrev_b32_e32 v11, 2, v0
+	v_cmp_lt_u32_e64 s[2:3], 55, v6
+	s_cbranch_scc1 .LBB0_3
+; %bb.1:                                ; %Flow
+	.loc	1 0 15 is_stmt 0                ; fused_qk_norm_rope_store.py:0:15
+	s_andn2_b64 vcc, exec, s[10:11]
+	s_cbranch_vccz .LBB0_4
+.LBB0_2:                                ; %common.ret
+	s_endpgm
+.LBB0_3:
+	.loc	1 165 18 is_stmt 1              ; fused_qk_norm_rope_store.py:165:18
+	s_and_b32 s45, s29, 0xffff
+	s_lshl_b32 s23, s22, 3
+	s_and_b64 s[10:11], s[18:19], exec
+	s_cselect_b32 s10, s23, 0x80000000
+	s_mov_b32 s47, 0x27000
+	s_mov_b32 s46, 0x7ffffffe
+	s_mov_b32 s44, s28
+	v_mov_b32_e32 v1, s10
+	buffer_load_dwordx2 v[14:15], v1, s[44:47], 0 offen
+	s_load_dword s35, s[0:1], 0x5c
+	s_load_dword s33, s[0:1], 0x64
+	s_load_dword s23, s[0:1], 0x6c
+	.loc	1 176 23                        ; fused_qk_norm_rope_store.py:176:23
+	v_lshlrev_b32_e32 v1, 2, v7
+	s_mov_b32 s10, s46
+	s_mov_b32 s11, s47
+	s_and_b32 s9, s9, 0xffff
+	buffer_load_dword v34, v1, s[8:11], 0 offen
+	.loc	1 170 23                        ; fused_qk_norm_rope_store.py:170:23
+	s_waitcnt lgkmcnt(0)
+	s_mul_i32 s8, s35, s22
+	.loc	1 167 18                        ; fused_qk_norm_rope_store.py:167:18
+	v_bfrev_b32_e32 v12, 1
+	.loc	1 173 22                        ; fused_qk_norm_rope_store.py:173:22
+	v_add_lshl_u32 v1, s8, v9, 1
+	s_waitcnt vmcnt(1)
+	v_cndmask_b32_e64 v15, v12, v1, s[18:19]
+	.loc	1 167 18                        ; fused_qk_norm_rope_store.py:167:18
+	s_and_b32 s45, s13, 0xffff
+	s_mov_b32 s44, s12
+	.loc	1 173 22                        ; fused_qk_norm_rope_store.py:173:22
+	s_mov_b32 s42, s46
+	s_mov_b32 s43, s47
+	s_and_b32 s41, s41, 0xffff
+	buffer_load_dwordx4 v[2:5], v15, s[40:43], 0 offen
+	.loc	1 105 49                        ; fused_qk_norm_rope_store.py:105:49
+	v_and_b32_e32 v13, 3, v0
+	.loc	1 176 60                        ; fused_qk_norm_rope_store.py:176:60
+	v_lshlrev_b32_e32 v19, 5, v0
+	v_lshlrev_b32_e32 v20, 1, v0
+	v_lshlrev_b32_e32 v16, 8, v0
+	v_bfe_i32 v17, v0, 1, 1
+	v_and_b32_e32 v18, 60, v11
+	v_and_b32_e32 v19, 0x200, v19
+	v_and_b32_e32 v20, 64, v20
+	v_or3_b32 v18, v19, v20, v18
+	s_and_b32 s11, s34, 0x80
+	v_add_u32_e32 v30, 0, v18
+	v_xad_u32 v31, v18, 64, 0
+	v_and_b32_e32 v17, 0xc0, v17
+	s_and_b32 s10, s34, 64
+	v_and_b32_e32 v16, 0x100, v16
+.Ltmp2:
+	.loc	1 31 54                         ; fused_qk_norm_rope_store.py:31:54 @[ fused_qk_norm_rope_store.py:179:58 ]
+	v_mov_b32_e32 v28, 0x3b000000
+	v_mov_b32_e32 v32, s23
+.Ltmp3:
+	.file	2 "/sgl-workspace/triton-custom/python/triton/language" "standard.py"
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ]
+	v_xor_b32_e32 v29, 0x80, v11
+.Ltmp4:
+	.loc	1 183 8                         ; fused_qk_norm_rope_store.py:183:8
+	v_cndmask_b32_e64 v15, v12, v15, s[14:15]
+	s_load_dwordx4 s[36:39], s[0:1], 0x38
+	.loc	1 228 22                        ; fused_qk_norm_rope_store.py:228:22
+	s_lshl_b32 s9, s22, 2
+	s_mov_b32 s23, 0x800000
+	.loc	1 167 28                        ; fused_qk_norm_rope_store.py:167:28
+	v_mul_lo_u32 v1, s16, v14
+	.loc	1 167 18 is_stmt 0              ; fused_qk_norm_rope_store.py:167:18
+	v_add_lshl_u32 v1, v1, v8, 1
+	v_cndmask_b32_e64 v1, v12, v1, s[18:19]
+	buffer_load_ushort v35, v1, s[44:47], 0 offen
+	.loc	1 168 18 is_stmt 1              ; fused_qk_norm_rope_store.py:168:18
+	s_and_b32 s45, s21, 0xffff
+	s_mov_b32 s44, s20
+	buffer_load_ushort v36, v1, s[44:47], 0 offen
+	.loc	1 105 36                        ; fused_qk_norm_rope_store.py:105:36
+	v_mov_b32_e32 v1, s27
+	.loc	1 176 60                        ; fused_qk_norm_rope_store.py:176:60
+	v_and_b32_e32 v14, 60, v0
+	.loc	1 105 36                        ; fused_qk_norm_rope_store.py:105:36
+	v_or_b32_e32 v0, s26, v13
+	.loc	1 228 22                        ; fused_qk_norm_rope_store.py:228:22
+	v_lshlrev_b32_e32 v19, 2, v0
+	.loc	1 106 22                        ; fused_qk_norm_rope_store.py:106:22
+	v_cmp_gt_i64_e64 s[6:7], s[6:7], v[0:1]
+	.loc	1 176 60                        ; fused_qk_norm_rope_store.py:176:60
+	s_lshr_b32 s26, s11, 1
+	s_lshl3_add_u32 s27, s10, 0
+	.loc	1 228 22                        ; fused_qk_norm_rope_store.py:228:22
+	v_cndmask_b32_e64 v44, v12, v19, s[6:7]
+	.loc	1 176 60                        ; fused_qk_norm_rope_store.py:176:60
+	v_bitop3_b32 v0, s26, v17, v14 bitop3:0x1e
+	.loc	1 173 74                        ; fused_qk_norm_rope_store.py:173:74
+	s_waitcnt vmcnt(2)
+	v_and_b32_e32 v19, 0xffff0000, v3
+	v_lshlrev_b32_e32 v18, 16, v3
+	v_and_b32_e32 v3, 0xffff0000, v2
+	v_lshlrev_b32_e32 v2, 16, v2
+.Ltmp5:
+	.loc	1 30 28                         ; fused_qk_norm_rope_store.py:30:28 @[ fused_qk_norm_rope_store.py:179:58 ]
+	v_pk_mul_f32 v[26:27], v[2:3], v[2:3]
+	v_pk_mul_f32 v[24:25], v[18:19], v[18:19]
+.Ltmp6:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ] ]
+	v_add_f32_e32 v26, v26, v27
+.Ltmp7:
+	.loc	1 176 60                        ; fused_qk_norm_rope_store.py:176:60
+	v_add3_u32 v1, s27, v16, v0
+	.loc	1 173 74                        ; fused_qk_norm_rope_store.py:173:74
+	v_and_b32_e32 v17, 0xffff0000, v5
+	v_lshlrev_b32_e32 v16, 16, v5
+	v_and_b32_e32 v5, 0xffff0000, v4
+	v_lshlrev_b32_e32 v4, 16, v4
+.Ltmp8:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ] ]
+	v_add_f32_e32 v24, v24, v26
+.Ltmp9:
+	.loc	1 30 28                         ; fused_qk_norm_rope_store.py:30:28 @[ fused_qk_norm_rope_store.py:179:58 ]
+	v_pk_mul_f32 v[22:23], v[4:5], v[4:5]
+.Ltmp10:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ] ]
+	v_add_f32_e32 v24, v25, v24
+	v_add_f32_e32 v22, v22, v24
+.Ltmp11:
+	.loc	1 30 28                         ; fused_qk_norm_rope_store.py:30:28 @[ fused_qk_norm_rope_store.py:179:58 ]
+	v_pk_mul_f32 v[20:21], v[16:17], v[16:17]
+.Ltmp12:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ] ]
+	v_add_f32_e32 v22, v23, v22
+	v_add_f32_e32 v20, v20, v22
+	v_add_f32_e32 v20, v21, v20
+.Ltmp13:
+	.loc	1 196 8                         ; fused_qk_norm_rope_store.py:196:8
+	v_add_lshl_u32 v0, s8, v6, 1
+	.loc	1 176 60                        ; fused_qk_norm_rope_store.py:176:60
+	ds_write_b32 v1, v34
+.Ltmp14:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ] ]
+	v_add_f32_dpp v20, v20, v20 row_shr:8 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp15:
+	.loc	1 51 18                         ; fused_qk_norm_rope_store.py:51:18 @[ fused_qk_norm_rope_store.py:192:60 ]
+	s_lshr_b32 s10, s10, 5
+	s_lshl_b32 s11, s11, 1
+.Ltmp16:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ] ]
+	v_add_f32_dpp v20, v20, v20 row_shr:4 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp17:
+	.loc	1 51 18                         ; fused_qk_norm_rope_store.py:51:18 @[ fused_qk_norm_rope_store.py:192:60 ]
+	s_or_b32 s10, s11, s10
+	s_add_i32 s10, s10, 0
+.Ltmp18:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ] ]
+	v_add_f32_dpp v20, v20, v20 row_shr:2 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp19:
+	.loc	1 51 18                         ; fused_qk_norm_rope_store.py:51:18 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_lshl_add_u32 v45, v6, 2, s10
+	v_lshl_add_u32 v46, v10, 5, s10
+.Ltmp20:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ] ]
+	v_add_f32_dpp v20, v20, v20 row_shr:1 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp21:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ]
+	v_mov_b32_e32 v21, v20
+.Ltmp22:
+	.loc	1 196 8                         ; fused_qk_norm_rope_store.py:196:8
+	v_add_u32_e32 v33, 0x380, v0
+	v_cndmask_b32_e64 v48, v12, v33, s[18:19]
+.Ltmp23:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ]
+	v_mov_b32_dpp v21, v21 row_bcast:15 row_mask:0xa bank_mask:0xf bound_ctrl:1
+.Ltmp24:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ] ]
+	v_add_f32_e32 v20, v21, v20
+.Ltmp25:
+	.loc	1 228 22                        ; fused_qk_norm_rope_store.py:228:22
+	s_waitcnt lgkmcnt(0)
+	s_and_b32 s45, s39, 0xffff
+	s_and_b64 s[10:11], s[18:19], exec
+.Ltmp26:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ] ]
+	v_add_f32_dpp v20, v20, v20 row_bcast:31 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp27:
+	.loc	1 228 22                        ; fused_qk_norm_rope_store.py:228:22
+	s_mov_b32 s44, s38
+.Ltmp28:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:179:58 ] ]
+	v_readlane_b32 s8, v20, 63
+.Ltmp29:
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_cndmask_b32_e64 v47, v12, v0, s[18:19]
+	s_mov_b32 s10, 0x43e00000
+.Ltmp30:
+	.loc	1 31 54                         ; fused_qk_norm_rope_store.py:31:54 @[ fused_qk_norm_rope_store.py:179:58 ]
+	v_fmac_f32_e32 v32, s8, v28
+	.loc	1 31 32 is_stmt 0               ; fused_qk_norm_rope_store.py:31:32 @[ fused_qk_norm_rope_store.py:179:58 ]
+	v_rsq_f32_e32 v20, v32
+.Ltmp31:
+	.loc	1 228 22 is_stmt 1              ; fused_qk_norm_rope_store.py:228:22
+	s_cselect_b32 s8, s9, 0x80000000
+	s_mov_b32 s11, 0xc3e00000
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	s_mov_b32 s38, s46
+.Ltmp32:
+	.loc	1 33 21                         ; fused_qk_norm_rope_store.py:33:21 @[ fused_qk_norm_rope_store.py:179:58 ]
+	v_pk_mul_f32 v[2:3], v[20:21], v[2:3] op_sel_hi:[0,1]
+	v_pk_mul_f32 v[18:19], v[20:21], v[18:19] op_sel_hi:[0,1]
+	v_pk_mul_f32 v[4:5], v[20:21], v[4:5] op_sel_hi:[0,1]
+	v_pk_mul_f32 v[16:17], v[20:21], v[16:17] op_sel_hi:[0,1]
+.Ltmp33:
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	s_mov_b32 s39, s47
+	.loc	1 176 60                        ; fused_qk_norm_rope_store.py:176:60
+	s_barrier
+	ds_read2_b32 v[22:23], v31 offset0:32 offset1:96
+	ds_read2st64_b32 v[20:21], v30 offset1:1
+	s_waitcnt lgkmcnt(1)
+	v_and_b32_e32 v25, 0xffff0000, v23
+	v_lshlrev_b32_e32 v24, 16, v23
+	v_and_b32_e32 v23, 0xffff0000, v22
+	v_lshlrev_b32_e32 v22, 16, v22
+	s_waitcnt lgkmcnt(0)
+	v_and_b32_e32 v27, 0xffff0000, v21
+	v_lshlrev_b32_e32 v26, 16, v21
+	v_and_b32_e32 v21, 0xffff0000, v20
+	v_lshlrev_b32_e32 v20, 16, v20
+.Ltmp34:
+	.loc	1 33 44                         ; fused_qk_norm_rope_store.py:33:44 @[ fused_qk_norm_rope_store.py:179:58 ]
+	v_pk_mul_f32 v[20:21], v[2:3], v[20:21]
+	v_pk_mul_f32 v[18:19], v[18:19], v[26:27]
+	v_pk_mul_f32 v[22:23], v[4:5], v[22:23]
+	v_pk_mul_f32 v[16:17], v[16:17], v[24:25]
+.Ltmp35:
+	.loc	1 183 21                        ; fused_qk_norm_rope_store.py:183:21
+	v_cvt_pk_bf16_f32 v2, v20, v21
+	v_cvt_pk_bf16_f32 v3, v18, v19
+	v_cvt_pk_bf16_f32 v4, v22, v23
+	v_cvt_pk_bf16_f32 v5, v16, v17
+	.loc	1 187 68                        ; fused_qk_norm_rope_store.py:187:68
+	v_cndmask_b32_e64 v21, 0, v21, s[2:3]
+	v_cndmask_b32_e64 v20, 0, v20, s[2:3]
+	v_cndmask_b32_e64 v19, 0, v19, s[2:3]
+	v_cndmask_b32_e64 v18, 0, v18, s[2:3]
+	v_cndmask_b32_e64 v23, 0, v23, s[2:3]
+	v_cndmask_b32_e64 v22, 0, v22, s[2:3]
+	v_cndmask_b32_e64 v17, 0, v17, s[2:3]
+	v_cndmask_b32_e64 v16, 0, v16, s[2:3]
+	.loc	1 183 8                         ; fused_qk_norm_rope_store.py:183:8
+	buffer_store_dwordx4 v[2:5], v15, s[40:43], 0 offen
+.Ltmp36:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ]
+	ds_bpermute_b32 v2, v29, v20
+	ds_bpermute_b32 v3, v29, v21
+	ds_bpermute_b32 v4, v29, v18
+	ds_bpermute_b32 v5, v29, v19
+	ds_bpermute_b32 v24, v29, v22
+	ds_bpermute_b32 v25, v29, v23
+	ds_bpermute_b32 v26, v29, v16
+	ds_bpermute_b32 v27, v29, v17
+.Ltmp37:
+	.loc	1 51 18                         ; fused_qk_norm_rope_store.py:51:18 @[ fused_qk_norm_rope_store.py:192:60 ]
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	s_waitcnt vmcnt(2)
+	ds_write_b16 v45, v35
+	; wave barrier
+	ds_read_u16 v1, v46
+	ds_read_u16 v15, v46 offset:4
+	ds_read_u16 v30, v46 offset:8
+	ds_read_u16 v31, v46 offset:12
+	ds_read_u16 v32, v46 offset:16
+	ds_read_u16 v33, v46 offset:20
+	ds_read_u16 v34, v46 offset:24
+	ds_read_u16 v35, v46 offset:28
+	.loc	1 51 32 is_stmt 0               ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	s_waitcnt vmcnt(1)
+	ds_write_b16 v45, v36
+	; wave barrier
+	ds_read_u16 v28, v46
+	ds_read_u16 v36, v46 offset:4
+	ds_read_u16 v37, v46 offset:8
+	ds_read_u16 v38, v46 offset:12
+	ds_read_u16 v39, v46 offset:16
+	ds_read_u16 v40, v46 offset:20
+	ds_read_u16 v49, v46 offset:24
+	ds_read_u16 v41, v46 offset:28
+.Ltmp38:
+	.loc	2 263 15 is_stmt 1              ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ] ]
+	v_pk_add_f32 v[2:3], v[20:21], v[2:3]
+.Ltmp39:
+	.loc	1 51 32                         ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	s_waitcnt lgkmcnt(6)
+	v_lshlrev_b32_e32 v29, 16, v36
+.Ltmp40:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ] ]
+	v_pk_add_f32 v[4:5], v[18:19], v[4:5]
+.Ltmp41:
+	.loc	1 51 18                         ; fused_qk_norm_rope_store.py:51:18 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_lshlrev_b32_e32 v18, 16, v30
+	.loc	1 51 32 is_stmt 0               ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	s_waitcnt lgkmcnt(5)
+	v_lshlrev_b32_e32 v30, 16, v37
+.Ltmp42:
+	.loc	2 263 15 is_stmt 1              ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ] ]
+	v_pk_add_f32 v[22:23], v[22:23], v[24:25]
+	v_pk_add_f32 v[16:17], v[16:17], v[26:27]
+.Ltmp43:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ]
+	ds_swizzle_b32 v36, v2 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v37, v3 offset:swizzle(SWAP,16)
+.Ltmp44:
+	.loc	1 51 18                         ; fused_qk_norm_rope_store.py:51:18 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_lshlrev_b32_e32 v19, 16, v31
+	.loc	1 51 32 is_stmt 0               ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	s_waitcnt lgkmcnt(6)
+	v_lshlrev_b32_e32 v31, 16, v38
+	.loc	1 51 18                         ; fused_qk_norm_rope_store.py:51:18 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_lshlrev_b32_e32 v25, 16, v33
+	v_lshlrev_b32_e32 v24, 16, v32
+	.loc	1 51 32                         ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	s_waitcnt lgkmcnt(4)
+	v_lshlrev_b32_e32 v33, 16, v40
+	v_lshlrev_b32_e32 v32, 16, v39
+	.loc	1 51 18                         ; fused_qk_norm_rope_store.py:51:18 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_lshlrev_b32_e32 v27, 16, v35
+	.loc	1 51 32                         ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	s_waitcnt lgkmcnt(2)
+	v_lshlrev_b32_e32 v35, 16, v41
+.Ltmp45:
+	.loc	2 293 36 is_stmt 1              ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ]
+	ds_swizzle_b32 v38, v4 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v39, v5 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v40, v22 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v41, v23 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v42, v16 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v43, v17 offset:swizzle(SWAP,16)
+.Ltmp46:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ] ]
+	s_waitcnt lgkmcnt(6)
+	v_pk_add_f32 v[2:3], v[2:3], v[36:37]
+	s_waitcnt lgkmcnt(4)
+	v_pk_add_f32 v[4:5], v[4:5], v[38:39]
+	s_waitcnt lgkmcnt(2)
+	v_pk_add_f32 v[22:23], v[22:23], v[40:41]
+.Ltmp47:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ]
+	v_mov_b32_e32 v36, v2
+.Ltmp48:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ] ]
+	s_waitcnt lgkmcnt(0)
+	v_pk_add_f32 v[16:17], v[16:17], v[42:43]
+.Ltmp49:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ]
+	v_mov_b32_e32 v37, v3
+	v_mov_b32_e32 v38, v4
+	v_mov_b32_e32 v39, v5
+	v_mov_b32_e32 v40, v22
+	v_mov_b32_e32 v41, v23
+	v_mov_b32_e32 v42, v16
+	v_mov_b32_e32 v43, v17
+	v_mov_b32_dpp v36, v36 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v37, v37 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v38, v38 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v39, v39 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v40, v40 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v41, v41 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v42, v42 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v43, v43 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v36, v2 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v37, v3 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v38, v4 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v39, v5 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v40, v22 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v41, v23 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v42, v16 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v43, v17 row_shl:8 row_mask:0xf bank_mask:0x3
+.Ltmp50:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ] ]
+	v_pk_add_f32 v[2:3], v[2:3], v[36:37]
+.Ltmp51:
+	.loc	1 51 32                         ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_lshlrev_b32_e32 v28, 16, v28
+.Ltmp52:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:189:19 ] ]
+	v_pk_add_f32 v[4:5], v[4:5], v[38:39]
+	v_pk_add_f32 v[22:23], v[22:23], v[40:41]
+	v_pk_add_f32 v[16:17], v[16:17], v[42:43]
+.Ltmp53:
+	.loc	1 39 31                         ; fused_qk_norm_rope_store.py:39:31 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:192:60 ] ]
+	v_sub_f32_e32 v36, 0, v3
+.Ltmp54:
+	.loc	1 51 32                         ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_mov_b32_e32 v37, v2
+	.loc	1 51 18 is_stmt 0               ; fused_qk_norm_rope_store.py:51:18 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_lshlrev_b32_e32 v21, 16, v15
+	v_lshlrev_b32_e32 v20, 16, v1
+	v_lshlrev_b32_e32 v26, 16, v34
+	.loc	1 51 32                         ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_lshlrev_b32_e32 v34, 16, v49
+.Ltmp55:
+	.loc	1 39 31 is_stmt 1               ; fused_qk_norm_rope_store.py:39:31 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:192:60 ] ]
+	v_sub_f32_e32 v38, 0, v5
+.Ltmp56:
+	.loc	1 51 32                         ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_mov_b32_e32 v39, v4
+.Ltmp57:
+	.loc	1 39 31                         ; fused_qk_norm_rope_store.py:39:31 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:192:60 ] ]
+	v_sub_f32_e32 v40, 0, v23
+.Ltmp58:
+	.loc	1 51 32                         ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_mov_b32_e32 v41, v22
+.Ltmp59:
+	.loc	1 39 31                         ; fused_qk_norm_rope_store.py:39:31 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:192:60 ] ]
+	v_sub_f32_e32 v42, 0, v17
+.Ltmp60:
+	.loc	1 51 32                         ; fused_qk_norm_rope_store.py:51:32 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_mov_b32_e32 v43, v16
+	v_pk_mul_f32 v[28:29], v[36:37], v[28:29]
+	v_pk_mul_f32 v[30:31], v[38:39], v[30:31]
+	v_pk_mul_f32 v[32:33], v[40:41], v[32:33]
+	v_pk_mul_f32 v[34:35], v[42:43], v[34:35]
+	.loc	1 51 24 is_stmt 0               ; fused_qk_norm_rope_store.py:51:24 @[ fused_qk_norm_rope_store.py:192:60 ]
+	v_pk_fma_f32 v[2:3], v[2:3], v[20:21], v[28:29]
+	v_pk_fma_f32 v[4:5], v[4:5], v[18:19], v[30:31]
+	v_pk_fma_f32 v[18:19], v[22:23], v[24:25], v[32:33]
+	v_pk_fma_f32 v[16:17], v[16:17], v[26:27], v[34:35]
+.Ltmp61:
+	.loc	1 196 8 is_stmt 1               ; fused_qk_norm_rope_store.py:196:8
+	v_cvt_pk_bf16_f32 v1, v2, s0
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	v_cvt_pk_bf16_f32 v2, v3, s0
+	v_cvt_pk_bf16_f32 v3, v4, s0
+	v_cvt_pk_bf16_f32 v4, v5, s0
+	v_cvt_pk_bf16_f32 v5, v18, s0
+	v_cvt_pk_bf16_f32 v15, v19, s0
+	v_cvt_pk_bf16_f32 v16, v16, s0
+	v_cvt_pk_bf16_f32 v17, v17, s0
+	ds_write_b16 v46, v1
+	ds_write_b16 v46, v2 offset:4
+	ds_write_b16 v46, v3 offset:8
+	ds_write_b16 v46, v4 offset:12
+	ds_write_b16 v46, v5 offset:16
+	ds_write_b16 v46, v15 offset:20
+	ds_write_b16 v46, v16 offset:24
+	ds_write_b16 v46, v17 offset:28
+	; wave barrier
+	ds_read_u16 v1, v45
+	.loc	1 228 22                        ; fused_qk_norm_rope_store.py:228:22
+	v_mov_b32_e32 v2, s8
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	v_add_u32_e32 v4, 0, v13
+	v_or_b32_e32 v13, s30, v14
+	v_cmp_eq_u32_e64 s[8:9], 0, v13
+	.loc	1 196 8                         ; fused_qk_norm_rope_store.py:196:8
+	s_waitcnt lgkmcnt(0)
+	buffer_store_short v1, v48, s[40:43], 0 offen
+	.loc	1 228 22                        ; fused_qk_norm_rope_store.py:228:22
+	buffer_load_dword v5, v2, s[44:47], 0 offen
+	buffer_load_dword v15, v44, s[44:47], 0 offen
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	buffer_load_ushort v16, v47, s[40:43], 0 offen
+	v_add_u32_e32 v13, 0x80, v0
+	v_cndmask_b32_e64 v17, v12, v13, s[18:19]
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_mov_b32_e32 v3, 0x42000000
+	.loc	1 260 48                        ; fused_qk_norm_rope_store.py:260:48
+	v_mov_b32_e32 v2, 0x43e00000
+	.loc	1 229 25                        ; fused_qk_norm_rope_store.py:229:25
+	s_waitcnt vmcnt(2)
+	v_readfirstlane_b32 s26, v5
+	s_waitcnt vmcnt(1)
+	v_ashrrev_i32_e32 v5, 31, v15
+	.loc	1 250 17                        ; fused_qk_norm_rope_store.py:250:17
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b32_e32 v14, 16, v16
+	.loc	1 252 36                        ; fused_qk_norm_rope_store.py:252:36
+	v_and_b32_e32 v13, 0x7fffffff, v14
+	.loc	1 229 25                        ; fused_qk_norm_rope_store.py:229:25
+	v_add_u32_sdwa v5, v15, v5 dst_sel:DWORD dst_unused:UNUSED_PAD src0_sel:DWORD src1_sel:BYTE_3
+.Ltmp62:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e64 v16, |v14|, |v14|
+.Ltmp63:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_dpp v13, v13 row_shr:8 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp64:
+	.loc	1 229 25                        ; fused_qk_norm_rope_store.py:229:25
+	v_ashrrev_i32_e32 v5, 8, v5
+.Ltmp65:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v13, v13, v13
+.Ltmp66:
+	.loc	1 230 25                        ; fused_qk_norm_rope_store.py:230:25
+	v_mul_i32_i24_e32 v18, 0x100, v5
+	.loc	1 273 32                        ; fused_qk_norm_rope_store.py:273:32
+	v_mul_lo_u32 v19, v5, s33
+.Ltmp67:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v5, v16, v13
+.Ltmp68:
+	.loc	1 229 25                        ; fused_qk_norm_rope_store.py:229:25
+	s_ashr_i32 s27, s26, 31
+	s_lshr_b32 s27, s27, 24
+.Ltmp69:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_dpp v13, v5 row_shr:4 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp70:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v13, v13, v13
+	v_max_f32_e32 v5, v5, v13
+.Ltmp71:
+	.loc	1 229 25                        ; fused_qk_norm_rope_store.py:229:25
+	s_add_i32 s27, s26, s27
+	s_ashr_i32 s34, s27, 8
+.Ltmp72:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_dpp v13, v5 row_shr:2 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp73:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v13, v13, v13
+	v_max_f32_e32 v5, v5, v13
+.Ltmp74:
+	.loc	1 230 25                        ; fused_qk_norm_rope_store.py:230:25
+	s_and_b32 s27, s27, 0x3ffff00
+	s_sub_i32 s35, s26, s27
+.Ltmp75:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_dpp v13, v5 row_shr:1 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp76:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v13, v13, v13
+	v_max_f32_e32 v5, v5, v13
+.Ltmp77:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_e32 v13, v5
+.Ltmp78:
+	.loc	1 230 25                        ; fused_qk_norm_rope_store.py:230:25
+	v_sub_u32_e32 v15, v15, v18
+	.loc	1 266 32                        ; fused_qk_norm_rope_store.py:266:32
+	s_mul_i32 s33, s34, s33
+.Ltmp79:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_dpp v13, v13 row_bcast:15 row_mask:0xa bank_mask:0xf bound_ctrl:1
+.Ltmp80:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v13, v13, v13
+	v_max_f32_e32 v5, v5, v13
+.Ltmp81:
+	.loc	1 266 32                        ; fused_qk_norm_rope_store.py:266:32
+	s_mulk_i32 s35, 0x240
+.Ltmp82:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_mov_b32_dpp v13, v5 row_bcast:31 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp83:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v13, v13, v13
+	v_max_f32_e32 v5, v5, v13
+.Ltmp84:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_readlane_b32 s26, v5, 63
+.Ltmp85:
+	.loc	1 253 44                        ; fused_qk_norm_rope_store.py:253:44
+	s_nop 1
+	v_max_f32_e64 v5, s26, s26
+	v_max_f32_e32 v5, 0x322bcc77, v5
+	.loc	1 254 34                        ; fused_qk_norm_rope_store.py:254:34
+	v_div_scale_f32 v13, s[26:27], s10, s10, v5
+	v_rcp_f32_e32 v16, v13
+	v_div_scale_f32 v18, vcc, v5, s10, v5
+	v_fma_f32 v20, -v13, v16, 1.0
+	v_fmac_f32_e32 v16, v20, v16
+	v_mul_f32_e32 v20, v18, v16
+	v_fma_f32 v21, -v13, v20, v18
+	v_fmac_f32_e32 v20, v21, v16
+	v_fma_f32 v13, -v13, v20, v18
+	v_div_fmas_f32 v13, v13, v16, v20
+	v_div_fixup_f32 v5, v13, s10, v5
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_cmp_gt_f32_e32 vcc, s23, v5
+	s_and_b64 s[26:27], vcc, exec
+	s_cselect_b32 s26, 32, 0
+	v_ldexp_f32 v5, v5, s26
+	v_log_f32_e32 v18, v5
+	v_cndmask_b32_e32 v16, 0, v3, vcc
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_add_i32 s26, s31, 0
+	v_mov_b32_e32 v5, s26
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_sub_f32_e32 v16, v18, v16
+	.loc	1 256 37                        ; fused_qk_norm_rope_store.py:256:37
+	v_ceil_f32_e32 v16, v16
+	.loc	1 257 33                        ; fused_qk_norm_rope_store.py:257:33
+	v_exp_f32_e32 v18, v16
+	.loc	1 271 40                        ; fused_qk_norm_rope_store.py:271:40
+	v_cvt_i32_f32_e32 v16, v16
+	.loc	1 266 32                        ; fused_qk_norm_rope_store.py:266:32
+	s_add_i32 s33, s33, s35
+	v_add_u32_e32 v13, s33, v6
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_div_scale_f32 v21, s[26:27], v18, v18, 1.0
+	v_rcp_f32_e32 v22, v21
+	v_div_scale_f32 v23, vcc, 1.0, v18, 1.0
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	s_and_b32 s37, s37, 0xffff
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_fma_f32 v24, -v21, v22, 1.0
+	v_fmac_f32_e32 v22, v24, v22
+	v_mul_f32_e32 v24, v23, v22
+	v_fma_f32 v25, -v21, v24, v23
+	v_fmac_f32_e32 v24, v25, v22
+	v_fma_f32 v21, -v21, v24, v23
+	v_div_fmas_f32 v21, v21, v22, v24
+	v_div_fixup_f32 v18, v21, v18, 1.0
+	.loc	1 259 35                        ; fused_qk_norm_rope_store.py:259:35
+	v_mul_f32_e32 v14, v18, v14
+	.loc	1 260 48                        ; fused_qk_norm_rope_store.py:260:48
+	v_med3_f32 v14, v14, s11, v2
+	.loc	1 262 34                        ; fused_qk_norm_rope_store.py:262:34
+	v_cvt_scalef32_pk_fp8_f32 v14, v14, s0, 1.0
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	v_cndmask_b32_e64 v20, v12, v13, s[18:19]
+	.loc	1 271 60                        ; fused_qk_norm_rope_store.py:271:60
+	v_add_u32_e32 v16, 0x7f, v16
+	.loc	1 262 34                        ; fused_qk_norm_rope_store.py:262:34
+	v_cvt_scalef32_pk_fp8_f32 v14, s0, v0, 1.0 op_sel:[0,0,0,1]
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	buffer_store_byte v14, v20, s[36:39], 0 offen
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_write_b8 v5, v16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_read_u8 v16, v4
+	.loc	1 273 32                        ; fused_qk_norm_rope_store.py:273:32
+	v_lshl_add_u32 v14, v15, 3, v19
+	v_add_u32_e32 v15, 0x24000, v14
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_and_b64 s[6:7], s[6:7], s[8:9]
+	v_cndmask_b32_e64 v15, v12, v15, s[6:7]
+	s_waitcnt lgkmcnt(0)
+	buffer_store_byte v16, v15, s[36:39], 0 offen
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	buffer_load_ushort v15, v17, s[40:43], 0 offen
+	.loc	1 250 17                        ; fused_qk_norm_rope_store.py:250:17
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b32_e32 v15, 16, v15
+	.loc	1 252 36                        ; fused_qk_norm_rope_store.py:252:36
+	v_and_b32_e32 v16, 0x7fffffff, v15
+.Ltmp86:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e64 v17, |v15|, |v15|
+.Ltmp87:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_mov_b32_dpp v16, v16 row_shr:8 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp88:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v16, v16, v16
+	v_max_f32_e32 v16, v17, v16
+.Ltmp89:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:4 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp90:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp91:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:2 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp92:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp93:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:1 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp94:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp95:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_e32 v17, v16
+	s_nop 1
+	v_mov_b32_dpp v17, v17 row_bcast:15 row_mask:0xa bank_mask:0xf bound_ctrl:1
+.Ltmp96:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp97:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_bcast:31 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp98:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp99:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_readlane_b32 s8, v16, 63
+.Ltmp100:
+	.loc	1 253 44                        ; fused_qk_norm_rope_store.py:253:44
+	s_nop 1
+	v_max_f32_e64 v16, s8, s8
+	v_max_f32_e32 v16, 0x322bcc77, v16
+	.loc	1 254 34                        ; fused_qk_norm_rope_store.py:254:34
+	v_div_scale_f32 v17, s[8:9], s10, s10, v16
+	v_rcp_f32_e32 v18, v17
+	v_div_scale_f32 v19, vcc, v16, s10, v16
+	v_fma_f32 v20, -v17, v18, 1.0
+	v_fmac_f32_e32 v18, v20, v18
+	v_mul_f32_e32 v20, v19, v18
+	v_fma_f32 v21, -v17, v20, v19
+	v_fmac_f32_e32 v20, v21, v18
+	v_fma_f32 v17, -v17, v20, v19
+	v_div_fmas_f32 v17, v17, v18, v20
+	v_div_fixup_f32 v16, v17, s10, v16
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_cmp_gt_f32_e32 vcc, s23, v16
+	s_and_b64 s[8:9], vcc, exec
+	s_cselect_b32 s8, 32, 0
+	v_ldexp_f32 v16, v16, s8
+	v_log_f32_e32 v16, v16
+	v_cndmask_b32_e32 v17, 0, v3, vcc
+	.loc	1 266 32                        ; fused_qk_norm_rope_store.py:266:32
+	v_add_u32_e32 v18, 64, v13
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	v_cndmask_b32_e64 v18, v12, v18, s[18:19]
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_sub_f32_e32 v16, v16, v17
+	.loc	1 256 37                        ; fused_qk_norm_rope_store.py:256:37
+	v_ceil_f32_e32 v16, v16
+	.loc	1 257 33                        ; fused_qk_norm_rope_store.py:257:33
+	v_exp_f32_e32 v17, v16
+	.loc	1 271 40                        ; fused_qk_norm_rope_store.py:271:40
+	v_cvt_i32_f32_e32 v16, v16
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_div_scale_f32 v19, s[8:9], v17, v17, 1.0
+	v_rcp_f32_e32 v20, v19
+	v_div_scale_f32 v21, vcc, 1.0, v17, 1.0
+	.loc	1 271 60                        ; fused_qk_norm_rope_store.py:271:60
+	v_add_u32_e32 v16, 0x7f, v16
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_fma_f32 v22, -v19, v20, 1.0
+	v_fmac_f32_e32 v20, v22, v20
+	v_mul_f32_e32 v22, v21, v20
+	v_fma_f32 v23, -v19, v22, v21
+	v_fmac_f32_e32 v22, v23, v20
+	v_fma_f32 v19, -v19, v22, v21
+	v_div_fmas_f32 v19, v19, v20, v22
+	v_div_fixup_f32 v17, v19, v17, 1.0
+	.loc	1 259 35                        ; fused_qk_norm_rope_store.py:259:35
+	v_mul_f32_e32 v15, v17, v15
+	.loc	1 260 48                        ; fused_qk_norm_rope_store.py:260:48
+	v_med3_f32 v15, v15, s11, v2
+	.loc	1 262 34                        ; fused_qk_norm_rope_store.py:262:34
+	v_cvt_scalef32_pk_fp8_f32 v15, v15, s0, 1.0
+	v_cvt_scalef32_pk_fp8_f32 v15, s0, v0, 1.0 op_sel:[0,0,0,1]
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	buffer_store_byte v15, v18, s[36:39], 0 offen
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_write_b8 v5, v16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_read_u8 v17, v4
+	.loc	1 273 45                        ; fused_qk_norm_rope_store.py:273:45
+	v_add_u32_e32 v16, 0x24001, v14
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_add_u32_e32 v15, 0x100, v0
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	v_cndmask_b32_e64 v16, v12, v16, s[6:7]
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_cndmask_b32_e64 v15, v12, v15, s[18:19]
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	buffer_store_byte v17, v16, s[36:39], 0 offen
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	buffer_load_ushort v15, v15, s[40:43], 0 offen
+	.loc	1 250 17                        ; fused_qk_norm_rope_store.py:250:17
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b32_e32 v15, 16, v15
+	.loc	1 252 36                        ; fused_qk_norm_rope_store.py:252:36
+	v_and_b32_e32 v16, 0x7fffffff, v15
+.Ltmp101:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e64 v17, |v15|, |v15|
+.Ltmp102:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_mov_b32_dpp v16, v16 row_shr:8 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp103:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v16, v16, v16
+	v_max_f32_e32 v16, v17, v16
+.Ltmp104:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:4 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp105:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp106:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:2 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp107:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp108:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:1 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp109:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp110:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_e32 v17, v16
+	s_nop 1
+	v_mov_b32_dpp v17, v17 row_bcast:15 row_mask:0xa bank_mask:0xf bound_ctrl:1
+.Ltmp111:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp112:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_bcast:31 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp113:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp114:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_readlane_b32 s8, v16, 63
+.Ltmp115:
+	.loc	1 253 44                        ; fused_qk_norm_rope_store.py:253:44
+	s_nop 1
+	v_max_f32_e64 v16, s8, s8
+	v_max_f32_e32 v16, 0x322bcc77, v16
+	.loc	1 254 34                        ; fused_qk_norm_rope_store.py:254:34
+	v_div_scale_f32 v17, s[8:9], s10, s10, v16
+	v_rcp_f32_e32 v18, v17
+	v_div_scale_f32 v19, vcc, v16, s10, v16
+	v_fma_f32 v20, -v17, v18, 1.0
+	v_fmac_f32_e32 v18, v20, v18
+	v_mul_f32_e32 v20, v19, v18
+	v_fma_f32 v21, -v17, v20, v19
+	v_fmac_f32_e32 v20, v21, v18
+	v_fma_f32 v17, -v17, v20, v19
+	v_div_fmas_f32 v17, v17, v18, v20
+	v_div_fixup_f32 v16, v17, s10, v16
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_cmp_gt_f32_e32 vcc, s23, v16
+	s_and_b64 s[8:9], vcc, exec
+	s_cselect_b32 s8, 32, 0
+	v_ldexp_f32 v16, v16, s8
+	v_log_f32_e32 v16, v16
+	v_cndmask_b32_e32 v17, 0, v3, vcc
+	.loc	1 266 32                        ; fused_qk_norm_rope_store.py:266:32
+	v_add_u32_e32 v18, 0x80, v13
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	v_cndmask_b32_e64 v18, v12, v18, s[18:19]
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_sub_f32_e32 v16, v16, v17
+	.loc	1 256 37                        ; fused_qk_norm_rope_store.py:256:37
+	v_ceil_f32_e32 v16, v16
+	.loc	1 257 33                        ; fused_qk_norm_rope_store.py:257:33
+	v_exp_f32_e32 v17, v16
+	.loc	1 271 40                        ; fused_qk_norm_rope_store.py:271:40
+	v_cvt_i32_f32_e32 v16, v16
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_div_scale_f32 v19, s[8:9], v17, v17, 1.0
+	v_rcp_f32_e32 v20, v19
+	v_div_scale_f32 v21, vcc, 1.0, v17, 1.0
+	.loc	1 271 60                        ; fused_qk_norm_rope_store.py:271:60
+	v_add_u32_e32 v16, 0x7f, v16
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_fma_f32 v22, -v19, v20, 1.0
+	v_fmac_f32_e32 v20, v22, v20
+	v_mul_f32_e32 v22, v21, v20
+	v_fma_f32 v23, -v19, v22, v21
+	v_fmac_f32_e32 v22, v23, v20
+	v_fma_f32 v19, -v19, v22, v21
+	v_div_fmas_f32 v19, v19, v20, v22
+	v_div_fixup_f32 v17, v19, v17, 1.0
+	.loc	1 259 35                        ; fused_qk_norm_rope_store.py:259:35
+	v_mul_f32_e32 v15, v17, v15
+	.loc	1 260 48                        ; fused_qk_norm_rope_store.py:260:48
+	v_med3_f32 v15, v15, s11, v2
+	.loc	1 262 34                        ; fused_qk_norm_rope_store.py:262:34
+	v_cvt_scalef32_pk_fp8_f32 v15, v15, s0, 1.0
+	v_cvt_scalef32_pk_fp8_f32 v15, s0, v0, 1.0 op_sel:[0,0,0,1]
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	buffer_store_byte v15, v18, s[36:39], 0 offen
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_write_b8 v5, v16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_read_u8 v17, v4
+	.loc	1 273 45                        ; fused_qk_norm_rope_store.py:273:45
+	v_add_u32_e32 v16, 0x24002, v14
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_add_u32_e32 v15, 0x180, v0
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	v_cndmask_b32_e64 v16, v12, v16, s[6:7]
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_cndmask_b32_e64 v15, v12, v15, s[18:19]
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	buffer_store_byte v17, v16, s[36:39], 0 offen
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	buffer_load_ushort v15, v15, s[40:43], 0 offen
+	.loc	1 250 17                        ; fused_qk_norm_rope_store.py:250:17
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b32_e32 v15, 16, v15
+	.loc	1 252 36                        ; fused_qk_norm_rope_store.py:252:36
+	v_and_b32_e32 v16, 0x7fffffff, v15
+.Ltmp116:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e64 v17, |v15|, |v15|
+.Ltmp117:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_mov_b32_dpp v16, v16 row_shr:8 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp118:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v16, v16, v16
+	v_max_f32_e32 v16, v17, v16
+.Ltmp119:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:4 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp120:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp121:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:2 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp122:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp123:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:1 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp124:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp125:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_e32 v17, v16
+	s_nop 1
+	v_mov_b32_dpp v17, v17 row_bcast:15 row_mask:0xa bank_mask:0xf bound_ctrl:1
+.Ltmp126:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp127:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_bcast:31 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp128:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp129:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_readlane_b32 s8, v16, 63
+.Ltmp130:
+	.loc	1 253 44                        ; fused_qk_norm_rope_store.py:253:44
+	s_nop 1
+	v_max_f32_e64 v16, s8, s8
+	v_max_f32_e32 v16, 0x322bcc77, v16
+	.loc	1 254 34                        ; fused_qk_norm_rope_store.py:254:34
+	v_div_scale_f32 v17, s[8:9], s10, s10, v16
+	v_rcp_f32_e32 v18, v17
+	v_div_scale_f32 v19, vcc, v16, s10, v16
+	v_fma_f32 v20, -v17, v18, 1.0
+	v_fmac_f32_e32 v18, v20, v18
+	v_mul_f32_e32 v20, v19, v18
+	v_fma_f32 v21, -v17, v20, v19
+	v_fmac_f32_e32 v20, v21, v18
+	v_fma_f32 v17, -v17, v20, v19
+	v_div_fmas_f32 v17, v17, v18, v20
+	v_div_fixup_f32 v16, v17, s10, v16
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_cmp_gt_f32_e32 vcc, s23, v16
+	s_and_b64 s[8:9], vcc, exec
+	s_cselect_b32 s8, 32, 0
+	v_ldexp_f32 v16, v16, s8
+	v_log_f32_e32 v16, v16
+	v_cndmask_b32_e32 v17, 0, v3, vcc
+	.loc	1 266 32                        ; fused_qk_norm_rope_store.py:266:32
+	v_add_u32_e32 v18, 0xc0, v13
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	v_cndmask_b32_e64 v18, v12, v18, s[18:19]
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_sub_f32_e32 v16, v16, v17
+	.loc	1 256 37                        ; fused_qk_norm_rope_store.py:256:37
+	v_ceil_f32_e32 v16, v16
+	.loc	1 257 33                        ; fused_qk_norm_rope_store.py:257:33
+	v_exp_f32_e32 v17, v16
+	.loc	1 271 40                        ; fused_qk_norm_rope_store.py:271:40
+	v_cvt_i32_f32_e32 v16, v16
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_div_scale_f32 v19, s[8:9], v17, v17, 1.0
+	v_rcp_f32_e32 v20, v19
+	v_div_scale_f32 v21, vcc, 1.0, v17, 1.0
+	.loc	1 271 60                        ; fused_qk_norm_rope_store.py:271:60
+	v_add_u32_e32 v16, 0x7f, v16
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_fma_f32 v22, -v19, v20, 1.0
+	v_fmac_f32_e32 v20, v22, v20
+	v_mul_f32_e32 v22, v21, v20
+	v_fma_f32 v23, -v19, v22, v21
+	v_fmac_f32_e32 v22, v23, v20
+	v_fma_f32 v19, -v19, v22, v21
+	v_div_fmas_f32 v19, v19, v20, v22
+	v_div_fixup_f32 v17, v19, v17, 1.0
+	.loc	1 259 35                        ; fused_qk_norm_rope_store.py:259:35
+	v_mul_f32_e32 v15, v17, v15
+	.loc	1 260 48                        ; fused_qk_norm_rope_store.py:260:48
+	v_med3_f32 v15, v15, s11, v2
+	.loc	1 262 34                        ; fused_qk_norm_rope_store.py:262:34
+	v_cvt_scalef32_pk_fp8_f32 v15, v15, s0, 1.0
+	v_cvt_scalef32_pk_fp8_f32 v15, s0, v0, 1.0 op_sel:[0,0,0,1]
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	buffer_store_byte v15, v18, s[36:39], 0 offen
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_write_b8 v5, v16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_read_u8 v17, v4
+	.loc	1 273 45                        ; fused_qk_norm_rope_store.py:273:45
+	v_add_u32_e32 v16, 0x24003, v14
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_add_u32_e32 v15, 0x200, v0
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	v_cndmask_b32_e64 v16, v12, v16, s[6:7]
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_cndmask_b32_e64 v15, v12, v15, s[18:19]
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	buffer_store_byte v17, v16, s[36:39], 0 offen
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	buffer_load_ushort v15, v15, s[40:43], 0 offen
+	.loc	1 250 17                        ; fused_qk_norm_rope_store.py:250:17
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b32_e32 v15, 16, v15
+	.loc	1 252 36                        ; fused_qk_norm_rope_store.py:252:36
+	v_and_b32_e32 v16, 0x7fffffff, v15
+.Ltmp131:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e64 v17, |v15|, |v15|
+.Ltmp132:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_mov_b32_dpp v16, v16 row_shr:8 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp133:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v16, v16, v16
+	v_max_f32_e32 v16, v17, v16
+.Ltmp134:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:4 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp135:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp136:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:2 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp137:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp138:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:1 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp139:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp140:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_e32 v17, v16
+	s_nop 1
+	v_mov_b32_dpp v17, v17 row_bcast:15 row_mask:0xa bank_mask:0xf bound_ctrl:1
+.Ltmp141:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp142:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_bcast:31 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp143:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp144:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_readlane_b32 s8, v16, 63
+.Ltmp145:
+	.loc	1 253 44                        ; fused_qk_norm_rope_store.py:253:44
+	s_nop 1
+	v_max_f32_e64 v16, s8, s8
+	v_max_f32_e32 v16, 0x322bcc77, v16
+	.loc	1 254 34                        ; fused_qk_norm_rope_store.py:254:34
+	v_div_scale_f32 v17, s[8:9], s10, s10, v16
+	v_rcp_f32_e32 v18, v17
+	v_div_scale_f32 v19, vcc, v16, s10, v16
+	v_fma_f32 v20, -v17, v18, 1.0
+	v_fmac_f32_e32 v18, v20, v18
+	v_mul_f32_e32 v20, v19, v18
+	v_fma_f32 v21, -v17, v20, v19
+	v_fmac_f32_e32 v20, v21, v18
+	v_fma_f32 v17, -v17, v20, v19
+	v_div_fmas_f32 v17, v17, v18, v20
+	v_div_fixup_f32 v16, v17, s10, v16
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_cmp_gt_f32_e32 vcc, s23, v16
+	s_and_b64 s[8:9], vcc, exec
+	s_cselect_b32 s8, 32, 0
+	v_ldexp_f32 v16, v16, s8
+	v_log_f32_e32 v16, v16
+	v_cndmask_b32_e32 v17, 0, v3, vcc
+	.loc	1 266 32                        ; fused_qk_norm_rope_store.py:266:32
+	v_add_u32_e32 v18, 0x100, v13
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	v_cndmask_b32_e64 v18, v12, v18, s[18:19]
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_sub_f32_e32 v16, v16, v17
+	.loc	1 256 37                        ; fused_qk_norm_rope_store.py:256:37
+	v_ceil_f32_e32 v16, v16
+	.loc	1 257 33                        ; fused_qk_norm_rope_store.py:257:33
+	v_exp_f32_e32 v17, v16
+	.loc	1 271 40                        ; fused_qk_norm_rope_store.py:271:40
+	v_cvt_i32_f32_e32 v16, v16
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_div_scale_f32 v19, s[8:9], v17, v17, 1.0
+	v_rcp_f32_e32 v20, v19
+	v_div_scale_f32 v21, vcc, 1.0, v17, 1.0
+	.loc	1 271 60                        ; fused_qk_norm_rope_store.py:271:60
+	v_add_u32_e32 v16, 0x7f, v16
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_fma_f32 v22, -v19, v20, 1.0
+	v_fmac_f32_e32 v20, v22, v20
+	v_mul_f32_e32 v22, v21, v20
+	v_fma_f32 v23, -v19, v22, v21
+	v_fmac_f32_e32 v22, v23, v20
+	v_fma_f32 v19, -v19, v22, v21
+	v_div_fmas_f32 v19, v19, v20, v22
+	v_div_fixup_f32 v17, v19, v17, 1.0
+	.loc	1 259 35                        ; fused_qk_norm_rope_store.py:259:35
+	v_mul_f32_e32 v15, v17, v15
+	.loc	1 260 48                        ; fused_qk_norm_rope_store.py:260:48
+	v_med3_f32 v15, v15, s11, v2
+	.loc	1 262 34                        ; fused_qk_norm_rope_store.py:262:34
+	v_cvt_scalef32_pk_fp8_f32 v15, v15, s0, 1.0
+	v_cvt_scalef32_pk_fp8_f32 v15, s0, v0, 1.0 op_sel:[0,0,0,1]
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	buffer_store_byte v15, v18, s[36:39], 0 offen
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_write_b8 v5, v16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_read_u8 v17, v4
+	.loc	1 273 45                        ; fused_qk_norm_rope_store.py:273:45
+	v_add_u32_e32 v16, 0x24004, v14
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_add_u32_e32 v15, 0x280, v0
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	v_cndmask_b32_e64 v16, v12, v16, s[6:7]
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_cndmask_b32_e64 v15, v12, v15, s[18:19]
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	buffer_store_byte v17, v16, s[36:39], 0 offen
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	buffer_load_ushort v15, v15, s[40:43], 0 offen
+	.loc	1 250 17                        ; fused_qk_norm_rope_store.py:250:17
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b32_e32 v15, 16, v15
+	.loc	1 252 36                        ; fused_qk_norm_rope_store.py:252:36
+	v_and_b32_e32 v16, 0x7fffffff, v15
+.Ltmp146:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e64 v17, |v15|, |v15|
+.Ltmp147:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_mov_b32_dpp v16, v16 row_shr:8 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp148:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v16, v16, v16
+	v_max_f32_e32 v16, v17, v16
+.Ltmp149:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:4 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp150:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp151:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:2 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp152:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp153:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:1 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp154:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp155:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_e32 v17, v16
+	s_nop 1
+	v_mov_b32_dpp v17, v17 row_bcast:15 row_mask:0xa bank_mask:0xf bound_ctrl:1
+.Ltmp156:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp157:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_bcast:31 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp158:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp159:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_readlane_b32 s8, v16, 63
+.Ltmp160:
+	.loc	1 253 44                        ; fused_qk_norm_rope_store.py:253:44
+	s_nop 1
+	v_max_f32_e64 v16, s8, s8
+	v_max_f32_e32 v16, 0x322bcc77, v16
+	.loc	1 254 34                        ; fused_qk_norm_rope_store.py:254:34
+	v_div_scale_f32 v17, s[8:9], s10, s10, v16
+	v_rcp_f32_e32 v18, v17
+	v_div_scale_f32 v19, vcc, v16, s10, v16
+	v_fma_f32 v20, -v17, v18, 1.0
+	v_fmac_f32_e32 v18, v20, v18
+	v_mul_f32_e32 v20, v19, v18
+	v_fma_f32 v21, -v17, v20, v19
+	v_fmac_f32_e32 v20, v21, v18
+	v_fma_f32 v17, -v17, v20, v19
+	v_div_fmas_f32 v17, v17, v18, v20
+	v_div_fixup_f32 v16, v17, s10, v16
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_cmp_gt_f32_e32 vcc, s23, v16
+	s_and_b64 s[8:9], vcc, exec
+	s_cselect_b32 s8, 32, 0
+	v_ldexp_f32 v16, v16, s8
+	v_log_f32_e32 v16, v16
+	v_cndmask_b32_e32 v17, 0, v3, vcc
+	.loc	1 266 32                        ; fused_qk_norm_rope_store.py:266:32
+	v_add_u32_e32 v18, 0x140, v13
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	v_cndmask_b32_e64 v18, v12, v18, s[18:19]
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_sub_f32_e32 v16, v16, v17
+	.loc	1 256 37                        ; fused_qk_norm_rope_store.py:256:37
+	v_ceil_f32_e32 v16, v16
+	.loc	1 257 33                        ; fused_qk_norm_rope_store.py:257:33
+	v_exp_f32_e32 v17, v16
+	.loc	1 271 40                        ; fused_qk_norm_rope_store.py:271:40
+	v_cvt_i32_f32_e32 v16, v16
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_div_scale_f32 v19, s[8:9], v17, v17, 1.0
+	v_rcp_f32_e32 v20, v19
+	v_div_scale_f32 v21, vcc, 1.0, v17, 1.0
+	.loc	1 271 60                        ; fused_qk_norm_rope_store.py:271:60
+	v_add_u32_e32 v16, 0x7f, v16
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_fma_f32 v22, -v19, v20, 1.0
+	v_fmac_f32_e32 v20, v22, v20
+	v_mul_f32_e32 v22, v21, v20
+	v_fma_f32 v23, -v19, v22, v21
+	v_fmac_f32_e32 v22, v23, v20
+	v_fma_f32 v19, -v19, v22, v21
+	v_div_fmas_f32 v19, v19, v20, v22
+	v_div_fixup_f32 v17, v19, v17, 1.0
+	.loc	1 259 35                        ; fused_qk_norm_rope_store.py:259:35
+	v_mul_f32_e32 v15, v17, v15
+	.loc	1 260 48                        ; fused_qk_norm_rope_store.py:260:48
+	v_med3_f32 v15, v15, s11, v2
+	.loc	1 262 34                        ; fused_qk_norm_rope_store.py:262:34
+	v_cvt_scalef32_pk_fp8_f32 v15, v15, s0, 1.0
+	v_cvt_scalef32_pk_fp8_f32 v15, s0, v0, 1.0 op_sel:[0,0,0,1]
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	buffer_store_byte v15, v18, s[36:39], 0 offen
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_write_b8 v5, v16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_read_u8 v16, v4
+	.loc	1 273 45                        ; fused_qk_norm_rope_store.py:273:45
+	v_add_u32_e32 v15, 0x24005, v14
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_add_u32_e32 v0, 0x300, v0
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	v_cndmask_b32_e64 v15, v12, v15, s[6:7]
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	v_cndmask_b32_e64 v0, v12, v0, s[18:19]
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	buffer_store_byte v16, v15, s[36:39], 0 offen
+	.loc	1 245 16                        ; fused_qk_norm_rope_store.py:245:16
+	buffer_load_ushort v0, v0, s[40:43], 0 offen
+	.loc	1 273 45                        ; fused_qk_norm_rope_store.py:273:45
+	v_add_u32_e32 v14, 0x24006, v14
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	v_cndmask_b32_e64 v14, v12, v14, s[6:7]
+	.loc	1 285 53                        ; fused_qk_norm_rope_store.py:285:53
+	v_lshrrev_b16_e32 v15, 8, v1
+	.loc	1 250 17                        ; fused_qk_norm_rope_store.py:250:17
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b32_e32 v0, 16, v0
+	.loc	1 252 36                        ; fused_qk_norm_rope_store.py:252:36
+	v_and_b32_e32 v16, 0x7fffffff, v0
+.Ltmp161:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e64 v17, |v0|, |v0|
+.Ltmp162:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_mov_b32_dpp v16, v16 row_shr:8 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp163:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v16, v16, v16
+	v_max_f32_e32 v16, v17, v16
+.Ltmp164:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:4 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp165:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp166:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:2 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp167:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp168:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_shr:1 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp169:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp170:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	v_mov_b32_e32 v17, v16
+	s_nop 1
+	v_mov_b32_dpp v17, v17 row_bcast:15 row_mask:0xa bank_mask:0xf bound_ctrl:1
+.Ltmp171:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp172:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 1
+	v_mov_b32_dpp v17, v16 row_bcast:31 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp173:
+	.loc	2 170 27                        ; standard.py:170:27 @[ standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ] ]
+	v_max_f32_e32 v17, v17, v17
+	v_max_f32_e32 v16, v16, v17
+.Ltmp174:
+	.loc	2 191 40                        ; standard.py:191:40 @[ fused_qk_norm_rope_store.py:252:29 ]
+	s_nop 0
+	v_readlane_b32 s8, v16, 63
+.Ltmp175:
+	.loc	1 253 44                        ; fused_qk_norm_rope_store.py:253:44
+	s_nop 1
+	v_max_f32_e64 v16, s8, s8
+	v_max_f32_e32 v16, 0x322bcc77, v16
+	.loc	1 254 34                        ; fused_qk_norm_rope_store.py:254:34
+	v_div_scale_f32 v17, s[8:9], s10, s10, v16
+	v_rcp_f32_e32 v18, v17
+	v_div_scale_f32 v19, vcc, v16, s10, v16
+	v_fma_f32 v20, -v17, v18, 1.0
+	v_fmac_f32_e32 v18, v20, v18
+	v_mul_f32_e32 v20, v19, v18
+	v_fma_f32 v21, -v17, v20, v19
+	v_fmac_f32_e32 v20, v21, v18
+	v_fma_f32 v17, -v17, v20, v19
+	v_div_fmas_f32 v17, v17, v18, v20
+	v_div_fixup_f32 v16, v17, s10, v16
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_cmp_gt_f32_e32 vcc, s23, v16
+	s_and_b64 s[8:9], vcc, exec
+	s_cselect_b32 s8, 32, 0
+	v_ldexp_f32 v16, v16, s8
+	v_log_f32_e32 v16, v16
+	v_cndmask_b32_e32 v3, 0, v3, vcc
+	.loc	1 266 32                        ; fused_qk_norm_rope_store.py:266:32
+	v_add_u32_e32 v17, 0x180, v13
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	v_cndmask_b32_e64 v17, v12, v17, s[18:19]
+	.loc	1 255 29                        ; fused_qk_norm_rope_store.py:255:29
+	v_sub_f32_e32 v3, v16, v3
+	.loc	1 256 37                        ; fused_qk_norm_rope_store.py:256:37
+	v_ceil_f32_e32 v3, v3
+	.loc	1 257 33                        ; fused_qk_norm_rope_store.py:257:33
+	v_exp_f32_e32 v16, v3
+	.loc	1 271 40                        ; fused_qk_norm_rope_store.py:271:40
+	v_cvt_i32_f32_e32 v3, v3
+	.loc	1 284 33                        ; fused_qk_norm_rope_store.py:284:33
+	v_add_u32_e32 v13, v13, v6
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_div_scale_f32 v18, s[6:7], v16, v16, 1.0
+	v_rcp_f32_e32 v19, v18
+	v_div_scale_f32 v20, vcc, 1.0, v16, 1.0
+	.loc	1 271 60                        ; fused_qk_norm_rope_store.py:271:60
+	v_add_u32_e32 v3, 0x7f, v3
+	.loc	1 258 30                        ; fused_qk_norm_rope_store.py:258:30
+	v_fma_f32 v21, -v18, v19, 1.0
+	v_fmac_f32_e32 v19, v21, v19
+	v_mul_f32_e32 v21, v20, v19
+	v_fma_f32 v22, -v18, v21, v20
+	v_fmac_f32_e32 v21, v22, v19
+	v_fma_f32 v18, -v18, v21, v20
+	v_div_fmas_f32 v18, v18, v19, v21
+	v_div_fixup_f32 v16, v18, v16, 1.0
+	.loc	1 259 35                        ; fused_qk_norm_rope_store.py:259:35
+	v_mul_f32_e32 v0, v16, v0
+	.loc	1 260 48                        ; fused_qk_norm_rope_store.py:260:48
+	v_med3_f32 v0, v0, s11, v2
+	.loc	1 262 34                        ; fused_qk_norm_rope_store.py:262:34
+	v_cvt_scalef32_pk_fp8_f32 v0, v0, s0, 1.0
+	v_cvt_scalef32_pk_fp8_f32 v0, s0, v0, 1.0 op_sel:[0,0,0,1]
+	.loc	1 267 16                        ; fused_qk_norm_rope_store.py:267:16
+	buffer_store_byte v0, v17, s[36:39], 0 offen
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_write_b8 v5, v3
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_read_u8 v3, v4
+	.loc	1 284 33                        ; fused_qk_norm_rope_store.py:284:33
+	v_add_u32_e32 v0, 0x1c0, v13
+	.loc	1 285 50                        ; fused_qk_norm_rope_store.py:285:50
+	v_add_u32_e32 v2, 0x1c1, v13
+	.loc	1 284 49                        ; fused_qk_norm_rope_store.py:284:49
+	v_cndmask_b32_e64 v0, v12, v0, s[18:19]
+	.loc	1 285 53                        ; fused_qk_norm_rope_store.py:285:53
+	v_cndmask_b32_e64 v2, v12, v2, s[18:19]
+	.loc	1 274 16                        ; fused_qk_norm_rope_store.py:274:16
+	s_waitcnt lgkmcnt(0)
+	buffer_store_byte v3, v14, s[36:39], 0 offen
+	.loc	1 284 49                        ; fused_qk_norm_rope_store.py:284:49
+	buffer_store_byte v1, v0, s[36:39], 0 offen
+	.loc	1 285 53                        ; fused_qk_norm_rope_store.py:285:53
+	buffer_store_byte v15, v2, s[36:39], 0 offen
+	s_cbranch_execnz .LBB0_2
+.LBB0_4:
+	.loc	1 0 53 is_stmt 0                ; fused_qk_norm_rope_store.py:0:53
+	s_load_dwordx2 s[8:9], s[0:1], 0x50
+	s_load_dword s10, s[0:1], 0x58
+	.loc	1 126 25 is_stmt 1              ; fused_qk_norm_rope_store.py:126:25
+	v_bfrev_b32_e32 v26, 1
+	s_and_b32 s25, s25, 0xffff
+	s_mov_b32 s27, 0x27000
+	.loc	1 123 14                        ; fused_qk_norm_rope_store.py:123:14
+	s_waitcnt lgkmcnt(0)
+	s_mul_i32 s6, s22, s8
+	.loc	1 124 14                        ; fused_qk_norm_rope_store.py:124:14
+	v_add_u32_e32 v0, s6, v9
+	.loc	1 126 25                        ; fused_qk_norm_rope_store.py:126:25
+	s_lshl_b32 s6, s17, 10
+	v_lshl_add_u32 v0, v0, 1, s6
+	s_mov_b32 s26, 0x7ffffffe
+	v_cndmask_b32_e64 v0, v26, v0, s[18:19]
+	buffer_load_dwordx4 v[0:3], v0, s[24:27], 0 offen
+	s_load_dword s0, s[0:1], 0x68
+.Ltmp176:
+	.loc	1 39 31                         ; fused_qk_norm_rope_store.py:39:31 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:152:63 ] ]
+	s_lshl2_add_u32 s1, s30, 0
+.Ltmp177:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:144:22 ]
+	v_xor_b32_e32 v25, 0x80, v11
+.Ltmp178:
+	.loc	1 39 31                         ; fused_qk_norm_rope_store.py:39:31 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:152:63 ] ]
+	v_lshl_add_u32 v27, v10, 5, s1
+.Ltmp179:
+	.loc	1 135 67                        ; fused_qk_norm_rope_store.py:135:67
+	s_mul_i32 s10, s10, s17
+.Ltmp180:
+	.loc	1 31 54                         ; fused_qk_norm_rope_store.py:31:54 @[ fused_qk_norm_rope_store.py:133:58 ]
+	s_waitcnt lgkmcnt(0)
+	v_mov_b32_e32 v21, s0
+.Ltmp181:
+	.loc	1 135 0                         ; fused_qk_norm_rope_store.py:135
+	s_mul_i32 s0, s22, s9
+.Ltmp182:
+	.loc	1 31 54                         ; fused_qk_norm_rope_store.py:31:54 @[ fused_qk_norm_rope_store.py:133:58 ]
+	v_mov_b32_e32 v20, 0x3b000000
+.Ltmp183:
+	.loc	1 135 0                         ; fused_qk_norm_rope_store.py:135
+	s_add_i32 s8, s0, s10
+	.loc	1 138 12                        ; fused_qk_norm_rope_store.py:138:12
+	v_add_lshl_u32 v9, v9, s8, 1
+	.loc	1 139 35                        ; fused_qk_norm_rope_store.py:139:35
+	s_and_b64 vcc, s[14:15], s[18:19]
+	.loc	1 138 12                        ; fused_qk_norm_rope_store.py:138:12
+	s_and_b32 s5, s5, 0xffff
+	s_mov_b32 s6, s26
+	s_mov_b32 s7, s27
+	v_cndmask_b32_e32 v9, v26, v9, vcc
+	.loc	1 146 22                        ; fused_qk_norm_rope_store.py:146:22
+	s_and_b32 s29, s29, 0xffff
+	s_mov_b32 s30, s26
+	s_mov_b32 s31, s27
+	.loc	1 149 22                        ; fused_qk_norm_rope_store.py:149:22
+	s_mov_b32 s23, s27
+	.loc	1 148 22                        ; fused_qk_norm_rope_store.py:148:22
+	s_mov_b32 s14, s26
+	s_mov_b32 s15, s27
+	.loc	1 126 75                        ; fused_qk_norm_rope_store.py:126:75
+	s_waitcnt vmcnt(0)
+	v_and_b32_e32 v11, 0xffff0000, v1
+	v_lshlrev_b32_e32 v10, 16, v1
+	v_and_b32_e32 v1, 0xffff0000, v0
+	v_lshlrev_b32_e32 v0, 16, v0
+.Ltmp184:
+	.loc	1 30 28                         ; fused_qk_norm_rope_store.py:30:28 @[ fused_qk_norm_rope_store.py:133:58 ]
+	v_pk_mul_f32 v[18:19], v[0:1], v[0:1]
+	v_pk_mul_f32 v[16:17], v[10:11], v[10:11]
+.Ltmp185:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:133:58 ] ] ]
+	v_add_f32_e32 v18, v18, v19
+.Ltmp186:
+	.loc	1 126 75                        ; fused_qk_norm_rope_store.py:126:75
+	v_and_b32_e32 v5, 0xffff0000, v3
+	v_lshlrev_b32_e32 v4, 16, v3
+	v_and_b32_e32 v3, 0xffff0000, v2
+	v_lshlrev_b32_e32 v2, 16, v2
+.Ltmp187:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:133:58 ] ] ]
+	v_add_f32_e32 v16, v16, v18
+.Ltmp188:
+	.loc	1 30 28                         ; fused_qk_norm_rope_store.py:30:28 @[ fused_qk_norm_rope_store.py:133:58 ]
+	v_pk_mul_f32 v[14:15], v[2:3], v[2:3]
+.Ltmp189:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:133:58 ] ] ]
+	v_add_f32_e32 v16, v17, v16
+	v_add_f32_e32 v14, v14, v16
+.Ltmp190:
+	.loc	1 30 28                         ; fused_qk_norm_rope_store.py:30:28 @[ fused_qk_norm_rope_store.py:133:58 ]
+	v_pk_mul_f32 v[12:13], v[4:5], v[4:5]
+.Ltmp191:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:133:58 ] ] ]
+	v_add_f32_e32 v14, v15, v14
+	v_add_f32_e32 v12, v12, v14
+	v_add_f32_e32 v12, v13, v12
+	s_nop 1
+	v_add_f32_dpp v12, v12, v12 row_shr:8 row_mask:0xf bank_mask:0xf bound_ctrl:1
+	s_nop 1
+	v_add_f32_dpp v12, v12, v12 row_shr:4 row_mask:0xf bank_mask:0xf bound_ctrl:1
+	s_nop 1
+	v_add_f32_dpp v12, v12, v12 row_shr:2 row_mask:0xf bank_mask:0xf bound_ctrl:1
+	s_nop 1
+	v_add_f32_dpp v12, v12, v12 row_shr:1 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp192:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:133:58 ] ]
+	v_mov_b32_e32 v13, v12
+	s_nop 1
+	v_mov_b32_dpp v13, v13 row_bcast:15 row_mask:0xa bank_mask:0xf bound_ctrl:1
+.Ltmp193:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:133:58 ] ] ]
+	v_add_f32_e32 v12, v13, v12
+	s_nop 1
+	v_add_f32_dpp v12, v12, v12 row_bcast:31 row_mask:0xf bank_mask:0xf bound_ctrl:1
+.Ltmp194:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:30:22 @[ fused_qk_norm_rope_store.py:133:58 ] ]
+	s_nop 0
+	v_readlane_b32 s0, v12, 63
+.Ltmp195:
+	.loc	1 31 54                         ; fused_qk_norm_rope_store.py:31:54 @[ fused_qk_norm_rope_store.py:133:58 ]
+	s_nop 1
+	v_fmac_f32_e32 v21, s0, v20
+	.loc	1 31 32 is_stmt 0               ; fused_qk_norm_rope_store.py:31:32 @[ fused_qk_norm_rope_store.py:133:58 ]
+	v_rsq_f32_e32 v12, v21
+	.loc	1 34 17 is_stmt 1               ; fused_qk_norm_rope_store.py:34:17 @[ fused_qk_norm_rope_store.py:133:58 ]
+	s_nop 0
+	v_pk_mul_f32 v[14:15], v[12:13], v[0:1] op_sel_hi:[0,1]
+	v_pk_mul_f32 v[10:11], v[12:13], v[10:11] op_sel_hi:[0,1]
+	v_pk_mul_f32 v[16:17], v[12:13], v[2:3] op_sel_hi:[0,1]
+	v_pk_mul_f32 v[4:5], v[12:13], v[4:5] op_sel_hi:[0,1]
+.Ltmp196:
+	.loc	1 138 24                        ; fused_qk_norm_rope_store.py:138:24
+	v_cvt_pk_bf16_f32 v0, v14, v15
+	v_cvt_pk_bf16_f32 v1, v10, v11
+	.loc	1 142 70                        ; fused_qk_norm_rope_store.py:142:70
+	v_cndmask_b32_e64 v13, 0, v15, s[2:3]
+	v_cndmask_b32_e64 v12, 0, v14, s[2:3]
+	v_cndmask_b32_e64 v11, 0, v11, s[2:3]
+	v_cndmask_b32_e64 v10, 0, v10, s[2:3]
+	v_cndmask_b32_e64 v15, 0, v17, s[2:3]
+	v_cndmask_b32_e64 v14, 0, v16, s[2:3]
+	.loc	1 138 24                        ; fused_qk_norm_rope_store.py:138:24
+	v_cvt_pk_bf16_f32 v2, v16, v17
+	.loc	1 142 70                        ; fused_qk_norm_rope_store.py:142:70
+	v_cndmask_b32_e64 v17, 0, v5, s[2:3]
+	v_cndmask_b32_e64 v16, 0, v4, s[2:3]
+.Ltmp197:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:144:22 ]
+	ds_bpermute_b32 v18, v25, v12
+	ds_bpermute_b32 v19, v25, v13
+	ds_bpermute_b32 v20, v25, v10
+	ds_bpermute_b32 v21, v25, v11
+	ds_bpermute_b32 v22, v25, v14
+	ds_bpermute_b32 v23, v25, v15
+	ds_bpermute_b32 v24, v25, v16
+	ds_bpermute_b32 v25, v25, v17
+.Ltmp198:
+	.loc	1 138 24                        ; fused_qk_norm_rope_store.py:138:24
+	v_cvt_pk_bf16_f32 v3, v4, v5
+.Ltmp199:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:144:22 ] ]
+	s_waitcnt lgkmcnt(6)
+	v_pk_add_f32 v[4:5], v[12:13], v[18:19]
+	s_waitcnt lgkmcnt(4)
+	v_pk_add_f32 v[10:11], v[10:11], v[20:21]
+	s_waitcnt lgkmcnt(2)
+	v_pk_add_f32 v[12:13], v[14:15], v[22:23]
+	s_waitcnt lgkmcnt(0)
+	v_pk_add_f32 v[14:15], v[16:17], v[24:25]
+.Ltmp200:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:144:22 ]
+	ds_swizzle_b32 v16, v4 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v17, v5 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v18, v10 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v19, v11 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v20, v12 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v21, v13 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v22, v14 offset:swizzle(SWAP,16)
+	ds_swizzle_b32 v23, v15 offset:swizzle(SWAP,16)
+.Ltmp201:
+	.loc	1 138 12                        ; fused_qk_norm_rope_store.py:138:12
+	buffer_store_dwordx4 v[0:3], v9, s[4:7], 0 offen
+	.loc	1 146 22                        ; fused_qk_norm_rope_store.py:146:22
+	s_lshl_b32 s2, s22, 3
+	s_and_b64 s[0:1], s[18:19], exec
+.Ltmp202:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:144:22 ] ]
+	s_waitcnt lgkmcnt(6)
+	v_pk_add_f32 v[0:1], v[4:5], v[16:17]
+	s_waitcnt lgkmcnt(4)
+	v_pk_add_f32 v[2:3], v[10:11], v[18:19]
+	s_waitcnt lgkmcnt(2)
+	v_pk_add_f32 v[4:5], v[12:13], v[20:21]
+	s_waitcnt lgkmcnt(0)
+	v_pk_add_f32 v[12:13], v[14:15], v[22:23]
+.Ltmp203:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:144:22 ]
+	v_mov_b32_e32 v10, v0
+	v_mov_b32_e32 v11, v1
+	v_mov_b32_e32 v14, v2
+	v_mov_b32_e32 v15, v3
+	v_mov_b32_e32 v16, v4
+	v_mov_b32_e32 v17, v5
+	v_mov_b32_e32 v18, v12
+	v_mov_b32_e32 v19, v13
+	v_mov_b32_dpp v10, v10 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v11, v11 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v14, v14 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v15, v15 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v16, v16 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v17, v17 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v18, v18 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v19, v19 row_shr:8 row_mask:0xf bank_mask:0xc
+	v_mov_b32_dpp v10, v0 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v11, v1 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v14, v2 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v15, v3 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v16, v4 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v17, v5 row_shl:8 row_mask:0xf bank_mask:0x3
+.Ltmp204:
+	.loc	1 146 22                        ; fused_qk_norm_rope_store.py:146:22
+	s_cselect_b32 s0, s2, 0x80000000
+.Ltmp205:
+	.loc	2 293 36                        ; standard.py:293:36 @[ fused_qk_norm_rope_store.py:144:22 ]
+	v_mov_b32_dpp v18, v12 row_shl:8 row_mask:0xf bank_mask:0x3
+	v_mov_b32_dpp v19, v13 row_shl:8 row_mask:0xf bank_mask:0x3
+.Ltmp206:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:144:22 ] ]
+	v_pk_add_f32 v[0:1], v[0:1], v[10:11]
+	v_pk_add_f32 v[2:3], v[2:3], v[14:15]
+	v_pk_add_f32 v[10:11], v[4:5], v[16:17]
+.Ltmp207:
+	.loc	1 146 22                        ; fused_qk_norm_rope_store.py:146:22
+	v_mov_b32_e32 v4, s0
+.Ltmp208:
+	.loc	2 263 15                        ; standard.py:263:15 @[ standard.py:293:36 @[ fused_qk_norm_rope_store.py:144:22 ] ]
+	v_pk_add_f32 v[12:13], v[12:13], v[18:19]
+.Ltmp209:
+	.loc	1 39 31                         ; fused_qk_norm_rope_store.py:39:31 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:152:63 ] ]
+	ds_write_b128 v27, v[0:3]
+	ds_write_b128 v27, v[10:13] offset:16
+.Ltmp210:
+	; wave barrier
+	.loc	1 146 22                        ; fused_qk_norm_rope_store.py:146:22
+	buffer_load_dwordx2 v[4:5], v4, s[28:31], 0 offen
+	.loc	1 149 22                        ; fused_qk_norm_rope_store.py:149:22
+	s_mov_b32 s22, s26
+	s_and_b32 s21, s21, 0xffff
+	.loc	1 148 22                        ; fused_qk_norm_rope_store.py:148:22
+	s_and_b32 s13, s13, 0xffff
+.Ltmp211:
+	.loc	1 39 31                         ; fused_qk_norm_rope_store.py:39:31 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:152:63 ] ]
+	s_waitcnt vmcnt(0)
+	v_lshl_add_u32 v5, v7, 2, 0
+	v_sub_f32_e32 v14, 0, v1
+	v_sub_f32_e32 v16, 0, v3
+	.loc	1 42 29                         ; fused_qk_norm_rope_store.py:42:29 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:152:63 ] ]
+	v_mov_b32_e32 v15, v0
+	v_mov_b32_e32 v17, v2
+	.loc	1 39 31                         ; fused_qk_norm_rope_store.py:39:31 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:152:63 ] ]
+	v_sub_f32_e32 v18, 0, v11
+	v_sub_f32_e32 v20, 0, v13
+	.loc	1 42 29                         ; fused_qk_norm_rope_store.py:42:29 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:152:63 ] ]
+	v_mov_b32_e32 v19, v10
+	v_mov_b32_e32 v21, v12
+	s_movk_i32 s0, 0x380
+.Ltmp212:
+	.loc	1 155 21                        ; fused_qk_norm_rope_store.py:155:21
+	v_add_u32_e32 v0, s8, v6
+	.loc	1 156 12                        ; fused_qk_norm_rope_store.py:156:12
+	v_lshl_add_u32 v2, v0, 1, s0
+	.loc	1 148 32                        ; fused_qk_norm_rope_store.py:148:32
+	v_mul_lo_u32 v4, s16, v4
+	.loc	1 148 22 is_stmt 0              ; fused_qk_norm_rope_store.py:148:22
+	v_add_lshl_u32 v4, v4, v8, 1
+	v_cndmask_b32_e64 v4, v26, v4, s[18:19]
+	.loc	1 149 22 is_stmt 1              ; fused_qk_norm_rope_store.py:149:22
+	buffer_load_ushort v8, v4, s[20:23], 0 offen
+	.loc	1 148 22                        ; fused_qk_norm_rope_store.py:148:22
+	buffer_load_ushort v9, v4, s[12:15], 0 offen
+.Ltmp213:
+	.loc	1 39 31                         ; fused_qk_norm_rope_store.py:39:31 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:152:63 ] ]
+	ds_read_b32 v4, v5
+	.loc	1 42 29                         ; fused_qk_norm_rope_store.py:42:29 @[ fused_qk_norm_rope_store.py:50:45 @[ fused_qk_norm_rope_store.py:152:63 ] ]
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	ds_write_b128 v27, v[14:17]
+	ds_write_b128 v27, v[18:21] offset:16
+	; wave barrier
+	ds_read_b32 v5, v5
+.Ltmp214:
+	.loc	1 51 18                         ; fused_qk_norm_rope_store.py:51:18 @[ fused_qk_norm_rope_store.py:152:63 ]
+	s_waitcnt vmcnt(1)
+	v_lshlrev_b32_e32 v1, 16, v8
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b32_e32 v0, 16, v9
+	s_waitcnt lgkmcnt(0)
+	v_pk_mul_f32 v[0:1], v[4:5], v[0:1]
+	.loc	1 51 24 is_stmt 0               ; fused_qk_norm_rope_store.py:51:24 @[ fused_qk_norm_rope_store.py:152:63 ]
+	s_nop 0
+	v_add_f32_e32 v0, v0, v1
+.Ltmp215:
+	.loc	1 156 20 is_stmt 1              ; fused_qk_norm_rope_store.py:156:20
+	v_cvt_pk_bf16_f32 v0, v0, s0
+	.loc	1 156 12 is_stmt 0              ; fused_qk_norm_rope_store.py:156:12
+	v_cndmask_b32_e64 v1, v26, v2, s[18:19]
+	buffer_store_short v0, v1, s[4:7], 0 offen
+	.loc	1 0 0                           ; fused_qk_norm_rope_store.py:0
+	s_endpgm
+.Ltmp216:
+	.section	.rodata,"a",@progbits
+	.p2align	6, 0x0
+	.amdhsa_kernel _fused_qk_norm_rope_store_kernel
+		.amdhsa_group_segment_fixed_size 0
+		.amdhsa_private_segment_fixed_size 0
+		.amdhsa_kernarg_size 128
+		.amdhsa_user_sgpr_count 16
+		.amdhsa_user_sgpr_dispatch_ptr 0
+		.amdhsa_user_sgpr_queue_ptr 0
+		.amdhsa_user_sgpr_kernarg_segment_ptr 1
+		.amdhsa_user_sgpr_dispatch_id 0
+		.amdhsa_user_sgpr_kernarg_preload_length 14
+		.amdhsa_user_sgpr_kernarg_preload_offset 0
+		.amdhsa_user_sgpr_private_segment_size 0
+		.amdhsa_uses_dynamic_stack 0
+		.amdhsa_enable_private_segment 0
+		.amdhsa_system_sgpr_workgroup_id_x 1
+		.amdhsa_system_sgpr_workgroup_id_y 1
+		.amdhsa_system_sgpr_workgroup_id_z 0
+		.amdhsa_system_sgpr_workgroup_info 0
+		.amdhsa_system_vgpr_workitem_id 0
+		.amdhsa_next_free_vgpr 50
+		.amdhsa_next_free_sgpr 48
+		.amdhsa_accum_offset 52
+		.amdhsa_reserve_vcc 1
+		.amdhsa_reserve_xnack_mask 1
+		.amdhsa_float_round_mode_32 0
+		.amdhsa_float_round_mode_16_64 0
+		.amdhsa_float_denorm_mode_32 3
+		.amdhsa_float_denorm_mode_16_64 3
+		.amdhsa_dx10_clamp 1
+		.amdhsa_ieee_mode 1
+		.amdhsa_fp16_overflow 0
+		.amdhsa_tg_split 0
+		.amdhsa_exception_fp_ieee_invalid_op 0
+		.amdhsa_exception_fp_denorm_src 0
+		.amdhsa_exception_fp_ieee_div_zero 0
+		.amdhsa_exception_fp_ieee_overflow 0
+		.amdhsa_exception_fp_ieee_underflow 0
+		.amdhsa_exception_fp_ieee_inexact 0
+		.amdhsa_exception_int_div_zero 0
+	.end_amdhsa_kernel
+	.text
+.Lfunc_end0:
+	.size	_fused_qk_norm_rope_store_kernel, .Lfunc_end0-_fused_qk_norm_rope_store_kernel
+	.cfi_endproc
+                                        ; -- End function
+	.set _fused_qk_norm_rope_store_kernel.num_vgpr, 50
+	.set _fused_qk_norm_rope_store_kernel.num_agpr, 0
+	.set _fused_qk_norm_rope_store_kernel.numbered_sgpr, 48
+	.set _fused_qk_norm_rope_store_kernel.num_named_barrier, 0
+	.set _fused_qk_norm_rope_store_kernel.private_seg_size, 0
+	.set _fused_qk_norm_rope_store_kernel.uses_vcc, 1
+	.set _fused_qk_norm_rope_store_kernel.uses_flat_scratch, 0
+	.set _fused_qk_norm_rope_store_kernel.has_dyn_sized_stack, 0
+	.set _fused_qk_norm_rope_store_kernel.has_recursion, 0
+	.set _fused_qk_norm_rope_store_kernel.has_indirect_call, 0
+	.section	.AMDGPU.csdata,"",@progbits
+; Kernel info:
+; codeLenInByte = 7308
+; TotalNumSgprs: 54
+; NumVgprs: 50
+; NumAgprs: 0
+; TotalNumVgprs: 50
+; ScratchSize: 0
+; MemoryBound: 0
+; FloatMode: 240
+; IeeeMode: 1
+; LDSByteSize: 0 bytes/workgroup (compile time only)
+; SGPRBlocks: 6
+; VGPRBlocks: 6
+; NumSGPRsForWavesPerEU: 54
+; NumVGPRsForWavesPerEU: 50
+; AccumOffset: 52
+; Occupancy: 8
+; WaveLimiterHint : 0
+; COMPUTE_PGM_RSRC2:SCRATCH_EN: 0
+; COMPUTE_PGM_RSRC2:USER_SGPR: 16
+; COMPUTE_PGM_RSRC2:TRAP_HANDLER: 0
+; COMPUTE_PGM_RSRC2:TGID_X_EN: 1
+; COMPUTE_PGM_RSRC2:TGID_Y_EN: 1
+; COMPUTE_PGM_RSRC2:TGID_Z_EN: 0
+; COMPUTE_PGM_RSRC2:TIDIG_COMP_CNT: 0
+; COMPUTE_PGM_RSRC3_GFX90A:ACCUM_OFFSET: 12
+; COMPUTE_PGM_RSRC3_GFX90A:TG_SPLIT: 0
+	.text
+	.p2alignl 6, 3212836864
+	.fill 256, 4, 3212836864
+	.section	.AMDGPU.gpr_maximums,"",@progbits
+	.set amdgpu.max_num_vgpr, 0
+	.set amdgpu.max_num_agpr, 0
+	.set amdgpu.max_num_sgpr, 0
+	.set amdgpu.max_num_named_barrier, 0
+	.text
+	.section	.debug_abbrev,"",@progbits
+	.byte	1                               ; Abbreviation Code
+	.byte	17                              ; DW_TAG_compile_unit
+	.byte	1                               ; DW_CHILDREN_yes
+	.byte	37                              ; DW_AT_producer
+	.byte	14                              ; DW_FORM_strp
+	.byte	19                              ; DW_AT_language
+	.byte	5                               ; DW_FORM_data2
+	.byte	3                               ; DW_AT_name
+	.byte	14                              ; DW_FORM_strp
+	.byte	16                              ; DW_AT_stmt_list
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	27                              ; DW_AT_comp_dir
+	.byte	14                              ; DW_FORM_strp
+	.byte	17                              ; DW_AT_low_pc
+	.byte	1                               ; DW_FORM_addr
+	.byte	18                              ; DW_AT_high_pc
+	.byte	6                               ; DW_FORM_data4
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	2                               ; Abbreviation Code
+	.byte	46                              ; DW_TAG_subprogram
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	3                               ; DW_AT_name
+	.byte	14                              ; DW_FORM_strp
+	.byte	32                              ; DW_AT_inline
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	3                               ; Abbreviation Code
+	.byte	46                              ; DW_TAG_subprogram
+	.byte	1                               ; DW_CHILDREN_yes
+	.byte	17                              ; DW_AT_low_pc
+	.byte	1                               ; DW_FORM_addr
+	.byte	18                              ; DW_AT_high_pc
+	.byte	6                               ; DW_FORM_data4
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	4                               ; Abbreviation Code
+	.byte	29                              ; DW_TAG_inlined_subroutine
+	.byte	1                               ; DW_CHILDREN_yes
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	85                              ; DW_AT_ranges
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	88                              ; DW_AT_call_file
+	.byte	11                              ; DW_FORM_data1
+	.byte	89                              ; DW_AT_call_line
+	.byte	11                              ; DW_FORM_data1
+	.byte	87                              ; DW_AT_call_column
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	5                               ; Abbreviation Code
+	.byte	29                              ; DW_TAG_inlined_subroutine
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	85                              ; DW_AT_ranges
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	88                              ; DW_AT_call_file
+	.byte	11                              ; DW_FORM_data1
+	.byte	89                              ; DW_AT_call_line
+	.byte	5                               ; DW_FORM_data2
+	.byte	87                              ; DW_AT_call_column
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	6                               ; Abbreviation Code
+	.byte	29                              ; DW_TAG_inlined_subroutine
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	85                              ; DW_AT_ranges
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	88                              ; DW_AT_call_file
+	.byte	11                              ; DW_FORM_data1
+	.byte	89                              ; DW_AT_call_line
+	.byte	11                              ; DW_FORM_data1
+	.byte	87                              ; DW_AT_call_column
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	0                               ; EOM(3)
+	.section	.debug_info,"",@progbits
+.Lcu_begin0:
+	.long	.Ldebug_info_end0-.Ldebug_info_start0 ; Length of Unit
+.Ldebug_info_start0:
+	.short	4                               ; DWARF version number
+	.long	.debug_abbrev                   ; Offset Into Abbrev. Section
+	.byte	8                               ; Address Size (in bytes)
+	.byte	1                               ; Abbrev [1] 0xb:0x105 DW_TAG_compile_unit
+	.long	.Linfo_string0                  ; DW_AT_producer
+	.short	2                               ; DW_AT_language
+	.long	.Linfo_string1                  ; DW_AT_name
+	.long	.Lline_table_start0             ; DW_AT_stmt_list
+	.long	.Linfo_string2                  ; DW_AT_comp_dir
+	.quad	.Lfunc_begin0                   ; DW_AT_low_pc
+	.long	.Lfunc_end0-.Lfunc_begin0       ; DW_AT_high_pc
+	.byte	2                               ; Abbrev [2] 0x2a:0x6 DW_TAG_subprogram
+	.long	.Linfo_string3                  ; DW_AT_name
+	.byte	1                               ; DW_AT_inline
+	.byte	3                               ; Abbrev [3] 0x30:0xdf DW_TAG_subprogram
+	.quad	.Lfunc_begin0                   ; DW_AT_low_pc
+	.long	.Lfunc_end0-.Lfunc_begin0       ; DW_AT_high_pc
+	.long	42                              ; DW_AT_abstract_origin
+	.byte	4                               ; Abbrev [4] 0x41:0x27 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges0                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	179                             ; DW_AT_call_line
+	.byte	58                              ; DW_AT_call_column
+	.byte	4                               ; Abbrev [4] 0x4d:0x1a DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges1                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	30                              ; DW_AT_call_line
+	.byte	22                              ; DW_AT_call_column
+	.byte	5                               ; Abbrev [5] 0x59:0xd DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges2                 ; DW_AT_ranges
+	.byte	2                               ; DW_AT_call_file
+	.short	293                             ; DW_AT_call_line
+	.byte	36                              ; DW_AT_call_column
+	.byte	0                               ; End Of Children Mark
+	.byte	0                               ; End Of Children Mark
+	.byte	4                               ; Abbrev [4] 0x68:0x1a DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges3                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	189                             ; DW_AT_call_line
+	.byte	19                              ; DW_AT_call_column
+	.byte	5                               ; Abbrev [5] 0x74:0xd DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges4                 ; DW_AT_ranges
+	.byte	2                               ; DW_AT_call_file
+	.short	293                             ; DW_AT_call_line
+	.byte	36                              ; DW_AT_call_column
+	.byte	0                               ; End Of Children Mark
+	.byte	4                               ; Abbrev [4] 0x82:0x19 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges5                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	192                             ; DW_AT_call_line
+	.byte	60                              ; DW_AT_call_column
+	.byte	6                               ; Abbrev [6] 0x8e:0xc DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges6                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	50                              ; DW_AT_call_line
+	.byte	45                              ; DW_AT_call_column
+	.byte	0                               ; End Of Children Mark
+	.byte	4                               ; Abbrev [4] 0x9b:0x19 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges7                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	252                             ; DW_AT_call_line
+	.byte	29                              ; DW_AT_call_column
+	.byte	6                               ; Abbrev [6] 0xa7:0xc DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges8                 ; DW_AT_ranges
+	.byte	2                               ; DW_AT_call_file
+	.byte	191                             ; DW_AT_call_line
+	.byte	40                              ; DW_AT_call_column
+	.byte	0                               ; End Of Children Mark
+	.byte	4                               ; Abbrev [4] 0xb4:0x19 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges9                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	152                             ; DW_AT_call_line
+	.byte	63                              ; DW_AT_call_column
+	.byte	6                               ; Abbrev [6] 0xc0:0xc DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges10                ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	50                              ; DW_AT_call_line
+	.byte	45                              ; DW_AT_call_column
+	.byte	0                               ; End Of Children Mark
+	.byte	4                               ; Abbrev [4] 0xcd:0x1a DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges11                ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	144                             ; DW_AT_call_line
+	.byte	22                              ; DW_AT_call_column
+	.byte	5                               ; Abbrev [5] 0xd9:0xd DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges12                ; DW_AT_ranges
+	.byte	2                               ; DW_AT_call_file
+	.short	293                             ; DW_AT_call_line
+	.byte	36                              ; DW_AT_call_column
+	.byte	0                               ; End Of Children Mark
+	.byte	4                               ; Abbrev [4] 0xe7:0x27 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges13                ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	133                             ; DW_AT_call_line
+	.byte	58                              ; DW_AT_call_column
+	.byte	4                               ; Abbrev [4] 0xf3:0x1a DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges14                ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.byte	30                              ; DW_AT_call_line
+	.byte	22                              ; DW_AT_call_column
+	.byte	5                               ; Abbrev [5] 0xff:0xd DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges15                ; DW_AT_ranges
+	.byte	2                               ; DW_AT_call_file
+	.short	293                             ; DW_AT_call_line
+	.byte	36                              ; DW_AT_call_column
+	.byte	0                               ; End Of Children Mark
+	.byte	0                               ; End Of Children Mark
+	.byte	0                               ; End Of Children Mark
+	.byte	0                               ; End Of Children Mark
+.Ldebug_info_end0:
+	.section	.debug_ranges,"",@progbits
+.Ldebug_ranges0:
+	.quad	.Ltmp2-.Lfunc_begin0
+	.quad	.Ltmp3-.Lfunc_begin0
+	.quad	.Ltmp5-.Lfunc_begin0
+	.quad	.Ltmp7-.Lfunc_begin0
+	.quad	.Ltmp8-.Lfunc_begin0
+	.quad	.Ltmp13-.Lfunc_begin0
+	.quad	.Ltmp14-.Lfunc_begin0
+	.quad	.Ltmp15-.Lfunc_begin0
+	.quad	.Ltmp16-.Lfunc_begin0
+	.quad	.Ltmp17-.Lfunc_begin0
+	.quad	.Ltmp18-.Lfunc_begin0
+	.quad	.Ltmp19-.Lfunc_begin0
+	.quad	.Ltmp20-.Lfunc_begin0
+	.quad	.Ltmp22-.Lfunc_begin0
+	.quad	.Ltmp23-.Lfunc_begin0
+	.quad	.Ltmp25-.Lfunc_begin0
+	.quad	.Ltmp26-.Lfunc_begin0
+	.quad	.Ltmp27-.Lfunc_begin0
+	.quad	.Ltmp28-.Lfunc_begin0
+	.quad	.Ltmp29-.Lfunc_begin0
+	.quad	.Ltmp30-.Lfunc_begin0
+	.quad	.Ltmp31-.Lfunc_begin0
+	.quad	.Ltmp32-.Lfunc_begin0
+	.quad	.Ltmp33-.Lfunc_begin0
+	.quad	.Ltmp34-.Lfunc_begin0
+	.quad	.Ltmp35-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges1:
+	.quad	.Ltmp6-.Lfunc_begin0
+	.quad	.Ltmp7-.Lfunc_begin0
+	.quad	.Ltmp8-.Lfunc_begin0
+	.quad	.Ltmp9-.Lfunc_begin0
+	.quad	.Ltmp10-.Lfunc_begin0
+	.quad	.Ltmp11-.Lfunc_begin0
+	.quad	.Ltmp12-.Lfunc_begin0
+	.quad	.Ltmp13-.Lfunc_begin0
+	.quad	.Ltmp14-.Lfunc_begin0
+	.quad	.Ltmp15-.Lfunc_begin0
+	.quad	.Ltmp16-.Lfunc_begin0
+	.quad	.Ltmp17-.Lfunc_begin0
+	.quad	.Ltmp18-.Lfunc_begin0
+	.quad	.Ltmp19-.Lfunc_begin0
+	.quad	.Ltmp20-.Lfunc_begin0
+	.quad	.Ltmp22-.Lfunc_begin0
+	.quad	.Ltmp23-.Lfunc_begin0
+	.quad	.Ltmp25-.Lfunc_begin0
+	.quad	.Ltmp26-.Lfunc_begin0
+	.quad	.Ltmp27-.Lfunc_begin0
+	.quad	.Ltmp28-.Lfunc_begin0
+	.quad	.Ltmp29-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges2:
+	.quad	.Ltmp6-.Lfunc_begin0
+	.quad	.Ltmp7-.Lfunc_begin0
+	.quad	.Ltmp8-.Lfunc_begin0
+	.quad	.Ltmp9-.Lfunc_begin0
+	.quad	.Ltmp10-.Lfunc_begin0
+	.quad	.Ltmp11-.Lfunc_begin0
+	.quad	.Ltmp12-.Lfunc_begin0
+	.quad	.Ltmp13-.Lfunc_begin0
+	.quad	.Ltmp14-.Lfunc_begin0
+	.quad	.Ltmp15-.Lfunc_begin0
+	.quad	.Ltmp16-.Lfunc_begin0
+	.quad	.Ltmp17-.Lfunc_begin0
+	.quad	.Ltmp18-.Lfunc_begin0
+	.quad	.Ltmp19-.Lfunc_begin0
+	.quad	.Ltmp20-.Lfunc_begin0
+	.quad	.Ltmp21-.Lfunc_begin0
+	.quad	.Ltmp24-.Lfunc_begin0
+	.quad	.Ltmp25-.Lfunc_begin0
+	.quad	.Ltmp26-.Lfunc_begin0
+	.quad	.Ltmp27-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges3:
+	.quad	.Ltmp3-.Lfunc_begin0
+	.quad	.Ltmp4-.Lfunc_begin0
+	.quad	.Ltmp36-.Lfunc_begin0
+	.quad	.Ltmp37-.Lfunc_begin0
+	.quad	.Ltmp38-.Lfunc_begin0
+	.quad	.Ltmp39-.Lfunc_begin0
+	.quad	.Ltmp40-.Lfunc_begin0
+	.quad	.Ltmp41-.Lfunc_begin0
+	.quad	.Ltmp42-.Lfunc_begin0
+	.quad	.Ltmp44-.Lfunc_begin0
+	.quad	.Ltmp45-.Lfunc_begin0
+	.quad	.Ltmp51-.Lfunc_begin0
+	.quad	.Ltmp52-.Lfunc_begin0
+	.quad	.Ltmp53-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges4:
+	.quad	.Ltmp38-.Lfunc_begin0
+	.quad	.Ltmp39-.Lfunc_begin0
+	.quad	.Ltmp40-.Lfunc_begin0
+	.quad	.Ltmp41-.Lfunc_begin0
+	.quad	.Ltmp42-.Lfunc_begin0
+	.quad	.Ltmp43-.Lfunc_begin0
+	.quad	.Ltmp46-.Lfunc_begin0
+	.quad	.Ltmp47-.Lfunc_begin0
+	.quad	.Ltmp48-.Lfunc_begin0
+	.quad	.Ltmp49-.Lfunc_begin0
+	.quad	.Ltmp50-.Lfunc_begin0
+	.quad	.Ltmp51-.Lfunc_begin0
+	.quad	.Ltmp52-.Lfunc_begin0
+	.quad	.Ltmp53-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges5:
+	.quad	.Ltmp15-.Lfunc_begin0
+	.quad	.Ltmp16-.Lfunc_begin0
+	.quad	.Ltmp17-.Lfunc_begin0
+	.quad	.Ltmp18-.Lfunc_begin0
+	.quad	.Ltmp19-.Lfunc_begin0
+	.quad	.Ltmp20-.Lfunc_begin0
+	.quad	.Ltmp37-.Lfunc_begin0
+	.quad	.Ltmp38-.Lfunc_begin0
+	.quad	.Ltmp39-.Lfunc_begin0
+	.quad	.Ltmp40-.Lfunc_begin0
+	.quad	.Ltmp41-.Lfunc_begin0
+	.quad	.Ltmp42-.Lfunc_begin0
+	.quad	.Ltmp44-.Lfunc_begin0
+	.quad	.Ltmp45-.Lfunc_begin0
+	.quad	.Ltmp51-.Lfunc_begin0
+	.quad	.Ltmp52-.Lfunc_begin0
+	.quad	.Ltmp53-.Lfunc_begin0
+	.quad	.Ltmp61-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges6:
+	.quad	.Ltmp53-.Lfunc_begin0
+	.quad	.Ltmp54-.Lfunc_begin0
+	.quad	.Ltmp55-.Lfunc_begin0
+	.quad	.Ltmp56-.Lfunc_begin0
+	.quad	.Ltmp57-.Lfunc_begin0
+	.quad	.Ltmp58-.Lfunc_begin0
+	.quad	.Ltmp59-.Lfunc_begin0
+	.quad	.Ltmp60-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges7:
+	.quad	.Ltmp62-.Lfunc_begin0
+	.quad	.Ltmp64-.Lfunc_begin0
+	.quad	.Ltmp65-.Lfunc_begin0
+	.quad	.Ltmp66-.Lfunc_begin0
+	.quad	.Ltmp67-.Lfunc_begin0
+	.quad	.Ltmp68-.Lfunc_begin0
+	.quad	.Ltmp69-.Lfunc_begin0
+	.quad	.Ltmp71-.Lfunc_begin0
+	.quad	.Ltmp72-.Lfunc_begin0
+	.quad	.Ltmp74-.Lfunc_begin0
+	.quad	.Ltmp75-.Lfunc_begin0
+	.quad	.Ltmp78-.Lfunc_begin0
+	.quad	.Ltmp79-.Lfunc_begin0
+	.quad	.Ltmp81-.Lfunc_begin0
+	.quad	.Ltmp82-.Lfunc_begin0
+	.quad	.Ltmp85-.Lfunc_begin0
+	.quad	.Ltmp86-.Lfunc_begin0
+	.quad	.Ltmp100-.Lfunc_begin0
+	.quad	.Ltmp101-.Lfunc_begin0
+	.quad	.Ltmp115-.Lfunc_begin0
+	.quad	.Ltmp116-.Lfunc_begin0
+	.quad	.Ltmp130-.Lfunc_begin0
+	.quad	.Ltmp131-.Lfunc_begin0
+	.quad	.Ltmp145-.Lfunc_begin0
+	.quad	.Ltmp146-.Lfunc_begin0
+	.quad	.Ltmp160-.Lfunc_begin0
+	.quad	.Ltmp161-.Lfunc_begin0
+	.quad	.Ltmp175-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges8:
+	.quad	.Ltmp62-.Lfunc_begin0
+	.quad	.Ltmp63-.Lfunc_begin0
+	.quad	.Ltmp65-.Lfunc_begin0
+	.quad	.Ltmp66-.Lfunc_begin0
+	.quad	.Ltmp67-.Lfunc_begin0
+	.quad	.Ltmp68-.Lfunc_begin0
+	.quad	.Ltmp70-.Lfunc_begin0
+	.quad	.Ltmp71-.Lfunc_begin0
+	.quad	.Ltmp73-.Lfunc_begin0
+	.quad	.Ltmp74-.Lfunc_begin0
+	.quad	.Ltmp76-.Lfunc_begin0
+	.quad	.Ltmp77-.Lfunc_begin0
+	.quad	.Ltmp80-.Lfunc_begin0
+	.quad	.Ltmp81-.Lfunc_begin0
+	.quad	.Ltmp83-.Lfunc_begin0
+	.quad	.Ltmp84-.Lfunc_begin0
+	.quad	.Ltmp86-.Lfunc_begin0
+	.quad	.Ltmp87-.Lfunc_begin0
+	.quad	.Ltmp88-.Lfunc_begin0
+	.quad	.Ltmp89-.Lfunc_begin0
+	.quad	.Ltmp90-.Lfunc_begin0
+	.quad	.Ltmp91-.Lfunc_begin0
+	.quad	.Ltmp92-.Lfunc_begin0
+	.quad	.Ltmp93-.Lfunc_begin0
+	.quad	.Ltmp94-.Lfunc_begin0
+	.quad	.Ltmp95-.Lfunc_begin0
+	.quad	.Ltmp96-.Lfunc_begin0
+	.quad	.Ltmp97-.Lfunc_begin0
+	.quad	.Ltmp98-.Lfunc_begin0
+	.quad	.Ltmp99-.Lfunc_begin0
+	.quad	.Ltmp101-.Lfunc_begin0
+	.quad	.Ltmp102-.Lfunc_begin0
+	.quad	.Ltmp103-.Lfunc_begin0
+	.quad	.Ltmp104-.Lfunc_begin0
+	.quad	.Ltmp105-.Lfunc_begin0
+	.quad	.Ltmp106-.Lfunc_begin0
+	.quad	.Ltmp107-.Lfunc_begin0
+	.quad	.Ltmp108-.Lfunc_begin0
+	.quad	.Ltmp109-.Lfunc_begin0
+	.quad	.Ltmp110-.Lfunc_begin0
+	.quad	.Ltmp111-.Lfunc_begin0
+	.quad	.Ltmp112-.Lfunc_begin0
+	.quad	.Ltmp113-.Lfunc_begin0
+	.quad	.Ltmp114-.Lfunc_begin0
+	.quad	.Ltmp116-.Lfunc_begin0
+	.quad	.Ltmp117-.Lfunc_begin0
+	.quad	.Ltmp118-.Lfunc_begin0
+	.quad	.Ltmp119-.Lfunc_begin0
+	.quad	.Ltmp120-.Lfunc_begin0
+	.quad	.Ltmp121-.Lfunc_begin0
+	.quad	.Ltmp122-.Lfunc_begin0
+	.quad	.Ltmp123-.Lfunc_begin0
+	.quad	.Ltmp124-.Lfunc_begin0
+	.quad	.Ltmp125-.Lfunc_begin0
+	.quad	.Ltmp126-.Lfunc_begin0
+	.quad	.Ltmp127-.Lfunc_begin0
+	.quad	.Ltmp128-.Lfunc_begin0
+	.quad	.Ltmp129-.Lfunc_begin0
+	.quad	.Ltmp131-.Lfunc_begin0
+	.quad	.Ltmp132-.Lfunc_begin0
+	.quad	.Ltmp133-.Lfunc_begin0
+	.quad	.Ltmp134-.Lfunc_begin0
+	.quad	.Ltmp135-.Lfunc_begin0
+	.quad	.Ltmp136-.Lfunc_begin0
+	.quad	.Ltmp137-.Lfunc_begin0
+	.quad	.Ltmp138-.Lfunc_begin0
+	.quad	.Ltmp139-.Lfunc_begin0
+	.quad	.Ltmp140-.Lfunc_begin0
+	.quad	.Ltmp141-.Lfunc_begin0
+	.quad	.Ltmp142-.Lfunc_begin0
+	.quad	.Ltmp143-.Lfunc_begin0
+	.quad	.Ltmp144-.Lfunc_begin0
+	.quad	.Ltmp146-.Lfunc_begin0
+	.quad	.Ltmp147-.Lfunc_begin0
+	.quad	.Ltmp148-.Lfunc_begin0
+	.quad	.Ltmp149-.Lfunc_begin0
+	.quad	.Ltmp150-.Lfunc_begin0
+	.quad	.Ltmp151-.Lfunc_begin0
+	.quad	.Ltmp152-.Lfunc_begin0
+	.quad	.Ltmp153-.Lfunc_begin0
+	.quad	.Ltmp154-.Lfunc_begin0
+	.quad	.Ltmp155-.Lfunc_begin0
+	.quad	.Ltmp156-.Lfunc_begin0
+	.quad	.Ltmp157-.Lfunc_begin0
+	.quad	.Ltmp158-.Lfunc_begin0
+	.quad	.Ltmp159-.Lfunc_begin0
+	.quad	.Ltmp161-.Lfunc_begin0
+	.quad	.Ltmp162-.Lfunc_begin0
+	.quad	.Ltmp163-.Lfunc_begin0
+	.quad	.Ltmp164-.Lfunc_begin0
+	.quad	.Ltmp165-.Lfunc_begin0
+	.quad	.Ltmp166-.Lfunc_begin0
+	.quad	.Ltmp167-.Lfunc_begin0
+	.quad	.Ltmp168-.Lfunc_begin0
+	.quad	.Ltmp169-.Lfunc_begin0
+	.quad	.Ltmp170-.Lfunc_begin0
+	.quad	.Ltmp171-.Lfunc_begin0
+	.quad	.Ltmp172-.Lfunc_begin0
+	.quad	.Ltmp173-.Lfunc_begin0
+	.quad	.Ltmp174-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges9:
+	.quad	.Ltmp176-.Lfunc_begin0
+	.quad	.Ltmp177-.Lfunc_begin0
+	.quad	.Ltmp178-.Lfunc_begin0
+	.quad	.Ltmp179-.Lfunc_begin0
+	.quad	.Ltmp209-.Lfunc_begin0
+	.quad	.Ltmp210-.Lfunc_begin0
+	.quad	.Ltmp211-.Lfunc_begin0
+	.quad	.Ltmp212-.Lfunc_begin0
+	.quad	.Ltmp213-.Lfunc_begin0
+	.quad	.Ltmp215-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges10:
+	.quad	.Ltmp176-.Lfunc_begin0
+	.quad	.Ltmp177-.Lfunc_begin0
+	.quad	.Ltmp178-.Lfunc_begin0
+	.quad	.Ltmp179-.Lfunc_begin0
+	.quad	.Ltmp209-.Lfunc_begin0
+	.quad	.Ltmp210-.Lfunc_begin0
+	.quad	.Ltmp211-.Lfunc_begin0
+	.quad	.Ltmp212-.Lfunc_begin0
+	.quad	.Ltmp213-.Lfunc_begin0
+	.quad	.Ltmp214-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges11:
+	.quad	.Ltmp177-.Lfunc_begin0
+	.quad	.Ltmp178-.Lfunc_begin0
+	.quad	.Ltmp197-.Lfunc_begin0
+	.quad	.Ltmp198-.Lfunc_begin0
+	.quad	.Ltmp199-.Lfunc_begin0
+	.quad	.Ltmp201-.Lfunc_begin0
+	.quad	.Ltmp202-.Lfunc_begin0
+	.quad	.Ltmp204-.Lfunc_begin0
+	.quad	.Ltmp205-.Lfunc_begin0
+	.quad	.Ltmp207-.Lfunc_begin0
+	.quad	.Ltmp208-.Lfunc_begin0
+	.quad	.Ltmp209-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges12:
+	.quad	.Ltmp199-.Lfunc_begin0
+	.quad	.Ltmp200-.Lfunc_begin0
+	.quad	.Ltmp202-.Lfunc_begin0
+	.quad	.Ltmp203-.Lfunc_begin0
+	.quad	.Ltmp206-.Lfunc_begin0
+	.quad	.Ltmp207-.Lfunc_begin0
+	.quad	.Ltmp208-.Lfunc_begin0
+	.quad	.Ltmp209-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges13:
+	.quad	.Ltmp180-.Lfunc_begin0
+	.quad	.Ltmp181-.Lfunc_begin0
+	.quad	.Ltmp182-.Lfunc_begin0
+	.quad	.Ltmp183-.Lfunc_begin0
+	.quad	.Ltmp184-.Lfunc_begin0
+	.quad	.Ltmp186-.Lfunc_begin0
+	.quad	.Ltmp187-.Lfunc_begin0
+	.quad	.Ltmp196-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges14:
+	.quad	.Ltmp185-.Lfunc_begin0
+	.quad	.Ltmp186-.Lfunc_begin0
+	.quad	.Ltmp187-.Lfunc_begin0
+	.quad	.Ltmp188-.Lfunc_begin0
+	.quad	.Ltmp189-.Lfunc_begin0
+	.quad	.Ltmp190-.Lfunc_begin0
+	.quad	.Ltmp191-.Lfunc_begin0
+	.quad	.Ltmp195-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges15:
+	.quad	.Ltmp185-.Lfunc_begin0
+	.quad	.Ltmp186-.Lfunc_begin0
+	.quad	.Ltmp187-.Lfunc_begin0
+	.quad	.Ltmp188-.Lfunc_begin0
+	.quad	.Ltmp189-.Lfunc_begin0
+	.quad	.Ltmp190-.Lfunc_begin0
+	.quad	.Ltmp191-.Lfunc_begin0
+	.quad	.Ltmp192-.Lfunc_begin0
+	.quad	.Ltmp193-.Lfunc_begin0
+	.quad	.Ltmp194-.Lfunc_begin0
+	.quad	0
+	.quad	0
+	.section	.debug_str,"MS",@progbits,1
+.Linfo_string0:
+	.asciz	"triton"                        ; string offset=0
+.Linfo_string1:
+	.asciz	"fused_qk_norm_rope_store.py"   ; string offset=7
+.Linfo_string2:
+	.asciz	"/sgl-workspace/sglang/python/sglang/srt/layers" ; string offset=35
+.Linfo_string3:
+	.asciz	"_fused_qk_norm_rope_store_kernel" ; string offset=82
+	.section	".note.GNU-stack","",@progbits
+	.amdgpu_metadata
+---
+amdhsa.kernels:
+  - .agpr_count:     0
+    .args:
+      - .address_space:  global
+        .offset:         0
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         8
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         16
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         24
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         32
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         40
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         48
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         56
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         64
+        .size:           8
+        .value_kind:     global_buffer
+      - .offset:         72
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         76
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         80
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         84
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         88
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         92
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         96
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         100
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         104
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         108
+        .size:           4
+        .value_kind:     by_value
+      - .address_space:  global
+        .offset:         112
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         120
+        .size:           8
+        .value_kind:     global_buffer
+    .group_segment_fixed_size: 0
+    .kernarg_segment_align: 8
+    .kernarg_segment_size: 128
+    .max_flat_workgroup_size: 256
+    .name:           _fused_qk_norm_rope_store_kernel
+    .private_segment_fixed_size: 0
+    .sgpr_count:     54
+    .sgpr_spill_count: 0
+    .symbol:         _fused_qk_norm_rope_store_kernel.kd
+    .uniform_work_group_size: 1
+    .uses_dynamic_stack: false
+    .vgpr_count:     50
+    .vgpr_spill_count: 0
+    .wavefront_size: 64
+amdhsa.target:   amdgcn-amd-amdhsa--gfx950
+amdhsa.version:
+  - 1
+  - 2
+...
+
+	.end_amdgpu_metadata
+	.section	.debug_line,"",@progbits
+.Lline_table_start0:

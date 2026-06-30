@@ -1,0 +1,2205 @@
+	.amdgcn_target "amdgcn-amd-amdhsa--gfx950"
+	.amdhsa_code_object_version 5
+	.text
+	.globl	_gluon_deepgemm_fp8_paged_mqa_logits_preshuffle ; -- Begin function _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle
+	.p2align	8
+	.type	_gluon_deepgemm_fp8_paged_mqa_logits_preshuffle,@function
+_gluon_deepgemm_fp8_paged_mqa_logits_preshuffle: ; @_gluon_deepgemm_fp8_paged_mqa_logits_preshuffle
+.Lfunc_begin0:
+	.cfi_sections .debug_frame
+	.cfi_startproc
+; %bb.10:
+	.file	1 "/sgl-workspace/aiter/aiter/ops/triton/gluon" "pa_mqa_logits.py"
+	.loc	1 319 0 prologue_end            ; pa_mqa_logits.py:319:0
+	s_load_dwordx2 s[2:3], s[0:1], 0x0
+	s_load_dwordx8 s[4:11], s[0:1], 0x8
+	s_load_dwordx2 s[12:13], s[0:1], 0x28
+	s_load_dword s14, s[0:1], 0x30
+	s_waitcnt lgkmcnt(0)
+	s_branch .LBB0_0
+	.loc	1 0 0 is_stmt 0                 ; :0:0
+.Ltmp0:
+	.p2align	8
+; %bb.11:
+.LBB0_0:
+.Ltmp1:
+	.loc	1 408 53 is_stmt 1              ; pa_mqa_logits.py:408:53
+	s_abs_i32 s5, s2
+	v_cvt_f32_u32_e32 v1, s5
+	s_mov_b32 s4, s14
+	s_sub_i32 s11, 0, s5
+	s_mov_b64 s[20:21], s[6:7]
+	v_rcp_iflag_f32_e32 v1, v1
+	s_abs_i32 s7, s15
+	s_xor_b32 s6, s15, s2
+	s_ashr_i32 s6, s6, 31
+	v_mul_f32_e32 v1, 0x4f7ffffe, v1
+	v_cvt_u32_f32_e32 v1, v1
+	.loc	1 596 31                        ; pa_mqa_logits.py:596:31
+	v_readfirstlane_b32 s35, v0
+	.loc	1 408 53                        ; pa_mqa_logits.py:408:53
+	v_readfirstlane_b32 s14, v1
+	s_mul_i32 s11, s11, s14
+	s_mul_hi_u32 s11, s14, s11
+	s_add_i32 s14, s14, s11
+	s_mul_hi_u32 s11, s7, s14
+	s_mul_i32 s14, s11, s5
+	s_sub_i32 s7, s7, s14
+	s_add_i32 s14, s11, 1
+	s_sub_i32 s16, s7, s5
+	s_cmp_ge_u32 s7, s5
+	s_cselect_b32 s11, s14, s11
+	s_cselect_b32 s7, s16, s7
+	s_add_i32 s14, s11, 1
+	s_cmp_ge_u32 s7, s5
+	s_cselect_b32 s5, s14, s11
+	.loc	1 409 66                        ; pa_mqa_logits.py:409:66
+	s_abs_i32 s7, s3
+	v_cvt_f32_u32_e32 v1, s7
+	.loc	1 408 53                        ; pa_mqa_logits.py:408:53
+	s_xor_b32 s5, s5, s6
+	s_sub_i32 s6, s5, s6
+	.loc	1 408 34 is_stmt 0              ; pa_mqa_logits.py:408:34
+	s_mul_i32 s2, s6, s2
+	.loc	1 409 66 is_stmt 1              ; pa_mqa_logits.py:409:66
+	v_rcp_iflag_f32_e32 v1, v1
+	.loc	1 408 34                        ; pa_mqa_logits.py:408:34
+	s_sub_i32 s24, s15, s2
+	.loc	1 409 66                        ; pa_mqa_logits.py:409:66
+	s_sub_i32 s14, 0, s7
+	s_abs_i32 s5, s6
+	v_mul_f32_e32 v1, 0x4f7ffffe, v1
+	v_cvt_u32_f32_e32 v1, v1
+	s_xor_b32 s2, s6, s3
+	s_ashr_i32 s2, s2, 31
+	s_load_dword s11, s[0:1], 0x7c
+	s_load_dwordx2 s[16:17], s[0:1], 0x48
+	v_readfirstlane_b32 s15, v1
+	s_mul_i32 s14, s14, s15
+	s_mul_hi_u32 s14, s15, s14
+	s_add_i32 s15, s15, s14
+	s_mul_hi_u32 s14, s5, s15
+	s_mul_i32 s15, s14, s7
+	s_sub_i32 s5, s5, s15
+	s_add_i32 s15, s14, 1
+	s_sub_i32 s18, s5, s7
+	s_cmp_ge_u32 s5, s7
+	s_cselect_b32 s14, s15, s14
+	s_cselect_b32 s5, s18, s5
+	s_add_i32 s15, s14, 1
+	s_cmp_ge_u32 s5, s7
+	s_cselect_b32 s5, s15, s14
+	s_xor_b32 s5, s5, s2
+	.loc	1 411 47                        ; pa_mqa_logits.py:411:47
+	s_ashr_i32 s25, s24, 31
+	.loc	1 409 66                        ; pa_mqa_logits.py:409:66
+	s_sub_i32 s7, s5, s2
+	.loc	1 411 47                        ; pa_mqa_logits.py:411:47
+	s_lshl_b64 s[14:15], s[24:25], 2
+	s_waitcnt lgkmcnt(0)
+	s_add_u32 s14, s16, s14
+	s_addc_u32 s15, s17, s15
+	.loc	1 414 51                        ; pa_mqa_logits.py:414:51
+	s_abs_i32 s2, s11
+	v_cvt_f32_u32_e32 v1, s2
+	.loc	1 411 29                        ; pa_mqa_logits.py:411:29
+	s_load_dword s5, s[14:15], 0x0
+	.loc	1 414 51                        ; pa_mqa_logits.py:414:51
+	s_sub_i32 s17, 0, s2
+	v_rcp_iflag_f32_e32 v1, v1
+.Ltmp2:
+	.file	2 "/sgl-workspace/triton-custom/python/triton/language" "standard.py"
+	.loc	2 43 17                         ; standard.py:43:17 @[ pa_mqa_logits.py:413:48 ]
+	s_waitcnt lgkmcnt(0)
+	s_add_i32 s14, s5, 0xff
+	.loc	2 43 30 is_stmt 0               ; standard.py:43:30 @[ pa_mqa_logits.py:413:48 ]
+	s_ashr_i32 s15, s14, 31
+.Ltmp3:
+	.loc	1 414 51 is_stmt 1              ; pa_mqa_logits.py:414:51
+	v_mul_f32_e32 v1, 0x4f7ffffe, v1
+	v_cvt_u32_f32_e32 v1, v1
+.Ltmp4:
+	.loc	2 43 30                         ; standard.py:43:30 @[ pa_mqa_logits.py:413:48 ]
+	s_lshr_b32 s15, s15, 24
+	s_add_i32 s14, s14, s15
+	s_ashr_i32 s14, s14, 8
+.Ltmp5:
+	.loc	1 414 51                        ; pa_mqa_logits.py:414:51
+	v_readfirstlane_b32 s18, v1
+	s_mul_i32 s17, s17, s18
+	s_mul_hi_u32 s17, s18, s17
+	s_abs_i32 s16, s14
+	s_add_i32 s18, s18, s17
+	s_mul_hi_u32 s17, s16, s18
+	s_mul_i32 s18, s17, s2
+	s_xor_b32 s15, s14, s11
+	s_sub_i32 s16, s16, s18
+	s_ashr_i32 s15, s15, 31
+	s_add_i32 s18, s17, 1
+	s_sub_i32 s19, s16, s2
+	s_cmp_ge_u32 s16, s2
+	s_cselect_b32 s17, s18, s17
+	s_cselect_b32 s16, s19, s16
+	s_add_i32 s18, s17, 1
+	s_cmp_ge_u32 s16, s2
+	s_cselect_b32 s2, s18, s17
+	s_xor_b32 s2, s2, s15
+	s_sub_i32 s15, s2, s15
+	.loc	1 415 50                        ; pa_mqa_logits.py:415:50
+	s_mul_i32 s2, s15, s11
+	s_sub_i32 s11, s14, s2
+	.loc	1 417 23                        ; pa_mqa_logits.py:417:23
+	s_mul_i32 s34, s15, s7
+	.loc	1 418 28                        ; pa_mqa_logits.py:418:28
+	s_min_i32 s33, s7, s11
+	.loc	1 418 10 is_stmt 0              ; pa_mqa_logits.py:418:10
+	s_add_i32 s2, s33, s34
+	s_lshl_b32 s2, s2, 8
+	.loc	1 421 25 is_stmt 1              ; pa_mqa_logits.py:421:25
+	s_sub_i32 s14, s5, s2
+	.loc	1 422 34                        ; pa_mqa_logits.py:422:34
+	s_lshl_b32 s15, s15, 8
+	.loc	1 423 36                        ; pa_mqa_logits.py:423:36
+	s_cmp_lt_i32 s7, s11
+	.loc	1 423 21 is_stmt 0              ; pa_mqa_logits.py:423:21
+	s_cselect_b32 s11, 0x100, 0
+	.loc	1 423 11                        ; pa_mqa_logits.py:423:11
+	s_add_i32 s11, s11, s15
+	.loc	1 422 8 is_stmt 1               ; pa_mqa_logits.py:422:8
+	s_min_i32 s14, s14, s11
+	.loc	1 426 31                        ; pa_mqa_logits.py:426:31
+	s_cmp_gt_i32 s14, 0
+	s_cbranch_scc0 .LBB0_9
+; %bb.1:
+	.loc	1 409 44                        ; pa_mqa_logits.py:409:44
+	s_mul_i32 s7, s7, s3
+	s_sub_i32 s25, s6, s7
+.Ltmp6:
+	.loc	2 43 17                         ; standard.py:43:17 @[ pa_mqa_logits.py:430:60 ]
+	s_add_i32 s6, s14, 63
+	.loc	2 43 30 is_stmt 0               ; standard.py:43:30 @[ pa_mqa_logits.py:430:60 ]
+	s_ashr_i32 s7, s6, 31
+	s_lshr_b32 s7, s7, 26
+	s_add_i32 s29, s6, s7
+	s_ashr_i32 s36, s29, 6
+.Ltmp7:
+	.loc	1 772 12 is_stmt 1              ; pa_mqa_logits.py:772:12
+	s_and_b32 s28, s35, 0xc0
+	.loc	1 436 53                        ; pa_mqa_logits.py:436:53
+	s_mul_i32 s6, s36, 0xc0
+	s_and_b32 s31, s6, 0xc0
+	.loc	1 444 32                        ; pa_mqa_logits.py:444:32
+	s_mul_i32 s6, s24, s8
+	.loc	1 445 27                        ; pa_mqa_logits.py:445:27
+	s_mul_i32 s7, s25, s9
+	.loc	1 447 29                        ; pa_mqa_logits.py:447:29
+	v_and_or_b32 v19, v0, 56, s28
+	.loc	1 450 27                        ; pa_mqa_logits.py:450:27
+	v_lshlrev_b32_e32 v20, 4, v0
+	s_load_dwordx4 s[16:19], s[0:1], 0x50
+	s_load_dword s27, s[0:1], 0x60
+	s_load_dword s26, s[0:1], 0x78
+	s_load_dword s11, s[0:1], 0x70
+	.loc	1 445 14                        ; pa_mqa_logits.py:445:14
+	s_add_i32 s7, s7, s6
+	.loc	1 447 29                        ; pa_mqa_logits.py:447:29
+	v_lshrrev_b32_e32 v1, 2, v19
+	.loc	1 450 27                        ; pa_mqa_logits.py:450:27
+	v_and_b32_e32 v2, 0x70, v20
+	.loc	1 447 29                        ; pa_mqa_logits.py:447:29
+	v_or_b32_e32 v3, 1, v1
+	.loc	1 446 14                        ; pa_mqa_logits.py:446:14
+	v_add_u32_e32 v2, s7, v2
+	.loc	1 450 14                        ; pa_mqa_logits.py:450:14
+	v_mad_u64_u32 v[4:5], s[6:7], v1, s10, v[2:3]
+	v_mad_u64_u32 v[2:3], s[6:7], v3, s10, v[2:3]
+	.loc	1 453 44                        ; pa_mqa_logits.py:453:44
+	s_sub_i32 s30, s2, s31
+	.loc	1 456 27                        ; pa_mqa_logits.py:456:27
+	s_ashr_i32 s6, s30, 6
+	.loc	1 458 15                        ; pa_mqa_logits.py:458:15
+	s_bfe_u32 s7, s35, 0x10007
+	s_mov_b32 s15, 0x27000
+	s_mov_b32 s14, 0x7ffffffe
+	.loc	1 457 14                        ; pa_mqa_logits.py:457:14
+	s_add_i32 s10, s6, s7
+	.loc	1 462 32                        ; pa_mqa_logits.py:462:32
+	s_waitcnt lgkmcnt(0)
+	s_mul_i32 s6, s24, s26
+	.loc	1 444 12                        ; pa_mqa_logits.py:444:12
+	s_and_b32 s21, s21, 0xffff
+	s_mov_b32 s22, s14
+	s_mov_b32 s23, s15
+	.loc	1 464 14                        ; pa_mqa_logits.py:464:14
+	s_add_i32 s8, s10, s6
+	.loc	1 444 12                        ; pa_mqa_logits.py:444:12
+	buffer_load_dwordx4 v[28:31], v4, s[20:23], 0 offen
+	buffer_load_dwordx4 v[46:49], v2, s[20:23], 0 offen
+	.loc	1 466 12                        ; pa_mqa_logits.py:466:12
+	s_lshl_b32 s22, s8, 2
+	.loc	1 470 27                        ; pa_mqa_logits.py:470:27
+	s_add_i32 s8, s30, 0x80
+	.loc	1 470 46 is_stmt 0              ; pa_mqa_logits.py:470:46
+	s_ashr_i32 s8, s8, 6
+	.loc	1 463 14 is_stmt 1              ; pa_mqa_logits.py:463:14
+	s_add_i32 s26, s7, s6
+	.loc	1 471 14                        ; pa_mqa_logits.py:471:14
+	s_add_i32 s7, s8, s7
+	.loc	1 478 14                        ; pa_mqa_logits.py:478:14
+	s_add_i32 s6, s7, s6
+	.loc	1 431 53                        ; pa_mqa_logits.py:431:53
+	s_andn2_b32 s29, s29, 63
+	.loc	1 457 27                        ; pa_mqa_logits.py:457:27
+	s_lshr_b32 s37, s28, 1
+	.loc	1 459 36                        ; pa_mqa_logits.py:459:36
+	s_ashr_i32 s20, s2, 6
+	.loc	1 466 12                        ; pa_mqa_logits.py:466:12
+	s_and_b32 s17, s17, 0xffff
+	.loc	1 480 12                        ; pa_mqa_logits.py:480:12
+	s_lshl_b32 s21, s6, 2
+	.loc	1 473 13                        ; pa_mqa_logits.py:473:13
+	s_cmp_lt_i32 s7, s20
+	s_cselect_b64 s[6:7], -1, 0
+	.loc	1 480 12                        ; pa_mqa_logits.py:480:12
+	s_and_b64 s[8:9], s[6:7], exec
+	.loc	1 485 33                        ; pa_mqa_logits.py:485:33
+	s_mul_i32 s9, s24, s3
+	.loc	1 480 12                        ; pa_mqa_logits.py:480:12
+	s_cselect_b32 s8, 0x80000000, s21
+	.loc	1 485 42                        ; pa_mqa_logits.py:485:42
+	s_add_i32 s28, s25, s9
+	.loc	1 502 14                        ; pa_mqa_logits.py:502:14
+	s_lshl_b32 s9, s35, 6
+	.loc	1 485 12                        ; pa_mqa_logits.py:485:12
+	s_and_b32 s21, s19, 0xffff
+	.loc	1 502 14                        ; pa_mqa_logits.py:502:14
+	s_and_b32 s9, s9, 0x1000
+	.loc	1 486 27                        ; pa_mqa_logits.py:486:27
+	v_and_b32_e32 v43, 48, v0
+	.loc	1 459 13                        ; pa_mqa_logits.py:459:13
+	s_cmp_lt_i32 s10, s20
+	.loc	1 480 12                        ; pa_mqa_logits.py:480:12
+	v_mov_b32_e32 v21, s8
+	.loc	1 485 56                        ; pa_mqa_logits.py:485:56
+	s_mul_i32 s8, s28, s27
+	.loc	1 486 27                        ; pa_mqa_logits.py:486:27
+	v_lshrrev_b32_e32 v2, 2, v43
+	.loc	1 466 12                        ; pa_mqa_logits.py:466:12
+	s_cselect_b32 s10, 0x80000000, s22
+	.loc	1 485 12                        ; pa_mqa_logits.py:485:12
+	s_mov_b32 s20, s18
+	s_mov_b32 s22, s14
+	.loc	1 486 14                        ; pa_mqa_logits.py:486:14
+	v_add_lshl_u32 v22, s8, v2, 2
+	.loc	1 466 12                        ; pa_mqa_logits.py:466:12
+	s_mov_b32 s40, s16
+	s_mov_b32 s41, s17
+	s_mov_b32 s42, s14
+	s_mov_b32 s43, s15
+	v_mov_b32_e32 v1, s10
+	.loc	1 485 12                        ; pa_mqa_logits.py:485:12
+	buffer_load_dwordx4 v[14:17], v22, s[20:23], 0 offen
+	buffer_load_dwordx4 v[10:13], v22, s[20:23], 0 offen offset:64
+	buffer_load_dwordx4 v[6:9], v22, s[20:23], 0 offen offset:128
+	buffer_load_dwordx4 v[2:5], v22, s[20:23], 0 offen offset:192
+	.loc	1 466 12                        ; pa_mqa_logits.py:466:12
+	buffer_load_dword v23, v1, s[40:43], 0 offen
+	.loc	1 480 12                        ; pa_mqa_logits.py:480:12
+	buffer_load_dword v18, v21, s[40:43], 0 offen
+	.loc	1 457 27                        ; pa_mqa_logits.py:457:27
+	v_and_b32_e32 v44, 15, v0
+	v_or_b32_e32 v1, s37, v44
+	.loc	1 510 38                        ; pa_mqa_logits.py:510:38
+	v_lshlrev_b32_e32 v25, 5, v43
+	v_and_b32_e32 v20, 0x60, v20
+	v_lshlrev_b32_e32 v19, 1, v19
+	.loc	1 457 27                        ; pa_mqa_logits.py:457:27
+	v_or_b32_e32 v34, 16, v1
+	s_load_dwordx2 s[20:21], s[0:1], 0x38
+	s_load_dword s27, s[0:1], 0x40
+	s_movk_i32 s8, 0x1800
+	.loc	1 493 14                        ; pa_mqa_logits.py:493:14
+	v_lshlrev_b32_e32 v22, 4, v43
+	.loc	1 497 14                        ; pa_mqa_logits.py:497:14
+	v_lshlrev_b32_e32 v24, 4, v44
+	.loc	1 510 38                        ; pa_mqa_logits.py:510:38
+	v_bitop3_b32 v19, v19, v25, v20 bitop3:0x1e
+	.loc	1 502 14                        ; pa_mqa_logits.py:502:14
+	v_lshlrev_b32_e32 v20, 7, v34
+	.loc	1 510 38                        ; pa_mqa_logits.py:510:38
+	v_and_b32_e32 v21, 1, v0
+	.loc	1 493 14                        ; pa_mqa_logits.py:493:14
+	v_or_b32_e32 v27, 0x400, v22
+	.loc	1 498 14                        ; pa_mqa_logits.py:498:14
+	v_and_or_b32 v20, v20, s8, v24
+	.loc	1 510 38                        ; pa_mqa_logits.py:510:38
+	v_lshlrev_b32_e32 v26, 11, v21
+	.loc	1 494 21                        ; pa_mqa_logits.py:494:21
+	v_or_b32_e32 v37, v20, v22
+	v_or_b32_e32 v38, v20, v27
+	.loc	1 498 14                        ; pa_mqa_logits.py:498:14
+	v_or_b32_e32 v20, s9, v24
+	.loc	1 512 80                        ; pa_mqa_logits.py:512:80
+	s_cselect_b64 s[8:9], -1, 0
+	.loc	1 510 38                        ; pa_mqa_logits.py:510:38
+	v_add3_u32 v19, 0, v26, v19
+	.loc	1 494 21                        ; pa_mqa_logits.py:494:21
+	v_or_b32_e32 v39, v20, v22
+	.loc	1 510 38                        ; pa_mqa_logits.py:510:38
+	s_waitcnt vmcnt(7)
+	ds_write_b128 v19, v[28:31]
+	s_waitcnt vmcnt(6)
+	ds_write_b128 v19, v[46:49] offset:4096
+	.loc	1 499 14                        ; pa_mqa_logits.py:499:14
+	v_bitop3_b32 v35, s37, 47, v44 bitop3:0xc8
+	v_bitop3_b32 v36, v1, 63, 16 bitop3:0xc8
+	.loc	1 494 21                        ; pa_mqa_logits.py:494:21
+	v_or_b32_e32 v40, v20, v27
+	.loc	1 515 12                        ; pa_mqa_logits.py:515:12
+	s_and_b32 s13, s13, 0xffff
+	.loc	1 519 12                        ; pa_mqa_logits.py:519:12
+	s_waitcnt lgkmcnt(0)
+	s_and_b32 s21, s21, 0xffff
+	s_movk_i32 s10, 0xe00
+	.loc	1 510 38                        ; pa_mqa_logits.py:510:38
+	v_lshlrev_b32_e32 v21, 12, v21
+	.loc	1 530 56                        ; pa_mqa_logits.py:530:56
+	s_add_i32 s24, s29, s2
+	.loc	1 512 80                        ; pa_mqa_logits.py:512:80
+	s_waitcnt vmcnt(1)
+	v_cndmask_b32_e64 v41, v23, 0, s[8:9]
+	.loc	1 515 70                        ; pa_mqa_logits.py:515:70
+	v_mul_lo_u32 v19, v41, s4
+	.loc	1 519 44                        ; pa_mqa_logits.py:519:44
+	v_mul_lo_u32 v20, v41, s27
+	.loc	1 515 37                        ; pa_mqa_logits.py:515:37
+	v_add_u32_e32 v22, v19, v39
+	v_add_u32_e32 v23, v19, v40
+	v_add_u32_e32 v24, v19, v37
+	v_add_u32_e32 v19, v19, v38
+	.loc	1 519 12                        ; pa_mqa_logits.py:519:12
+	v_add_lshl_u32 v25, v20, v35, 2
+	v_add_lshl_u32 v20, v20, v36, 2
+	s_load_dwordx2 s[8:9], s[0:1], 0x68
+	.loc	1 510 38                        ; pa_mqa_logits.py:510:38
+	s_waitcnt lgkmcnt(0)
+	s_barrier
+	.loc	1 515 12                        ; pa_mqa_logits.py:515:12
+	buffer_load_dwordx4 v[94:97], v22, s[12:15], 0 offen
+	buffer_load_dwordx4 v[90:93], v23, s[12:15], 0 offen
+	buffer_load_dwordx4 v[86:89], v24, s[12:15], 0 offen
+	buffer_load_dwordx4 v[82:85], v19, s[12:15], 0 offen
+	.loc	1 519 12                        ; pa_mqa_logits.py:519:12
+	buffer_load_dword v46, v25, s[20:23], 0 offen
+	buffer_load_dword v45, v20, s[20:23], 0 offen
+	.loc	1 510 38                        ; pa_mqa_logits.py:510:38
+	v_lshlrev_b32_e32 v20, 3, v0
+	v_lshlrev_b32_e32 v19, 7, v0
+	v_and_b32_e32 v20, 0x70, v20
+	v_and_b32_e32 v0, 32, v0
+	v_and_or_b32 v19, v19, s10, v20
+	v_bitop3_b32 v0, v19, v21, v0 bitop3:0xde
+	v_add_u32_e32 v19, 0, v0
+	v_xad_u32 v0, v0, 64, 0
+	ds_read_b128 v[74:77], v19
+	ds_read_b128 v[66:69], v19 offset:128
+	ds_read_b128 v[58:61], v19 offset:256
+	ds_read_b128 v[54:57], v19 offset:384
+	ds_read_b128 v[78:81], v0
+	ds_read_b128 v[70:73], v0 offset:128
+	ds_read_b128 v[62:65], v0 offset:256
+	ds_read_b128 v[50:53], v0 offset:384
+	.loc	1 530 25                        ; pa_mqa_logits.py:530:25
+	s_add_i32 s10, s30, 0x100
+	.loc	1 530 34 is_stmt 0              ; pa_mqa_logits.py:530:34
+	s_cmp_ge_i32 s10, s24
+	.loc	1 530 11                        ; pa_mqa_logits.py:530:11
+	s_cbranch_scc1 .LBB0_3
+; %bb.2:
+	.loc	1 0 11                          ; pa_mqa_logits.py:0:11
+	s_ashr_i32 s10, s10, 6
+	s_add_i32 s10, s26, s10
+	s_lshl_b32 s10, s10, 2
+	.loc	1 533 16 is_stmt 1              ; pa_mqa_logits.py:533:16
+	s_mov_b32 s18, s14
+	s_mov_b32 s19, s15
+	v_mov_b32_e32 v0, s10
+	buffer_load_dword v41, v0, s[16:19], 0 offen
+.LBB0_3:
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	s_waitcnt vmcnt(5) lgkmcnt(7)
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[74:75], v[94:95], 0
+	.loc	1 554 80                        ; pa_mqa_logits.py:554:80
+	v_cndmask_b32_e64 v0, v18, 0, s[6:7]
+	.loc	1 557 70                        ; pa_mqa_logits.py:557:70
+	v_mul_lo_u32 v18, v0, s4
+	.loc	1 557 37 is_stmt 0              ; pa_mqa_logits.py:557:37
+	v_add_u32_e32 v42, v18, v39
+	.loc	1 568 46 is_stmt 1              ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[76:77], v[96:97], v[98:101]
+	.loc	1 557 37                        ; pa_mqa_logits.py:557:37
+	v_add_u32_e32 v47, v18, v40
+	v_add_u32_e32 v48, v18, v37
+	v_add_u32_e32 v49, v18, v38
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	s_waitcnt vmcnt(4) lgkmcnt(3)
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[78:79], v[90:91], v[98:101]
+	.loc	1 557 12                        ; pa_mqa_logits.py:557:12
+	buffer_load_dwordx4 v[30:33], v42, s[12:15], 0 offen
+	buffer_load_dwordx4 v[26:29], v47, s[12:15], 0 offen
+	buffer_load_dwordx4 v[22:25], v48, s[12:15], 0 offen
+	buffer_load_dwordx4 v[18:21], v49, s[12:15], 0 offen
+	.loc	1 561 44                        ; pa_mqa_logits.py:561:44
+	v_mul_lo_u32 v0, v0, s27
+	.loc	1 561 12 is_stmt 0              ; pa_mqa_logits.py:561:12
+	v_add_lshl_u32 v42, v0, v35, 2
+	.loc	1 568 46 is_stmt 1              ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[80:81], v[92:93], v[98:101]
+	.loc	1 561 12                        ; pa_mqa_logits.py:561:12
+	s_mov_b32 s22, s14
+	s_mov_b32 s23, s15
+	v_add_lshl_u32 v0, v0, v36, 2
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	s_waitcnt vmcnt(7)
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[74:75], v[86:87], 0
+	.loc	1 561 12                        ; pa_mqa_logits.py:561:12
+	buffer_load_dword v42, v42, s[20:23], 0 offen
+	.loc	1 584 16                        ; pa_mqa_logits.py:584:16
+	s_waitcnt vmcnt(6)
+	s_nop 0
+	v_mul_f32_e32 v106, v46, v98
+	v_mul_f32_e32 v107, v46, v99
+	v_mul_f32_e32 v108, v46, v100
+	v_mul_f32_e32 v109, v46, v101
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[76:77], v[88:89], v[102:105]
+	.loc	1 561 12                        ; pa_mqa_logits.py:561:12
+	buffer_load_dword v0, v0, s[20:23], 0 offen
+	.loc	1 593 56                        ; pa_mqa_logits.py:593:56
+	s_mul_i32 s28, s28, s11
+	.loc	1 591 12                        ; pa_mqa_logits.py:591:12
+	v_cmp_eq_u32_e32 vcc, 0, v43
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[78:79], v[82:83], v[98:101]
+	.loc	1 591 12                        ; pa_mqa_logits.py:591:12
+	v_bfrev_b32_e32 v43, 1
+	.loc	1 595 16                        ; pa_mqa_logits.py:595:16
+	s_add_i32 s18, s30, s28
+	.loc	1 591 12                        ; pa_mqa_logits.py:591:12
+	s_and_b32 s9, s9, 0xffff
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[80:81], v[84:85], v[98:101]
+	.loc	1 591 12                        ; pa_mqa_logits.py:591:12
+	s_mov_b32 s10, s14
+	s_mov_b32 s11, s15
+	.loc	1 605 57                        ; pa_mqa_logits.py:605:57
+	s_add_i32 s29, s24, 0xffffff00
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[66:67], v[94:95], 0
+	.loc	1 584 16                        ; pa_mqa_logits.py:584:16
+	s_waitcnt vmcnt(6)
+	s_nop 2
+	v_mul_f32_e32 v110, v45, v98
+	v_mul_f32_e32 v111, v45, v99
+	v_mul_f32_e32 v112, v45, v100
+	v_mul_f32_e32 v113, v45, v101
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[68:69], v[96:97], v[102:105]
+	s_waitcnt lgkmcnt(2)
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[70:71], v[90:91], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[72:73], v[92:93], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[66:67], v[86:87], 0
+	.loc	1 584 16                        ; pa_mqa_logits.py:584:16
+	s_nop 6
+	v_mul_f32_e32 v114, v46, v98
+	v_mul_f32_e32 v115, v46, v99
+	v_mul_f32_e32 v116, v46, v100
+	v_mul_f32_e32 v117, v46, v101
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[68:69], v[88:89], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[70:71], v[82:83], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[72:73], v[84:85], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[58:59], v[94:95], 0
+	.loc	1 584 16                        ; pa_mqa_logits.py:584:16
+	s_nop 6
+	v_mul_f32_e32 v118, v45, v98
+	v_mul_f32_e32 v119, v45, v99
+	v_mul_f32_e32 v120, v45, v100
+	v_mul_f32_e32 v121, v45, v101
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[60:61], v[96:97], v[102:105]
+	s_waitcnt lgkmcnt(1)
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[62:63], v[90:91], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[64:65], v[92:93], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[58:59], v[86:87], 0
+	.loc	1 584 16                        ; pa_mqa_logits.py:584:16
+	s_nop 6
+	v_mul_f32_e32 v122, v46, v98
+	v_mul_f32_e32 v123, v46, v99
+	v_mul_f32_e32 v124, v46, v100
+	v_mul_f32_e32 v125, v46, v101
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[60:61], v[88:89], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[54:55], v[94:95], 0
+	v_mfma_f32_16x16x32_fp8_fp8 v[94:97], v[56:57], v[96:97], v[102:105]
+	s_waitcnt lgkmcnt(0)
+	v_mfma_f32_16x16x32_fp8_fp8 v[94:97], v[50:51], v[90:91], v[94:97]
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	s_nop 4
+	v_max_f32_e32 v102, 0, v116
+	v_max_f32_e32 v103, 0, v117
+	v_max_f32_e32 v104, 0, v118
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[90:93], v[52:53], v[92:93], v[94:97]
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v105, 0, v119
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[94:97], v[54:55], v[86:87], 0
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[62:63], v[82:83], v[98:101]
+	.loc	1 584 16                        ; pa_mqa_logits.py:584:16
+	s_nop 4
+	v_mul_f32_e32 v90, v46, v90
+	v_mul_f32_e32 v86, v46, v91
+	v_mul_f32_e32 v87, v46, v92
+	v_mul_f32_e32 v91, v46, v93
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[46:49], v[56:57], v[88:89], v[94:97]
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v88, 0, v108
+	v_max_f32_e32 v89, 0, v109
+	v_max_f32_e32 v93, 0, v111
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[46:49], v[50:51], v[82:83], v[46:49]
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v96, 0, v114
+	v_max_f32_e32 v97, 0, v115
+	v_max_f32_e32 v92, 0, v110
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[64:65], v[84:85], v[98:101]
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v94, 0, v112
+	v_max_f32_e32 v95, 0, v113
+	v_max_f32_e32 v108, 0, v122
+	.loc	1 568 46                        ; pa_mqa_logits.py:568:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[46:49], v[52:53], v[84:85], v[46:49]
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v85, 0, v107
+	.loc	1 584 16                        ; pa_mqa_logits.py:584:16
+	s_nop 2
+	v_mul_f32_e32 v98, v45, v98
+	v_mul_f32_e32 v99, v45, v99
+	v_mul_f32_e32 v100, v45, v100
+	v_mul_f32_e32 v101, v45, v101
+	v_mul_f32_e32 v82, v45, v46
+	v_mul_f32_e32 v83, v45, v47
+	v_mul_f32_e32 v48, v45, v48
+	v_mul_f32_e32 v45, v45, v49
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v84, 0, v106
+	v_max_f32_e32 v49, 0, v45
+	.loc	1 586 16                        ; pa_mqa_logits.py:586:16
+	v_mul_f32_e32 v45, v15, v85
+.Ltmp8:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v45, v14, v84
+	v_fmac_f32_e32 v45, v16, v88
+	v_fmac_f32_e32 v45, v17, v89
+	v_fmac_f32_e32 v45, v10, v96
+.Ltmp9:
+	.loc	1 586 16                        ; pa_mqa_logits.py:586:16
+	v_mul_f32_e32 v85, v15, v93
+.Ltmp10:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v45, v11, v97
+	v_fmac_f32_e32 v85, v14, v92
+	v_fmac_f32_e32 v45, v12, v102
+	v_fmac_f32_e32 v85, v16, v94
+	v_fmac_f32_e32 v45, v13, v103
+.Ltmp11:
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v109, 0, v123
+.Ltmp12:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v17, v95
+	v_fmac_f32_e32 v45, v6, v108
+.Ltmp13:
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v110, 0, v124
+.Ltmp14:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v10, v104
+	v_fmac_f32_e32 v45, v7, v109
+.Ltmp15:
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v106, 0, v120
+	v_max_f32_e32 v111, 0, v125
+.Ltmp16:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v11, v105
+	v_fmac_f32_e32 v45, v8, v110
+.Ltmp17:
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v107, 0, v121
+	v_max_f32_e32 v90, 0, v90
+.Ltmp18:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v12, v106
+	v_fmac_f32_e32 v45, v9, v111
+.Ltmp19:
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v98, 0, v98
+	v_max_f32_e32 v86, 0, v86
+	v_max_f32_e32 v46, 0, v87
+	v_max_f32_e32 v47, 0, v91
+.Ltmp20:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v13, v107
+	v_fmac_f32_e32 v45, v2, v90
+.Ltmp21:
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v99, 0, v99
+	.loc	1 586 16                        ; pa_mqa_logits.py:586:16
+	v_pk_mul_f32 v[46:47], v[4:5], v[46:47]
+.Ltmp22:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v6, v98
+	v_fmac_f32_e32 v45, v3, v86
+.Ltmp23:
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v100, 0, v100
+.Ltmp24:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v7, v99
+	v_add_f32_e32 v45, v46, v45
+.Ltmp25:
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v101, 0, v101
+.Ltmp26:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v8, v100
+	v_add_f32_e32 v45, v47, v45
+.Ltmp27:
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v82, 0, v82
+.Ltmp28:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v9, v101
+.Ltmp29:
+	.loc	1 589 27                        ; pa_mqa_logits.py:589:27
+	v_mov_b32_e32 v47, v45
+	.loc	1 585 26                        ; pa_mqa_logits.py:585:26
+	v_max_f32_e32 v83, 0, v83
+	v_max_f32_e32 v48, 0, v48
+.Ltmp30:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v2, v82
+.Ltmp31:
+	.loc	1 589 27                        ; pa_mqa_logits.py:589:27
+	v_permlane32_swap_b32_e32 v45, v47
+	.loc	1 586 16                        ; pa_mqa_logits.py:586:16
+	v_pk_mul_f32 v[48:49], v[4:5], v[48:49]
+.Ltmp32:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_fmac_f32_e32 v85, v3, v83
+	v_add_f32_e32 v45, v45, v47
+	v_add_f32_e32 v46, v48, v85
+.Ltmp33:
+	.loc	1 589 27                        ; pa_mqa_logits.py:589:27
+	v_mov_b32_e32 v47, v45
+.Ltmp34:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_add_f32_e32 v46, v49, v46
+.Ltmp35:
+	.loc	1 589 27                        ; pa_mqa_logits.py:589:27
+	s_nop 0
+	v_permlane16_swap_b32_e32 v45, v47
+.Ltmp36:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_add_f32_e32 v45, v45, v47
+.Ltmp37:
+	.loc	1 589 27                        ; pa_mqa_logits.py:589:27
+	v_mov_b32_e32 v47, v46
+	s_nop 1
+	v_permlane32_swap_b32_e32 v46, v47
+.Ltmp38:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_add_f32_e32 v46, v46, v47
+.Ltmp39:
+	.loc	1 589 27                        ; pa_mqa_logits.py:589:27
+	v_mov_b32_e32 v47, v46
+	s_nop 1
+	v_permlane16_swap_b32_e32 v46, v47
+.Ltmp40:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:589:27 ]
+	v_add_f32_e32 v46, v46, v47
+.Ltmp41:
+	.loc	1 596 18                        ; pa_mqa_logits.py:596:18
+	v_add_u32_e32 v47, s30, v1
+	.loc	1 600 15                        ; pa_mqa_logits.py:600:15
+	v_cmp_le_i32_e64 s[6:7], s2, v47
+	.loc	1 591 12                        ; pa_mqa_logits.py:591:12
+	v_add_lshl_u32 v47, v47, s28, 2
+	s_and_b64 s[6:7], vcc, s[6:7]
+	v_cndmask_b32_e64 v47, v43, v47, s[6:7]
+	buffer_store_dword v45, v47, s[8:11], 0 offen
+	v_add_lshl_u32 v45, s18, v34, 2
+	v_cndmask_b32_e64 v45, v43, v45, s[6:7]
+	.loc	1 606 12                        ; pa_mqa_logits.py:606:12
+	s_cmp_ge_i32 s30, s29
+	.loc	1 591 12                        ; pa_mqa_logits.py:591:12
+	buffer_store_dword v46, v45, s[8:11], 0 offen
+	.loc	1 606 12                        ; pa_mqa_logits.py:606:12
+	s_cbranch_scc1 .LBB0_8
+; %bb.4:                                ; %.lr.ph.preheader
+	.loc	1 0 12 is_stmt 0                ; pa_mqa_logits.py:0:12
+	s_load_dword s30, s[0:1], 0x74
+	.loc	1 681 16 is_stmt 1              ; pa_mqa_logits.py:681:16
+	s_lshl_b32 s0, s34, 8
+	s_lshl_b32 s1, s33, 8
+	s_add_i32 s0, s0, s1
+	s_sub_i32 s0, s0, s31
+	s_add_i32 s31, s0, 0x200
+	s_lshl_b32 s0, s34, 10
+	s_lshl2_add_u32 s0, s28, s0
+	s_lshl_b32 s1, s33, 10
+	s_add_i32 s0, s0, s1
+	s_lshl_b32 s1, s35, 1
+	s_and_b32 s1, s1, 0x180
+	s_add_i32 s0, s0, s1
+	v_lshl_add_u32 v45, v44, 2, s0
+	s_sub_i32 s0, 0, s36
+	s_and_b32 s0, s0, 3
+	s_lshl_b32 s0, s0, 8
+	v_subrev_u32_e32 v45, s0, v45
+	v_add_u32_e32 v44, s37, v44
+	s_mov_b32 s18, s14
+	s_mov_b32 s19, s15
+	s_mov_b32 s10, s14
+	s_mov_b32 s11, s15
+	s_branch .LBB0_6
+.LBB0_5:                                ;   in Loop: Header=BB0_6 Depth=1
+	.loc	1 695 74                        ; pa_mqa_logits.py:695:74
+	s_waitcnt vmcnt(8)
+	v_mul_lo_u32 v0, v48, s4
+	.loc	1 695 41 is_stmt 0              ; pa_mqa_logits.py:695:41
+	v_add_u32_e32 v42, v0, v39
+	v_add_u32_e32 v98, v0, v40
+	v_add_u32_e32 v99, v0, v37
+	v_add_u32_e32 v0, v0, v38
+	.loc	1 695 16                        ; pa_mqa_logits.py:695:16
+	buffer_load_dwordx4 v[30:33], v42, s[12:15], 0 offen
+	buffer_load_dwordx4 v[26:29], v98, s[12:15], 0 offen
+	buffer_load_dwordx4 v[22:25], v99, s[12:15], 0 offen
+	buffer_load_dwordx4 v[18:21], v0, s[12:15], 0 offen
+	.loc	1 705 50 is_stmt 1              ; pa_mqa_logits.py:705:50
+	s_waitcnt vmcnt(11)
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[74:75], v[94:95], 0
+	.loc	1 699 48                        ; pa_mqa_logits.py:699:48
+	v_mul_lo_u32 v0, v48, s27
+	.loc	1 699 16 is_stmt 0              ; pa_mqa_logits.py:699:16
+	v_add_lshl_u32 v42, v0, v35, 2
+	v_add_lshl_u32 v0, v0, v36, 2
+	.loc	1 705 50 is_stmt 1              ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[76:77], v[96:97], v[98:101]
+	.loc	1 699 16                        ; pa_mqa_logits.py:699:16
+	buffer_load_dword v42, v42, s[20:23], 0 offen
+	s_nop 0
+	buffer_load_dword v0, v0, s[20:23], 0 offen
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	s_waitcnt vmcnt(12)
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[78:79], v[90:91], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[80:81], v[92:93], v[98:101]
+	s_waitcnt vmcnt(11)
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[74:75], v[86:87], 0
+	.loc	1 721 20                        ; pa_mqa_logits.py:721:20
+	s_waitcnt vmcnt(9)
+	s_nop 4
+	v_mul_f32_e32 v48, v47, v98
+	v_mul_f32_e32 v106, v47, v99
+	v_mul_f32_e32 v107, v47, v100
+	v_mul_f32_e32 v108, v47, v101
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[76:77], v[88:89], v[102:105]
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v48, 0, v48
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[78:79], v[82:83], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[80:81], v[84:85], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[66:67], v[94:95], 0
+	.loc	1 721 20                        ; pa_mqa_logits.py:721:20
+	s_waitcnt vmcnt(8)
+	s_nop 5
+	v_mul_f32_e32 v109, v46, v98
+	v_mul_f32_e32 v110, v46, v99
+	v_mul_f32_e32 v111, v46, v100
+	v_mul_f32_e32 v112, v46, v101
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[68:69], v[96:97], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[70:71], v[90:91], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[72:73], v[92:93], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[66:67], v[86:87], 0
+	.loc	1 721 20                        ; pa_mqa_logits.py:721:20
+	s_nop 6
+	v_mul_f32_e32 v113, v47, v98
+	v_mul_f32_e32 v114, v47, v99
+	v_mul_f32_e32 v115, v47, v100
+	v_mul_f32_e32 v116, v47, v101
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[68:69], v[88:89], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[70:71], v[82:83], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[72:73], v[84:85], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[58:59], v[94:95], 0
+	.loc	1 721 20                        ; pa_mqa_logits.py:721:20
+	s_nop 6
+	v_mul_f32_e32 v117, v46, v98
+	v_mul_f32_e32 v118, v46, v99
+	v_mul_f32_e32 v119, v46, v100
+	v_mul_f32_e32 v120, v46, v101
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[60:61], v[96:97], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[62:63], v[90:91], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[64:65], v[92:93], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[58:59], v[86:87], 0
+	.loc	1 721 20                        ; pa_mqa_logits.py:721:20
+	s_nop 6
+	v_mul_f32_e32 v121, v47, v98
+	v_mul_f32_e32 v122, v47, v99
+	v_mul_f32_e32 v123, v47, v100
+	v_mul_f32_e32 v124, v47, v101
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[60:61], v[88:89], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[54:55], v[94:95], 0
+	v_mfma_f32_16x16x32_fp8_fp8 v[94:97], v[56:57], v[96:97], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[94:97], v[50:51], v[90:91], v[94:97]
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	s_nop 5
+	v_max_f32_e32 v102, 0, v115
+	v_max_f32_e32 v103, 0, v116
+	v_max_f32_e32 v104, 0, v117
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[90:93], v[52:53], v[92:93], v[94:97]
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v105, 0, v118
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[94:97], v[54:55], v[86:87], 0
+	v_mfma_f32_16x16x32_fp8_fp8 v[86:89], v[56:57], v[88:89], v[94:97]
+	.loc	1 721 20                        ; pa_mqa_logits.py:721:20
+	s_nop 4
+	v_mul_f32_e32 v92, v47, v92
+	v_mul_f32_e32 v90, v47, v90
+	v_mul_f32_e32 v91, v47, v91
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[62:63], v[82:83], v[98:101]
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v96, 0, v113
+	.loc	1 721 20                        ; pa_mqa_logits.py:721:20
+	v_mul_f32_e32 v47, v47, v93
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v93, 0, v110
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[86:89], v[50:51], v[82:83], v[86:89]
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v97, 0, v114
+	v_max_f32_e32 v95, 0, v112
+	v_max_f32_e32 v94, 0, v111
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[64:65], v[84:85], v[98:101]
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v110, 0, v123
+	v_max_f32_e32 v111, 0, v124
+	v_max_f32_e32 v90, 0, v90
+	.loc	1 705 50                        ; pa_mqa_logits.py:705:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[82:85], v[52:53], v[84:85], v[86:89]
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v91, 0, v91
+	.loc	1 721 20                        ; pa_mqa_logits.py:721:20
+	s_nop 2
+	v_mul_f32_e32 v98, v46, v98
+	v_mul_f32_e32 v99, v46, v99
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v86, 0, v106
+	.loc	1 721 20                        ; pa_mqa_logits.py:721:20
+	v_mul_f32_e32 v100, v46, v100
+	v_mul_f32_e32 v82, v46, v82
+	v_mul_f32_e32 v84, v46, v84
+	v_mul_f32_e32 v101, v46, v101
+	v_mul_f32_e32 v83, v46, v83
+	v_mul_f32_e32 v85, v46, v85
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v46, 0, v92
+	v_max_f32_e32 v92, 0, v82
+	v_max_f32_e32 v82, 0, v84
+	.loc	1 723 20                        ; pa_mqa_logits.py:723:20
+	v_mul_f32_e32 v84, v15, v86
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v87, 0, v107
+.Ltmp42:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v84, v14, v48
+.Ltmp43:
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v88, 0, v108
+.Ltmp44:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v84, v16, v87
+	v_fmac_f32_e32 v84, v17, v88
+	v_fmac_f32_e32 v84, v10, v96
+.Ltmp45:
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v89, 0, v109
+	v_max_f32_e32 v112, 0, v83
+	v_max_f32_e32 v83, 0, v85
+	.loc	1 723 20                        ; pa_mqa_logits.py:723:20
+	v_mul_f32_e32 v85, v15, v93
+.Ltmp46:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v84, v11, v97
+	v_fmac_f32_e32 v85, v14, v89
+	v_fmac_f32_e32 v84, v12, v102
+.Ltmp47:
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v108, 0, v121
+.Ltmp48:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v85, v16, v94
+	v_fmac_f32_e32 v84, v13, v103
+.Ltmp49:
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v109, 0, v122
+.Ltmp50:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v85, v17, v95
+	v_fmac_f32_e32 v84, v6, v108
+	v_fmac_f32_e32 v85, v10, v104
+	v_fmac_f32_e32 v84, v7, v109
+.Ltmp51:
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v106, 0, v119
+.Ltmp52:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v85, v11, v105
+	v_fmac_f32_e32 v84, v8, v110
+.Ltmp53:
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v107, 0, v120
+.Ltmp54:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v85, v12, v106
+	v_fmac_f32_e32 v84, v9, v111
+.Ltmp55:
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v98, 0, v98
+	v_max_f32_e32 v47, 0, v47
+.Ltmp56:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v85, v13, v107
+	v_fmac_f32_e32 v84, v2, v90
+.Ltmp57:
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v99, 0, v99
+	.loc	1 723 20                        ; pa_mqa_logits.py:723:20
+	v_pk_mul_f32 v[46:47], v[4:5], v[46:47]
+.Ltmp58:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v85, v6, v98
+	v_fmac_f32_e32 v84, v3, v91
+.Ltmp59:
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v100, 0, v100
+.Ltmp60:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v85, v7, v99
+	v_add_f32_e32 v46, v46, v84
+.Ltmp61:
+	.loc	1 722 30                        ; pa_mqa_logits.py:722:30
+	v_max_f32_e32 v101, 0, v101
+.Ltmp62:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v85, v8, v100
+	v_add_f32_e32 v46, v47, v46
+	v_fmac_f32_e32 v85, v9, v101
+.Ltmp63:
+	.loc	1 726 31                        ; pa_mqa_logits.py:726:31
+	v_mov_b32_e32 v48, v46
+.Ltmp64:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v85, v2, v92
+.Ltmp65:
+	.loc	1 726 31                        ; pa_mqa_logits.py:726:31
+	s_nop 0
+	v_permlane32_swap_b32_e32 v46, v48
+	.loc	1 723 20                        ; pa_mqa_logits.py:723:20
+	v_pk_mul_f32 v[82:83], v[4:5], v[82:83]
+.Ltmp66:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_fmac_f32_e32 v85, v3, v112
+	v_add_f32_e32 v46, v46, v48
+	v_add_f32_e32 v47, v82, v85
+.Ltmp67:
+	.loc	1 726 31                        ; pa_mqa_logits.py:726:31
+	v_mov_b32_e32 v48, v46
+.Ltmp68:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_add_f32_e32 v47, v83, v47
+.Ltmp69:
+	.loc	1 726 31                        ; pa_mqa_logits.py:726:31
+	s_nop 0
+	v_permlane16_swap_b32_e32 v46, v48
+.Ltmp70:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_add_f32_e32 v46, v46, v48
+.Ltmp71:
+	.loc	1 726 31                        ; pa_mqa_logits.py:726:31
+	v_mov_b32_e32 v48, v47
+	s_nop 1
+	v_permlane32_swap_b32_e32 v47, v48
+.Ltmp72:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_add_f32_e32 v47, v47, v48
+.Ltmp73:
+	.loc	1 726 31                        ; pa_mqa_logits.py:726:31
+	v_mov_b32_e32 v48, v47
+	s_nop 1
+	v_permlane16_swap_b32_e32 v47, v48
+.Ltmp74:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:726:31 ]
+	v_add_f32_e32 v47, v47, v48
+.Ltmp75:
+	.loc	1 734 22                        ; pa_mqa_logits.py:734:22
+	v_add_u32_e32 v48, 0xffffff00, v49
+	.loc	1 732 20                        ; pa_mqa_logits.py:732:20
+	v_add_u32_e32 v49, 0xffffff10, v49
+	.loc	1 745 18                        ; pa_mqa_logits.py:745:18
+	s_waitcnt lgkmcnt(0)
+	v_cmp_gt_i32_e64 s[0:1], s30, v48
+	v_cmp_gt_i32_e64 s[6:7], s30, v49
+	.loc	1 728 16                        ; pa_mqa_logits.py:728:16
+	v_add_u32_e32 v48, 0x400, v45
+	s_and_b64 s[0:1], vcc, s[0:1]
+	v_cndmask_b32_e64 v49, v43, v48, s[0:1]
+	v_add_u32_e32 v45, 0x440, v45
+	s_and_b64 s[0:1], vcc, s[6:7]
+	v_cndmask_b32_e64 v45, v43, v45, s[0:1]
+	.loc	1 606 12                        ; pa_mqa_logits.py:606:12
+	s_add_i32 s0, s31, 0x100
+	s_add_i32 s1, s31, 0xffffff00
+	.loc	1 728 16                        ; pa_mqa_logits.py:728:16
+	buffer_store_dword v46, v49, s[8:11], 0 offen
+	buffer_store_dword v47, v45, s[8:11], 0 offen
+	.loc	1 606 12                        ; pa_mqa_logits.py:606:12
+	s_cmp_lt_i32 s1, s29
+	v_mov_b32_e32 v45, v48
+	s_mov_b32 s31, s0
+	s_cbranch_scc0 .LBB0_8
+.LBB0_6:                                ; %.lr.ph
+                                        ; =>This Inner Loop Header: Depth=1
+	.loc	1 618 61                        ; pa_mqa_logits.py:618:61
+	s_add_i32 s0, s31, 0xffffff80
+	s_ashr_i32 s0, s0, 6
+	.loc	1 619 18                        ; pa_mqa_logits.py:619:18
+	s_add_i32 s0, s26, s0
+	.loc	1 617 16                        ; pa_mqa_logits.py:617:16
+	s_lshl_b32 s0, s0, 2
+	v_mov_b32_e32 v46, s0
+	buffer_load_dword v48, v46, s[16:19], 0 offen
+	.loc	1 624 74                        ; pa_mqa_logits.py:624:74
+	s_waitcnt vmcnt(9)
+	v_mul_lo_u32 v46, v41, s4
+	v_mul_lo_u32 v47, v41, s4
+	.loc	1 624 41 is_stmt 0              ; pa_mqa_logits.py:624:41
+	v_add_u32_e32 v49, v46, v39
+	v_add_u32_e32 v98, v47, v37
+	v_add_u32_e32 v46, v46, v40
+	v_add_u32_e32 v47, v47, v38
+	.loc	1 624 16                        ; pa_mqa_logits.py:624:16
+	buffer_load_dwordx4 v[94:97], v49, s[12:15], 0 offen
+	buffer_load_dwordx4 v[90:93], v46, s[12:15], 0 offen
+	buffer_load_dwordx4 v[86:89], v98, s[12:15], 0 offen
+	buffer_load_dwordx4 v[82:85], v47, s[12:15], 0 offen
+	.loc	1 635 50 is_stmt 1              ; pa_mqa_logits.py:635:50
+	s_waitcnt vmcnt(12)
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[74:75], v[30:31], 0
+	.loc	1 628 48                        ; pa_mqa_logits.py:628:48
+	v_mul_lo_u32 v46, v41, s27
+	v_mul_lo_u32 v49, v41, s27
+	.loc	1 628 16 is_stmt 0              ; pa_mqa_logits.py:628:16
+	v_add_lshl_u32 v46, v46, v35, 2
+	.loc	1 635 50 is_stmt 1              ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[76:77], v[32:33], v[98:101]
+	.loc	1 628 16                        ; pa_mqa_logits.py:628:16
+	buffer_load_dword v47, v46, s[20:23], 0 offen
+	v_add_lshl_u32 v46, v49, v36, 2
+	buffer_load_dword v46, v46, s[20:23], 0 offen
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	s_waitcnt vmcnt(13)
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[78:79], v[26:27], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[80:81], v[28:29], v[98:101]
+	s_waitcnt vmcnt(12)
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[74:75], v[22:23], 0
+	.loc	1 649 20                        ; pa_mqa_logits.py:649:20
+	s_waitcnt vmcnt(10)
+	s_nop 4
+	v_mul_f32_e32 v49, v42, v98
+	v_mul_f32_e32 v106, v42, v99
+	v_mul_f32_e32 v107, v42, v100
+	v_mul_f32_e32 v108, v42, v101
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[76:77], v[24:25], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[78:79], v[18:19], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[80:81], v[20:21], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[66:67], v[30:31], 0
+	.loc	1 649 20                        ; pa_mqa_logits.py:649:20
+	s_waitcnt vmcnt(9)
+	s_nop 5
+	v_mul_f32_e32 v109, v0, v98
+	v_mul_f32_e32 v110, v0, v99
+	v_mul_f32_e32 v111, v0, v100
+	v_mul_f32_e32 v112, v0, v101
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[68:69], v[32:33], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[70:71], v[26:27], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[72:73], v[28:29], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[66:67], v[22:23], 0
+	.loc	1 649 20                        ; pa_mqa_logits.py:649:20
+	s_nop 6
+	v_mul_f32_e32 v113, v42, v98
+	v_mul_f32_e32 v114, v42, v99
+	v_mul_f32_e32 v115, v42, v100
+	v_mul_f32_e32 v116, v42, v101
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[68:69], v[24:25], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[70:71], v[18:19], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[72:73], v[20:21], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[58:59], v[30:31], 0
+	.loc	1 649 20                        ; pa_mqa_logits.py:649:20
+	s_nop 6
+	v_mul_f32_e32 v117, v0, v98
+	v_mul_f32_e32 v118, v0, v99
+	v_mul_f32_e32 v119, v0, v100
+	v_mul_f32_e32 v120, v0, v101
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[60:61], v[32:33], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[62:63], v[26:27], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[64:65], v[28:29], v[98:101]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[58:59], v[22:23], 0
+	.loc	1 649 20                        ; pa_mqa_logits.py:649:20
+	s_nop 6
+	v_mul_f32_e32 v121, v42, v98
+	v_mul_f32_e32 v122, v42, v99
+	v_mul_f32_e32 v123, v42, v100
+	v_mul_f32_e32 v124, v42, v101
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[60:61], v[24:25], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[102:105], v[54:55], v[30:31], 0
+	v_mfma_f32_16x16x32_fp8_fp8 v[30:33], v[56:57], v[32:33], v[102:105]
+	v_mfma_f32_16x16x32_fp8_fp8 v[30:33], v[50:51], v[26:27], v[30:33]
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	s_nop 5
+	v_max_f32_e32 v102, 0, v113
+	v_max_f32_e32 v103, 0, v114
+	v_max_f32_e32 v104, 0, v115
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[26:29], v[52:53], v[28:29], v[30:33]
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v105, 0, v116
+	v_max_f32_e32 v113, 0, v124
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[30:33], v[54:55], v[22:23], 0
+	v_mfma_f32_16x16x32_fp8_fp8 v[22:25], v[56:57], v[24:25], v[30:33]
+	.loc	1 649 20                        ; pa_mqa_logits.py:649:20
+	s_nop 3
+	v_mul_f32_e32 v26, v42, v26
+	v_mul_f32_e32 v27, v42, v27
+	v_mul_f32_e32 v28, v42, v28
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[62:63], v[18:19], v[98:101]
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v30, 0, v107
+	v_max_f32_e32 v31, 0, v108
+	v_max_f32_e32 v33, 0, v110
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[22:25], v[50:51], v[18:19], v[22:25]
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v32, 0, v109
+	.loc	1 649 20                        ; pa_mqa_logits.py:649:20
+	v_mul_f32_e32 v29, v42, v29
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v42, 0, v111
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[98:101], v[64:65], v[20:21], v[98:101]
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v110, 0, v121
+	v_max_f32_e32 v111, 0, v122
+	v_max_f32_e32 v107, 0, v118
+	.loc	1 635 50                        ; pa_mqa_logits.py:635:50
+	v_mfma_f32_16x16x32_fp8_fp8 v[18:21], v[52:53], v[20:21], v[22:25]
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v108, 0, v119
+	.loc	1 649 20                        ; pa_mqa_logits.py:649:20
+	s_nop 2
+	v_mul_f32_e32 v98, v0, v98
+	v_mul_f32_e32 v99, v0, v99
+	v_mul_f32_e32 v100, v0, v100
+	v_mul_f32_e32 v101, v0, v101
+	v_mul_f32_e32 v22, v0, v18
+	v_mul_f32_e32 v23, v0, v19
+	v_mul_f32_e32 v20, v0, v20
+	v_mul_f32_e32 v0, v0, v21
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v25, 0, v106
+	v_max_f32_e32 v24, 0, v49
+	v_max_f32_e32 v21, 0, v0
+	.loc	1 651 20                        ; pa_mqa_logits.py:651:20
+	v_mul_f32_e32 v0, v15, v25
+.Ltmp76:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v0, v14, v24
+	v_fmac_f32_e32 v0, v16, v30
+	v_fmac_f32_e32 v0, v17, v31
+	v_fmac_f32_e32 v0, v10, v102
+.Ltmp77:
+	.loc	1 651 20                        ; pa_mqa_logits.py:651:20
+	v_mul_f32_e32 v25, v15, v33
+.Ltmp78:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v0, v11, v103
+	v_fmac_f32_e32 v25, v14, v32
+	v_fmac_f32_e32 v0, v12, v104
+.Ltmp79:
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v49, 0, v112
+.Ltmp80:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v16, v42
+	v_fmac_f32_e32 v0, v13, v105
+.Ltmp81:
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v106, 0, v117
+.Ltmp82:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v17, v49
+	v_fmac_f32_e32 v0, v6, v110
+.Ltmp83:
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v112, 0, v123
+.Ltmp84:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v10, v106
+	v_fmac_f32_e32 v0, v7, v111
+	v_fmac_f32_e32 v25, v11, v107
+	v_fmac_f32_e32 v0, v8, v112
+.Ltmp85:
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v109, 0, v120
+	v_max_f32_e32 v26, 0, v26
+.Ltmp86:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v12, v108
+	v_fmac_f32_e32 v0, v9, v113
+.Ltmp87:
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v98, 0, v98
+	v_max_f32_e32 v27, 0, v27
+	v_max_f32_e32 v18, 0, v28
+	v_max_f32_e32 v19, 0, v29
+.Ltmp88:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v13, v109
+	v_fmac_f32_e32 v0, v2, v26
+.Ltmp89:
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v99, 0, v99
+	.loc	1 651 20                        ; pa_mqa_logits.py:651:20
+	v_pk_mul_f32 v[18:19], v[4:5], v[18:19]
+.Ltmp90:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v6, v98
+	v_fmac_f32_e32 v0, v3, v27
+.Ltmp91:
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v100, 0, v100
+.Ltmp92:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v7, v99
+	v_add_f32_e32 v0, v18, v0
+.Ltmp93:
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v101, 0, v101
+.Ltmp94:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v8, v100
+	v_add_f32_e32 v0, v19, v0
+.Ltmp95:
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v22, 0, v22
+.Ltmp96:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v9, v101
+.Ltmp97:
+	.loc	1 654 31                        ; pa_mqa_logits.py:654:31
+	v_mov_b32_e32 v19, v0
+	.loc	1 650 30                        ; pa_mqa_logits.py:650:30
+	v_max_f32_e32 v23, 0, v23
+	v_max_f32_e32 v20, 0, v20
+.Ltmp98:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v2, v22
+.Ltmp99:
+	.loc	1 654 31                        ; pa_mqa_logits.py:654:31
+	v_permlane32_swap_b32_e32 v0, v19
+	.loc	1 651 20                        ; pa_mqa_logits.py:651:20
+	v_pk_mul_f32 v[20:21], v[4:5], v[20:21]
+.Ltmp100:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_fmac_f32_e32 v25, v3, v23
+	v_add_f32_e32 v0, v0, v19
+	v_add_f32_e32 v18, v20, v25
+.Ltmp101:
+	.loc	1 654 31                        ; pa_mqa_logits.py:654:31
+	v_mov_b32_e32 v19, v0
+.Ltmp102:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_add_f32_e32 v18, v21, v18
+.Ltmp103:
+	.loc	1 654 31                        ; pa_mqa_logits.py:654:31
+	s_nop 0
+	v_permlane16_swap_b32_e32 v0, v19
+.Ltmp104:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_add_f32_e32 v0, v0, v19
+.Ltmp105:
+	.loc	1 654 31                        ; pa_mqa_logits.py:654:31
+	v_mov_b32_e32 v19, v18
+	s_nop 1
+	v_permlane32_swap_b32_e32 v18, v19
+.Ltmp106:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_add_f32_e32 v18, v18, v19
+.Ltmp107:
+	.loc	1 654 31                        ; pa_mqa_logits.py:654:31
+	v_mov_b32_e32 v19, v18
+	s_nop 1
+	v_permlane16_swap_b32_e32 v18, v19
+	.loc	1 660 20                        ; pa_mqa_logits.py:660:20
+	v_add_u32_e32 v49, s31, v44
+.Ltmp108:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:654:31 ]
+	v_add_f32_e32 v18, v18, v19
+.Ltmp109:
+	.loc	1 660 20                        ; pa_mqa_logits.py:660:20
+	v_add_u32_e32 v19, 0xfffffe80, v49
+	.loc	1 669 19                        ; pa_mqa_logits.py:669:19
+	v_cmp_le_i32_e64 s[0:1], s2, v19
+	.loc	1 656 16                        ; pa_mqa_logits.py:656:16
+	v_add_u32_e32 v19, 0x200, v45
+	s_and_b64 s[0:1], vcc, s[0:1]
+	v_cndmask_b32_e64 v19, v43, v19, s[0:1]
+	buffer_store_dword v0, v19, s[8:11], 0 offen
+	v_add_u32_e32 v0, 0x240, v45
+	v_cndmask_b32_e64 v0, v43, v0, s[0:1]
+	.loc	1 682 18                        ; pa_mqa_logits.py:682:18
+	s_cmp_ge_i32 s31, s24
+	.loc	1 656 16                        ; pa_mqa_logits.py:656:16
+	buffer_store_dword v18, v0, s[8:11], 0 offen
+	.loc	1 681 16                        ; pa_mqa_logits.py:681:16
+	s_cbranch_scc1 .LBB0_5
+; %bb.7:                                ;   in Loop: Header=BB0_6 Depth=1
+	.loc	1 0 16 is_stmt 0                ; pa_mqa_logits.py:0:16
+	s_ashr_i32 s0, s31, 6
+	s_add_i32 s0, s26, s0
+	s_lshl_b32 s0, s0, 2
+	.loc	1 686 20 is_stmt 1              ; pa_mqa_logits.py:686:20
+	v_mov_b32_e32 v0, s0
+	buffer_load_dword v41, v0, s[16:19], 0 offen
+	s_branch .LBB0_5
+.LBB0_8:                                ; %._crit_edge
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	s_waitcnt vmcnt(7)
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[74:75], v[30:31], 0
+	.loc	1 764 14                        ; pa_mqa_logits.py:764:14
+	s_addk_i32 s24, 0xff80
+	.loc	1 766 32                        ; pa_mqa_logits.py:766:32
+	s_sub_i32 s0, s5, s3
+	.loc	1 765 14                        ; pa_mqa_logits.py:765:14
+	v_add_u32_e32 v1, s24, v1
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[76:77], v[32:33], v[36:39]
+	.loc	1 766 41                        ; pa_mqa_logits.py:766:41
+	s_add_i32 s3, s0, s25
+	.loc	1 770 40                        ; pa_mqa_logits.py:770:40
+	v_cmp_ge_i32_e64 s[0:1], s3, v1
+	.loc	1 772 12                        ; pa_mqa_logits.py:772:12
+	s_mov_b32 s10, s14
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	s_waitcnt vmcnt(6)
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[78:79], v[26:27], v[36:39]
+	.loc	1 772 12                        ; pa_mqa_logits.py:772:12
+	s_mov_b32 s11, s15
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[80:81], v[28:29], v[36:39]
+	s_waitcnt vmcnt(5)
+	v_mfma_f32_16x16x32_fp8_fp8 v[44:47], v[74:75], v[22:23], 0
+	.loc	1 757 16                        ; pa_mqa_logits.py:757:16
+	s_waitcnt vmcnt(3)
+	s_nop 4
+	v_mul_f32_e32 v35, v42, v36
+	v_mul_f32_e32 v40, v42, v37
+	v_mul_f32_e32 v41, v42, v38
+	v_mul_f32_e32 v43, v42, v39
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[76:77], v[24:25], v[44:47]
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[78:79], v[18:19], v[36:39]
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[80:81], v[20:21], v[36:39]
+	v_mfma_f32_16x16x32_fp8_fp8 v[44:47], v[66:67], v[30:31], 0
+	.loc	1 757 16                        ; pa_mqa_logits.py:757:16
+	s_waitcnt vmcnt(2)
+	s_nop 5
+	v_mul_f32_e32 v48, v0, v36
+	v_mul_f32_e32 v49, v0, v37
+	v_mul_f32_e32 v74, v0, v38
+	v_mul_f32_e32 v75, v0, v39
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[68:69], v[32:33], v[44:47]
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[70:71], v[26:27], v[36:39]
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[72:73], v[28:29], v[36:39]
+	v_mfma_f32_16x16x32_fp8_fp8 v[44:47], v[66:67], v[22:23], 0
+	.loc	1 757 16                        ; pa_mqa_logits.py:757:16
+	s_nop 6
+	v_mul_f32_e32 v76, v42, v36
+	v_mul_f32_e32 v66, v42, v37
+	v_mul_f32_e32 v67, v42, v38
+	v_mul_f32_e32 v77, v42, v39
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[68:69], v[24:25], v[44:47]
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[70:71], v[18:19], v[36:39]
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[72:73], v[20:21], v[36:39]
+	v_mfma_f32_16x16x32_fp8_fp8 v[44:47], v[58:59], v[30:31], 0
+	.loc	1 757 16                        ; pa_mqa_logits.py:757:16
+	s_nop 6
+	v_mul_f32_e32 v68, v0, v36
+	v_mul_f32_e32 v69, v0, v37
+	v_mul_f32_e32 v70, v0, v38
+	v_mul_f32_e32 v71, v0, v39
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[60:61], v[32:33], v[44:47]
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[62:63], v[26:27], v[36:39]
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[64:65], v[28:29], v[36:39]
+	v_mfma_f32_16x16x32_fp8_fp8 v[44:47], v[58:59], v[22:23], 0
+	.loc	1 757 16                        ; pa_mqa_logits.py:757:16
+	s_nop 6
+	v_mul_f32_e32 v72, v42, v36
+	v_mul_f32_e32 v58, v42, v37
+	v_mul_f32_e32 v59, v42, v38
+	v_mul_f32_e32 v73, v42, v39
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[60:61], v[24:25], v[44:47]
+	v_mfma_f32_16x16x32_fp8_fp8 v[44:47], v[54:55], v[30:31], 0
+	v_mfma_f32_16x16x32_fp8_fp8 v[30:33], v[56:57], v[32:33], v[44:47]
+	v_mfma_f32_16x16x32_fp8_fp8 v[30:33], v[50:51], v[26:27], v[30:33]
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	s_nop 5
+	v_max_f32_e32 v44, 0, v77
+	v_max_f32_e32 v45, 0, v68
+	v_max_f32_e32 v46, 0, v69
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[26:29], v[52:53], v[28:29], v[30:33]
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v47, 0, v70
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[30:33], v[54:55], v[22:23], 0
+	v_mfma_f32_16x16x32_fp8_fp8 v[22:25], v[56:57], v[24:25], v[30:33]
+	.loc	1 757 16                        ; pa_mqa_logits.py:757:16
+	s_nop 4
+	v_mul_f32_e32 v26, v42, v26
+	v_mul_f32_e32 v27, v42, v27
+	v_mul_f32_e32 v28, v42, v28
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[62:63], v[18:19], v[36:39]
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v30, 0, v41
+	v_max_f32_e32 v31, 0, v43
+	v_max_f32_e32 v33, 0, v49
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[22:25], v[50:51], v[18:19], v[22:25]
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v32, 0, v48
+	v_max_f32_e32 v41, 0, v76
+	.loc	1 757 16                        ; pa_mqa_logits.py:757:16
+	v_mul_f32_e32 v29, v42, v29
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[36:39], v[64:65], v[20:21], v[36:39]
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v42, 0, v66
+	v_max_f32_e32 v43, 0, v67
+	v_max_f32_e32 v49, 0, v72
+	.loc	1 755 46                        ; pa_mqa_logits.py:755:46
+	v_mfma_f32_16x16x32_fp8_fp8 v[18:21], v[52:53], v[20:21], v[22:25]
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v50, 0, v58
+	.loc	1 757 16                        ; pa_mqa_logits.py:757:16
+	s_nop 2
+	v_mul_f32_e32 v36, v0, v36
+	v_mul_f32_e32 v37, v0, v37
+	v_mul_f32_e32 v38, v0, v38
+	v_mul_f32_e32 v39, v0, v39
+	v_mul_f32_e32 v22, v0, v18
+	v_mul_f32_e32 v23, v0, v19
+	v_mul_f32_e32 v20, v0, v20
+	v_mul_f32_e32 v0, v0, v21
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v25, 0, v40
+	v_max_f32_e32 v24, 0, v35
+	v_max_f32_e32 v21, 0, v0
+	.loc	1 759 16                        ; pa_mqa_logits.py:759:16
+	v_mul_f32_e32 v0, v15, v25
+.Ltmp110:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_fmac_f32_e32 v0, v14, v24
+	v_fmac_f32_e32 v0, v16, v30
+.Ltmp111:
+	.loc	1 759 16                        ; pa_mqa_logits.py:759:16
+	v_mul_f32_e32 v15, v15, v33
+.Ltmp112:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_fmac_f32_e32 v0, v17, v31
+.Ltmp113:
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v35, 0, v74
+.Ltmp114:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_fmac_f32_e32 v15, v14, v32
+	v_fmac_f32_e32 v0, v10, v41
+.Ltmp115:
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v40, 0, v75
+.Ltmp116:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_fmac_f32_e32 v15, v16, v35
+	v_fmac_f32_e32 v0, v11, v42
+	v_fmac_f32_e32 v15, v17, v40
+	v_fmac_f32_e32 v0, v12, v43
+	v_fmac_f32_e32 v0, v13, v44
+	v_fmac_f32_e32 v15, v10, v45
+	v_fmac_f32_e32 v15, v11, v46
+	v_fmac_f32_e32 v0, v6, v49
+.Ltmp117:
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v48, 0, v71
+	v_max_f32_e32 v51, 0, v59
+.Ltmp118:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_fmac_f32_e32 v15, v12, v47
+	v_fmac_f32_e32 v0, v7, v50
+.Ltmp119:
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v52, 0, v73
+	v_max_f32_e32 v36, 0, v36
+.Ltmp120:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_fmac_f32_e32 v15, v13, v48
+	v_fmac_f32_e32 v0, v8, v51
+.Ltmp121:
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v37, 0, v37
+	v_max_f32_e32 v26, 0, v26
+.Ltmp122:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_fmac_f32_e32 v0, v9, v52
+	v_fmac_f32_e32 v15, v6, v36
+.Ltmp123:
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v38, 0, v38
+	v_max_f32_e32 v27, 0, v27
+	v_max_f32_e32 v18, 0, v28
+	v_max_f32_e32 v19, 0, v29
+.Ltmp124:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_fmac_f32_e32 v15, v7, v37
+	v_fmac_f32_e32 v0, v2, v26
+.Ltmp125:
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v39, 0, v39
+	.loc	1 759 16                        ; pa_mqa_logits.py:759:16
+	v_pk_mul_f32 v[18:19], v[4:5], v[18:19]
+.Ltmp126:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_fmac_f32_e32 v15, v8, v38
+	v_fmac_f32_e32 v0, v3, v27
+.Ltmp127:
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v22, 0, v22
+.Ltmp128:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_fmac_f32_e32 v15, v9, v39
+	v_add_f32_e32 v0, v18, v0
+.Ltmp129:
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v23, 0, v23
+.Ltmp130:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_add_f32_e32 v0, v19, v0
+	v_fmac_f32_e32 v15, v2, v22
+	v_fmac_f32_e32 v15, v3, v23
+.Ltmp131:
+	.loc	1 769 27                        ; pa_mqa_logits.py:769:27
+	v_mov_b32_e32 v3, v0
+	.loc	1 758 26                        ; pa_mqa_logits.py:758:26
+	v_max_f32_e32 v20, 0, v20
+	.loc	1 769 27                        ; pa_mqa_logits.py:769:27
+	s_nop 0
+	v_permlane32_swap_b32_e32 v0, v3
+	.loc	1 759 16                        ; pa_mqa_logits.py:759:16
+	v_pk_mul_f32 v[4:5], v[4:5], v[20:21]
+.Ltmp132:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_add_f32_e32 v0, v0, v3
+	v_add_f32_e32 v2, v4, v15
+.Ltmp133:
+	.loc	1 769 27                        ; pa_mqa_logits.py:769:27
+	v_mov_b32_e32 v3, v0
+.Ltmp134:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_add_f32_e32 v2, v5, v2
+.Ltmp135:
+	.loc	1 769 27                        ; pa_mqa_logits.py:769:27
+	s_nop 0
+	v_permlane16_swap_b32_e32 v0, v3
+.Ltmp136:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_add_f32_e32 v0, v0, v3
+.Ltmp137:
+	.loc	1 769 27                        ; pa_mqa_logits.py:769:27
+	v_mov_b32_e32 v3, v2
+	s_nop 1
+	v_permlane32_swap_b32_e32 v2, v3
+.Ltmp138:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_add_f32_e32 v2, v2, v3
+.Ltmp139:
+	.loc	1 769 27                        ; pa_mqa_logits.py:769:27
+	v_mov_b32_e32 v3, v2
+	s_nop 1
+	v_permlane16_swap_b32_e32 v2, v3
+	.loc	1 765 14                        ; pa_mqa_logits.py:765:14
+	v_add_u32_e32 v20, s24, v34
+.Ltmp140:
+	.loc	1 51 15                         ; pa_mqa_logits.py:51:15 @[ pa_mqa_logits.py:769:27 ]
+	v_add_f32_e32 v2, v2, v3
+.Ltmp141:
+	.loc	1 770 40                        ; pa_mqa_logits.py:770:40
+	v_mov_b32_e32 v3, 0xff800000
+	v_cndmask_b32_e64 v0, v3, v0, s[0:1]
+	v_cmp_ge_i32_e64 s[0:1], s3, v20
+	s_nop 1
+	v_cndmask_b32_e64 v2, v3, v2, s[0:1]
+	.loc	1 783 15                        ; pa_mqa_logits.py:783:15
+	v_cmp_le_i32_e64 s[0:1], s2, v1
+	.loc	1 772 12                        ; pa_mqa_logits.py:772:12
+	v_add_lshl_u32 v1, v1, s28, 2
+	v_bfrev_b32_e32 v3, 1
+	s_and_b64 vcc, vcc, s[0:1]
+	v_cndmask_b32_e32 v1, v3, v1, vcc
+	buffer_store_dword v0, v1, s[8:11], 0 offen
+	v_add_lshl_u32 v0, v20, s28, 2
+	v_cndmask_b32_e32 v0, v3, v0, vcc
+	buffer_store_dword v2, v0, s[8:11], 0 offen
+.LBB0_9:                                ; %common.ret
+	.loc	1 0 0 is_stmt 0                 ; pa_mqa_logits.py:0
+	s_endpgm
+.Ltmp142:
+	.section	.rodata,"a",@progbits
+	.p2align	6, 0x0
+	.amdhsa_kernel _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle
+		.amdhsa_group_segment_fixed_size 0
+		.amdhsa_private_segment_fixed_size 0
+		.amdhsa_kernarg_size 144
+		.amdhsa_user_sgpr_count 15
+		.amdhsa_user_sgpr_dispatch_ptr 0
+		.amdhsa_user_sgpr_queue_ptr 0
+		.amdhsa_user_sgpr_kernarg_segment_ptr 1
+		.amdhsa_user_sgpr_dispatch_id 0
+		.amdhsa_user_sgpr_kernarg_preload_length 13
+		.amdhsa_user_sgpr_kernarg_preload_offset 0
+		.amdhsa_user_sgpr_private_segment_size 0
+		.amdhsa_uses_dynamic_stack 0
+		.amdhsa_enable_private_segment 0
+		.amdhsa_system_sgpr_workgroup_id_x 1
+		.amdhsa_system_sgpr_workgroup_id_y 0
+		.amdhsa_system_sgpr_workgroup_id_z 0
+		.amdhsa_system_sgpr_workgroup_info 0
+		.amdhsa_system_vgpr_workitem_id 0
+		.amdhsa_next_free_vgpr 169
+		.amdhsa_next_free_sgpr 96
+		.amdhsa_accum_offset 128
+		.amdhsa_reserve_vcc 1
+		.amdhsa_reserve_xnack_mask 1
+		.amdhsa_float_round_mode_32 0
+		.amdhsa_float_round_mode_16_64 0
+		.amdhsa_float_denorm_mode_32 3
+		.amdhsa_float_denorm_mode_16_64 3
+		.amdhsa_dx10_clamp 1
+		.amdhsa_ieee_mode 1
+		.amdhsa_fp16_overflow 0
+		.amdhsa_tg_split 0
+		.amdhsa_exception_fp_ieee_invalid_op 0
+		.amdhsa_exception_fp_denorm_src 0
+		.amdhsa_exception_fp_ieee_div_zero 0
+		.amdhsa_exception_fp_ieee_overflow 0
+		.amdhsa_exception_fp_ieee_underflow 0
+		.amdhsa_exception_fp_ieee_inexact 0
+		.amdhsa_exception_int_div_zero 0
+	.end_amdhsa_kernel
+	.text
+.Lfunc_end0:
+	.size	_gluon_deepgemm_fp8_paged_mqa_logits_preshuffle, .Lfunc_end0-_gluon_deepgemm_fp8_paged_mqa_logits_preshuffle
+	.cfi_endproc
+                                        ; -- End function
+	.set _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.num_vgpr, 126
+	.set _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.num_agpr, 0
+	.set _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.numbered_sgpr, 44
+	.set _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.num_named_barrier, 0
+	.set _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.private_seg_size, 0
+	.set _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.uses_vcc, 1
+	.set _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.uses_flat_scratch, 0
+	.set _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.has_dyn_sized_stack, 0
+	.set _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.has_recursion, 0
+	.set _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.has_indirect_call, 0
+	.section	.AMDGPU.csdata,"",@progbits
+; Kernel info:
+; codeLenInByte = 5692
+; TotalNumSgprs: 50
+; NumVgprs: 126
+; NumAgprs: 0
+; TotalNumVgprs: 126
+; ScratchSize: 0
+; MemoryBound: 0
+; FloatMode: 240
+; IeeeMode: 1
+; LDSByteSize: 0 bytes/workgroup (compile time only)
+; SGPRBlocks: 12
+; VGPRBlocks: 21
+; NumSGPRsForWavesPerEU: 102
+; NumVGPRsForWavesPerEU: 169
+; AccumOffset: 128
+; Occupancy: 2
+; WaveLimiterHint : 0
+; COMPUTE_PGM_RSRC2:SCRATCH_EN: 0
+; COMPUTE_PGM_RSRC2:USER_SGPR: 15
+; COMPUTE_PGM_RSRC2:TRAP_HANDLER: 0
+; COMPUTE_PGM_RSRC2:TGID_X_EN: 1
+; COMPUTE_PGM_RSRC2:TGID_Y_EN: 0
+; COMPUTE_PGM_RSRC2:TGID_Z_EN: 0
+; COMPUTE_PGM_RSRC2:TIDIG_COMP_CNT: 0
+; COMPUTE_PGM_RSRC3_GFX90A:ACCUM_OFFSET: 31
+; COMPUTE_PGM_RSRC3_GFX90A:TG_SPLIT: 0
+	.text
+	.p2alignl 6, 3212836864
+	.fill 256, 4, 3212836864
+	.section	.AMDGPU.gpr_maximums,"",@progbits
+	.set amdgpu.max_num_vgpr, 0
+	.set amdgpu.max_num_agpr, 0
+	.set amdgpu.max_num_sgpr, 0
+	.set amdgpu.max_num_named_barrier, 0
+	.text
+	.section	.debug_abbrev,"",@progbits
+	.byte	1                               ; Abbreviation Code
+	.byte	17                              ; DW_TAG_compile_unit
+	.byte	1                               ; DW_CHILDREN_yes
+	.byte	37                              ; DW_AT_producer
+	.byte	14                              ; DW_FORM_strp
+	.byte	19                              ; DW_AT_language
+	.byte	5                               ; DW_FORM_data2
+	.byte	3                               ; DW_AT_name
+	.byte	14                              ; DW_FORM_strp
+	.byte	16                              ; DW_AT_stmt_list
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	27                              ; DW_AT_comp_dir
+	.byte	14                              ; DW_FORM_strp
+	.byte	17                              ; DW_AT_low_pc
+	.byte	1                               ; DW_FORM_addr
+	.byte	18                              ; DW_AT_high_pc
+	.byte	6                               ; DW_FORM_data4
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	2                               ; Abbreviation Code
+	.byte	46                              ; DW_TAG_subprogram
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	3                               ; DW_AT_name
+	.byte	14                              ; DW_FORM_strp
+	.byte	32                              ; DW_AT_inline
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	3                               ; Abbreviation Code
+	.byte	46                              ; DW_TAG_subprogram
+	.byte	1                               ; DW_CHILDREN_yes
+	.byte	17                              ; DW_AT_low_pc
+	.byte	1                               ; DW_FORM_addr
+	.byte	18                              ; DW_AT_high_pc
+	.byte	6                               ; DW_FORM_data4
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	4                               ; Abbreviation Code
+	.byte	29                              ; DW_TAG_inlined_subroutine
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	85                              ; DW_AT_ranges
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	88                              ; DW_AT_call_file
+	.byte	11                              ; DW_FORM_data1
+	.byte	89                              ; DW_AT_call_line
+	.byte	5                               ; DW_FORM_data2
+	.byte	87                              ; DW_AT_call_column
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	5                               ; Abbreviation Code
+	.byte	29                              ; DW_TAG_inlined_subroutine
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	49                              ; DW_AT_abstract_origin
+	.byte	19                              ; DW_FORM_ref4
+	.byte	17                              ; DW_AT_low_pc
+	.byte	1                               ; DW_FORM_addr
+	.byte	18                              ; DW_AT_high_pc
+	.byte	6                               ; DW_FORM_data4
+	.byte	88                              ; DW_AT_call_file
+	.byte	11                              ; DW_FORM_data1
+	.byte	89                              ; DW_AT_call_line
+	.byte	5                               ; DW_FORM_data2
+	.byte	87                              ; DW_AT_call_column
+	.byte	11                              ; DW_FORM_data1
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	0                               ; EOM(3)
+	.section	.debug_info,"",@progbits
+.Lcu_begin0:
+	.long	.Ldebug_info_end0-.Ldebug_info_start0 ; Length of Unit
+.Ldebug_info_start0:
+	.short	4                               ; DWARF version number
+	.long	.debug_abbrev                   ; Offset Into Abbrev. Section
+	.byte	8                               ; Address Size (in bytes)
+	.byte	1                               ; Abbrev [1] 0xb:0x8e DW_TAG_compile_unit
+	.long	.Linfo_string0                  ; DW_AT_producer
+	.short	2                               ; DW_AT_language
+	.long	.Linfo_string1                  ; DW_AT_name
+	.long	.Lline_table_start0             ; DW_AT_stmt_list
+	.long	.Linfo_string2                  ; DW_AT_comp_dir
+	.quad	.Lfunc_begin0                   ; DW_AT_low_pc
+	.long	.Lfunc_end0-.Lfunc_begin0       ; DW_AT_high_pc
+	.byte	2                               ; Abbrev [2] 0x2a:0x6 DW_TAG_subprogram
+	.long	.Linfo_string3                  ; DW_AT_name
+	.byte	1                               ; DW_AT_inline
+	.byte	3                               ; Abbrev [3] 0x30:0x68 DW_TAG_subprogram
+	.quad	.Lfunc_begin0                   ; DW_AT_low_pc
+	.long	.Lfunc_end0-.Lfunc_begin0       ; DW_AT_high_pc
+	.long	42                              ; DW_AT_abstract_origin
+	.byte	4                               ; Abbrev [4] 0x41:0xd DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges0                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.short	413                             ; DW_AT_call_line
+	.byte	48                              ; DW_AT_call_column
+	.byte	5                               ; Abbrev [5] 0x4e:0x15 DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.quad	.Ltmp6                          ; DW_AT_low_pc
+	.long	.Ltmp7-.Ltmp6                   ; DW_AT_high_pc
+	.byte	1                               ; DW_AT_call_file
+	.short	430                             ; DW_AT_call_line
+	.byte	60                              ; DW_AT_call_column
+	.byte	4                               ; Abbrev [4] 0x63:0xd DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges1                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.short	589                             ; DW_AT_call_line
+	.byte	27                              ; DW_AT_call_column
+	.byte	4                               ; Abbrev [4] 0x70:0xd DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges2                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.short	726                             ; DW_AT_call_line
+	.byte	31                              ; DW_AT_call_column
+	.byte	4                               ; Abbrev [4] 0x7d:0xd DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges3                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.short	654                             ; DW_AT_call_line
+	.byte	31                              ; DW_AT_call_column
+	.byte	4                               ; Abbrev [4] 0x8a:0xd DW_TAG_inlined_subroutine
+	.long	42                              ; DW_AT_abstract_origin
+	.long	.Ldebug_ranges4                 ; DW_AT_ranges
+	.byte	1                               ; DW_AT_call_file
+	.short	769                             ; DW_AT_call_line
+	.byte	27                              ; DW_AT_call_column
+	.byte	0                               ; End Of Children Mark
+	.byte	0                               ; End Of Children Mark
+.Ldebug_info_end0:
+	.section	.debug_ranges,"",@progbits
+.Ldebug_ranges0:
+	.quad	.Ltmp2-.Lfunc_begin0
+	.quad	.Ltmp3-.Lfunc_begin0
+	.quad	.Ltmp4-.Lfunc_begin0
+	.quad	.Ltmp5-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges1:
+	.quad	.Ltmp8-.Lfunc_begin0
+	.quad	.Ltmp9-.Lfunc_begin0
+	.quad	.Ltmp10-.Lfunc_begin0
+	.quad	.Ltmp11-.Lfunc_begin0
+	.quad	.Ltmp12-.Lfunc_begin0
+	.quad	.Ltmp13-.Lfunc_begin0
+	.quad	.Ltmp14-.Lfunc_begin0
+	.quad	.Ltmp15-.Lfunc_begin0
+	.quad	.Ltmp16-.Lfunc_begin0
+	.quad	.Ltmp17-.Lfunc_begin0
+	.quad	.Ltmp18-.Lfunc_begin0
+	.quad	.Ltmp19-.Lfunc_begin0
+	.quad	.Ltmp20-.Lfunc_begin0
+	.quad	.Ltmp21-.Lfunc_begin0
+	.quad	.Ltmp22-.Lfunc_begin0
+	.quad	.Ltmp23-.Lfunc_begin0
+	.quad	.Ltmp24-.Lfunc_begin0
+	.quad	.Ltmp25-.Lfunc_begin0
+	.quad	.Ltmp26-.Lfunc_begin0
+	.quad	.Ltmp27-.Lfunc_begin0
+	.quad	.Ltmp28-.Lfunc_begin0
+	.quad	.Ltmp29-.Lfunc_begin0
+	.quad	.Ltmp30-.Lfunc_begin0
+	.quad	.Ltmp31-.Lfunc_begin0
+	.quad	.Ltmp32-.Lfunc_begin0
+	.quad	.Ltmp33-.Lfunc_begin0
+	.quad	.Ltmp34-.Lfunc_begin0
+	.quad	.Ltmp35-.Lfunc_begin0
+	.quad	.Ltmp36-.Lfunc_begin0
+	.quad	.Ltmp37-.Lfunc_begin0
+	.quad	.Ltmp38-.Lfunc_begin0
+	.quad	.Ltmp39-.Lfunc_begin0
+	.quad	.Ltmp40-.Lfunc_begin0
+	.quad	.Ltmp41-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges2:
+	.quad	.Ltmp42-.Lfunc_begin0
+	.quad	.Ltmp43-.Lfunc_begin0
+	.quad	.Ltmp44-.Lfunc_begin0
+	.quad	.Ltmp45-.Lfunc_begin0
+	.quad	.Ltmp46-.Lfunc_begin0
+	.quad	.Ltmp47-.Lfunc_begin0
+	.quad	.Ltmp48-.Lfunc_begin0
+	.quad	.Ltmp49-.Lfunc_begin0
+	.quad	.Ltmp50-.Lfunc_begin0
+	.quad	.Ltmp51-.Lfunc_begin0
+	.quad	.Ltmp52-.Lfunc_begin0
+	.quad	.Ltmp53-.Lfunc_begin0
+	.quad	.Ltmp54-.Lfunc_begin0
+	.quad	.Ltmp55-.Lfunc_begin0
+	.quad	.Ltmp56-.Lfunc_begin0
+	.quad	.Ltmp57-.Lfunc_begin0
+	.quad	.Ltmp58-.Lfunc_begin0
+	.quad	.Ltmp59-.Lfunc_begin0
+	.quad	.Ltmp60-.Lfunc_begin0
+	.quad	.Ltmp61-.Lfunc_begin0
+	.quad	.Ltmp62-.Lfunc_begin0
+	.quad	.Ltmp63-.Lfunc_begin0
+	.quad	.Ltmp64-.Lfunc_begin0
+	.quad	.Ltmp65-.Lfunc_begin0
+	.quad	.Ltmp66-.Lfunc_begin0
+	.quad	.Ltmp67-.Lfunc_begin0
+	.quad	.Ltmp68-.Lfunc_begin0
+	.quad	.Ltmp69-.Lfunc_begin0
+	.quad	.Ltmp70-.Lfunc_begin0
+	.quad	.Ltmp71-.Lfunc_begin0
+	.quad	.Ltmp72-.Lfunc_begin0
+	.quad	.Ltmp73-.Lfunc_begin0
+	.quad	.Ltmp74-.Lfunc_begin0
+	.quad	.Ltmp75-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges3:
+	.quad	.Ltmp76-.Lfunc_begin0
+	.quad	.Ltmp77-.Lfunc_begin0
+	.quad	.Ltmp78-.Lfunc_begin0
+	.quad	.Ltmp79-.Lfunc_begin0
+	.quad	.Ltmp80-.Lfunc_begin0
+	.quad	.Ltmp81-.Lfunc_begin0
+	.quad	.Ltmp82-.Lfunc_begin0
+	.quad	.Ltmp83-.Lfunc_begin0
+	.quad	.Ltmp84-.Lfunc_begin0
+	.quad	.Ltmp85-.Lfunc_begin0
+	.quad	.Ltmp86-.Lfunc_begin0
+	.quad	.Ltmp87-.Lfunc_begin0
+	.quad	.Ltmp88-.Lfunc_begin0
+	.quad	.Ltmp89-.Lfunc_begin0
+	.quad	.Ltmp90-.Lfunc_begin0
+	.quad	.Ltmp91-.Lfunc_begin0
+	.quad	.Ltmp92-.Lfunc_begin0
+	.quad	.Ltmp93-.Lfunc_begin0
+	.quad	.Ltmp94-.Lfunc_begin0
+	.quad	.Ltmp95-.Lfunc_begin0
+	.quad	.Ltmp96-.Lfunc_begin0
+	.quad	.Ltmp97-.Lfunc_begin0
+	.quad	.Ltmp98-.Lfunc_begin0
+	.quad	.Ltmp99-.Lfunc_begin0
+	.quad	.Ltmp100-.Lfunc_begin0
+	.quad	.Ltmp101-.Lfunc_begin0
+	.quad	.Ltmp102-.Lfunc_begin0
+	.quad	.Ltmp103-.Lfunc_begin0
+	.quad	.Ltmp104-.Lfunc_begin0
+	.quad	.Ltmp105-.Lfunc_begin0
+	.quad	.Ltmp106-.Lfunc_begin0
+	.quad	.Ltmp107-.Lfunc_begin0
+	.quad	.Ltmp108-.Lfunc_begin0
+	.quad	.Ltmp109-.Lfunc_begin0
+	.quad	0
+	.quad	0
+.Ldebug_ranges4:
+	.quad	.Ltmp110-.Lfunc_begin0
+	.quad	.Ltmp111-.Lfunc_begin0
+	.quad	.Ltmp112-.Lfunc_begin0
+	.quad	.Ltmp113-.Lfunc_begin0
+	.quad	.Ltmp114-.Lfunc_begin0
+	.quad	.Ltmp115-.Lfunc_begin0
+	.quad	.Ltmp116-.Lfunc_begin0
+	.quad	.Ltmp117-.Lfunc_begin0
+	.quad	.Ltmp118-.Lfunc_begin0
+	.quad	.Ltmp119-.Lfunc_begin0
+	.quad	.Ltmp120-.Lfunc_begin0
+	.quad	.Ltmp121-.Lfunc_begin0
+	.quad	.Ltmp122-.Lfunc_begin0
+	.quad	.Ltmp123-.Lfunc_begin0
+	.quad	.Ltmp124-.Lfunc_begin0
+	.quad	.Ltmp125-.Lfunc_begin0
+	.quad	.Ltmp126-.Lfunc_begin0
+	.quad	.Ltmp127-.Lfunc_begin0
+	.quad	.Ltmp128-.Lfunc_begin0
+	.quad	.Ltmp129-.Lfunc_begin0
+	.quad	.Ltmp130-.Lfunc_begin0
+	.quad	.Ltmp131-.Lfunc_begin0
+	.quad	.Ltmp132-.Lfunc_begin0
+	.quad	.Ltmp133-.Lfunc_begin0
+	.quad	.Ltmp134-.Lfunc_begin0
+	.quad	.Ltmp135-.Lfunc_begin0
+	.quad	.Ltmp136-.Lfunc_begin0
+	.quad	.Ltmp137-.Lfunc_begin0
+	.quad	.Ltmp138-.Lfunc_begin0
+	.quad	.Ltmp139-.Lfunc_begin0
+	.quad	.Ltmp140-.Lfunc_begin0
+	.quad	.Ltmp141-.Lfunc_begin0
+	.quad	0
+	.quad	0
+	.section	.debug_str,"MS",@progbits,1
+.Linfo_string0:
+	.asciz	"triton"                        ; string offset=0
+.Linfo_string1:
+	.asciz	"pa_mqa_logits.py"              ; string offset=7
+.Linfo_string2:
+	.asciz	"/sgl-workspace/aiter/aiter/ops/triton/gluon" ; string offset=24
+.Linfo_string3:
+	.asciz	"_gluon_deepgemm_fp8_paged_mqa_logits_preshuffle" ; string offset=68
+	.section	".note.GNU-stack","",@progbits
+	.amdgpu_metadata
+---
+amdhsa.kernels:
+  - .agpr_count:     0
+    .args:
+      - .offset:         0
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         4
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         8
+        .size:           4
+        .value_kind:     by_value
+      - .address_space:  global
+        .offset:         16
+        .size:           8
+        .value_kind:     global_buffer
+      - .offset:         24
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         28
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         32
+        .size:           4
+        .value_kind:     by_value
+      - .address_space:  global
+        .offset:         40
+        .size:           8
+        .value_kind:     global_buffer
+      - .offset:         48
+        .size:           4
+        .value_kind:     by_value
+      - .address_space:  global
+        .offset:         56
+        .size:           8
+        .value_kind:     global_buffer
+      - .offset:         64
+        .size:           4
+        .value_kind:     by_value
+      - .address_space:  global
+        .offset:         72
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         80
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         88
+        .size:           8
+        .value_kind:     global_buffer
+      - .offset:         96
+        .size:           4
+        .value_kind:     by_value
+      - .address_space:  global
+        .offset:         104
+        .size:           8
+        .value_kind:     global_buffer
+      - .offset:         112
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         116
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         120
+        .size:           4
+        .value_kind:     by_value
+      - .offset:         124
+        .size:           4
+        .value_kind:     by_value
+      - .address_space:  global
+        .offset:         128
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         136
+        .size:           8
+        .value_kind:     global_buffer
+    .group_segment_fixed_size: 0
+    .kernarg_segment_align: 8
+    .kernarg_segment_size: 144
+    .max_flat_workgroup_size: 256
+    .name:           _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle
+    .private_segment_fixed_size: 0
+    .sgpr_count:     50
+    .sgpr_spill_count: 0
+    .symbol:         _gluon_deepgemm_fp8_paged_mqa_logits_preshuffle.kd
+    .uniform_work_group_size: 1
+    .uses_dynamic_stack: false
+    .vgpr_count:     126
+    .vgpr_spill_count: 0
+    .wavefront_size: 64
+amdhsa.target:   amdgcn-amd-amdhsa--gfx950
+amdhsa.version:
+  - 1
+  - 2
+...
+
+	.end_amdgpu_metadata
+	.section	.debug_line,"",@progbits
+.Lline_table_start0:

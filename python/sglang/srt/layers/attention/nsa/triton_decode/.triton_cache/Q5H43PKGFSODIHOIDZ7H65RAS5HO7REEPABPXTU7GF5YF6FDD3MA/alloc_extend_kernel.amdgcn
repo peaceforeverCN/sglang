@@ -1,0 +1,659 @@
+	.amdgcn_target "amdgcn-amd-amdhsa--gfx950"
+	.amdhsa_code_object_version 5
+	.text
+	.globl	alloc_extend_kernel             ; -- Begin function alloc_extend_kernel
+	.p2align	8
+	.type	alloc_extend_kernel,@function
+alloc_extend_kernel:                    ; @alloc_extend_kernel
+.Lfunc_begin0:
+	.cfi_sections .debug_frame
+	.cfi_startproc
+; %bb.7:
+	.file	1 "/sgl-workspace/sglang/python/sglang/srt/mem_cache/triton_ops" "allocator.py"
+	.loc	1 6 0 prologue_end              ; allocator.py:6:0
+	s_load_dwordx2 s[2:3], s[0:1], 0x0
+	s_load_dwordx8 s[4:11], s[0:1], 0x8
+	s_load_dwordx4 s[12:15], s[0:1], 0x28
+	s_waitcnt lgkmcnt(0)
+	s_branch .LBB0_0
+	.loc	1 0 0 is_stmt 0                 ; :0:0
+.Ltmp0:
+	.p2align	8
+; %bb.8:
+.LBB0_0:
+	s_mov_b64 s[36:37], s[10:11]
+.Ltmp1:
+	.loc	1 18 23 is_stmt 1               ; allocator.py:18:23
+	s_load_dword s11, s[4:5], 0x0
+	.loc	1 19 23                         ; allocator.py:19:23
+	s_load_dword s10, s[2:3], 0x0
+	.loc	1 64 39                         ; allocator.py:64:39
+	v_readfirstlane_b32 s1, v0
+	.loc	1 22 22                         ; allocator.py:22:22
+	s_ashr_i32 s17, s16, 31
+	.loc	1 86 8                          ; allocator.py:86:8
+	s_and_b32 s0, s1, 0xc0
+	.loc	1 22 22                         ; allocator.py:22:22
+	s_lshl_b64 s[12:13], s[16:17], 2
+	.loc	1 20 29                         ; allocator.py:20:29
+	s_waitcnt lgkmcnt(0)
+	s_sub_i32 s14, s11, s10
+	.loc	1 22 22                         ; allocator.py:22:22
+	s_add_u32 s4, s4, s12
+	s_addc_u32 s5, s5, s13
+	.loc	1 23 22                         ; allocator.py:23:22
+	s_add_u32 s2, s2, s12
+	s_addc_u32 s3, s3, s13
+	s_load_dword s2, s[2:3], 0x0
+	.loc	1 44 35                         ; allocator.py:44:35
+	v_and_b32_e32 v2, 63, v0
+	.loc	1 22 22                         ; allocator.py:22:22
+	s_load_dword s33, s[4:5], 0x0
+	.loc	1 44 35                         ; allocator.py:44:35
+	v_or_b32_e32 v0, s0, v2
+	.loc	1 47 19                         ; allocator.py:47:19
+	v_add_u32_e32 v4, 1, v0
+	.loc	1 34 30                         ; allocator.py:34:30
+	s_waitcnt lgkmcnt(0)
+	s_add_i32 s3, s2, 0xff
+	.loc	1 35 9                          ; allocator.py:35:9
+	s_ashr_i32 s4, s3, 31
+	.loc	1 24 27                         ; allocator.py:24:27
+	s_sub_i32 s35, s2, s33
+	.loc	1 35 9                          ; allocator.py:35:9
+	s_lshr_b32 s4, s4, 24
+	.loc	1 27 41                         ; allocator.py:27:41
+	s_add_i32 s35, s35, s14
+	.loc	1 35 9                          ; allocator.py:35:9
+	s_add_i32 s3, s3, s4
+	.loc	1 40 23                         ; allocator.py:40:23
+	s_lshl_b64 s[4:5], s[16:17], 3
+	s_add_u32 s4, s6, s4
+	s_addc_u32 s5, s7, s5
+	s_load_dwordx2 s[6:7], s[4:5], 0x0
+	.loc	1 42 62                         ; allocator.py:42:62
+	s_and_b32 s4, s3, 0xffffff00
+	.loc	1 42 21 is_stmt 0               ; allocator.py:42:21
+	s_min_i32 s45, s33, s4
+	.loc	1 42 75                         ; allocator.py:42:75
+	s_sub_i32 s44, s45, s2
+	.loc	1 47 19 is_stmt 1               ; allocator.py:47:19
+	v_mov_b32_e32 v5, 0
+	.loc	1 47 8 is_stmt 0                ; allocator.py:47:8
+	s_and_b32 s37, s37, 0xffff
+	v_add_lshl_u32 v1, s35, v0, 3
+	v_bfrev_b32_e32 v3, 1
+	.loc	1 48 31 is_stmt 1               ; allocator.py:48:31
+	v_cmp_gt_i32_e32 vcc, s44, v0
+	.loc	1 47 23                         ; allocator.py:47:23
+	s_waitcnt lgkmcnt(0)
+	v_lshl_add_u64 v[4:5], v[4:5], 0, s[6:7]
+	s_mov_b32 s39, 0x27000
+	s_mov_b32 s38, 0x7ffffffe
+	.loc	1 47 8 is_stmt 0                ; allocator.py:47:8
+	v_cndmask_b32_e32 v1, v3, v1, vcc
+	.loc	1 50 30 is_stmt 1               ; allocator.py:50:30
+	s_cmp_gt_i32 s33, s4
+	.loc	1 47 8                          ; allocator.py:47:8
+	buffer_store_dwordx2 v[4:5], v1, s[36:39], 0 offen
+	.loc	1 50 30                         ; allocator.py:50:30
+	s_cbranch_scc0 .LBB0_6
+; %bb.1:
+	.loc	1 29 46                         ; allocator.py:29:46
+	s_add_i32 s5, s11, 0xff
+	.loc	1 29 52 is_stmt 0               ; allocator.py:29:52
+	s_ashr_i32 s6, s5, 31
+	s_lshr_b32 s6, s6, 24
+	s_add_i32 s5, s5, s6
+	.loc	1 30 47 is_stmt 1               ; allocator.py:30:47
+	s_add_i32 s6, s10, 0xff
+	.loc	1 30 53 is_stmt 0               ; allocator.py:30:53
+	s_ashr_i32 s7, s6, 31
+	s_lshr_b32 s7, s7, 24
+	s_add_i32 s6, s6, s7
+	.loc	1 29 52 is_stmt 1               ; allocator.py:29:52
+	s_ashr_i32 s5, s5, 8
+	.loc	1 30 53                         ; allocator.py:30:53
+	s_ashr_i32 s6, s6, 8
+	.loc	1 31 38                         ; allocator.py:31:38
+	s_sub_i32 s34, s5, s6
+	.loc	1 58 19                         ; allocator.py:58:19
+	s_ashr_i32 s5, s33, 31
+	s_lshr_b32 s5, s5, 24
+	s_add_i32 s5, s33, s5
+	.loc	1 58 31 is_stmt 0               ; allocator.py:58:31
+	s_and_b32 s47, s5, 0xffffff00
+	.loc	1 59 10 is_stmt 1               ; allocator.py:59:10
+	s_sub_i32 s46, s47, s4
+	.loc	1 62 45                         ; allocator.py:62:45
+	s_add_i32 s4, s46, 0xfff
+	.loc	1 63 26                         ; allocator.py:63:26
+	s_cmpk_lt_i32 s4, 0x1000
+	s_cbranch_scc1 .LBB0_4
+; %bb.2:                                ; %.lr.ph
+	.loc	1 62 51                         ; allocator.py:62:51
+	s_ashr_i32 s5, s4, 31
+	s_lshr_b32 s5, s5, 20
+	s_add_i32 s4, s4, s5
+	s_ashr_i32 s48, s4, 12
+	.loc	1 33 53                         ; allocator.py:33:53
+	s_add_i32 s4, s33, 0xff
+	.loc	1 33 59 is_stmt 0               ; allocator.py:33:59
+	s_ashr_i32 s5, s4, 31
+	s_lshr_b32 s5, s5, 24
+	.loc	1 63 26 is_stmt 1               ; allocator.py:63:26
+	s_lshl_b32 s1, s1, 3
+	.loc	1 33 59                         ; allocator.py:33:59
+	s_add_i32 s4, s4, s5
+	.loc	1 63 26                         ; allocator.py:63:26
+	s_and_b32 s1, s1, 0x600
+	.loc	1 33 59                         ; allocator.py:33:59
+	s_ashr_i32 s4, s4, 8
+	.loc	1 63 26                         ; allocator.py:63:26
+	s_lshl3_add_u32 s1, s35, s1
+	s_ashr_i32 s3, s3, 8
+	.loc	1 33 71                         ; allocator.py:33:71
+	s_sub_i32 s49, s34, s4
+	.loc	1 63 26                         ; allocator.py:63:26
+	s_lshl3_add_u32 s1, s45, s1
+	s_lshl_b32 s2, s2, 3
+	.loc	1 37 45                         ; allocator.py:37:45
+	s_add_i32 s49, s49, s3
+	s_mov_b32 s43, 0x27000
+	s_mov_b32 s42, 0x7ffffffe
+	s_and_b32 s41, s9, 0xffff
+	s_mov_b32 s40, s8
+	.loc	1 63 26                         ; allocator.py:63:26
+	v_lshlrev_b32_e32 v1, 3, v2
+	s_sub_i32 s50, s1, s2
+	v_add_u32_e32 v2, s0, v2
+	s_mov_b32 s51, 0
+	v_bfrev_b32_e32 v3, 1
+.LBB0_3:                                ; =>This Inner Loop Header: Depth=1
+	.loc	1 65 43                         ; allocator.py:65:43
+	v_add_u32_e32 v4, s51, v2
+	.loc	1 68 59                         ; allocator.py:68:59
+	s_lshr_b32 s0, s51, 8
+	.loc	1 65 43                         ; allocator.py:65:43
+	v_add_u32_e32 v5, 0x100, v4
+	v_add_u32_e32 v6, 0x200, v4
+	v_add_u32_e32 v7, 0x300, v4
+	v_add_u32_e32 v8, 0x400, v4
+	v_add_u32_e32 v9, 0x500, v4
+	v_add_u32_e32 v10, 0x600, v4
+	v_add_u32_e32 v11, 0x700, v4
+	v_add_u32_e32 v12, 0x800, v4
+	v_add_u32_e32 v13, 0x900, v4
+	v_add_u32_e32 v14, 0xa00, v4
+	v_add_u32_e32 v15, 0xb00, v4
+	v_add_u32_e32 v16, 0xc00, v4
+	v_add_u32_e32 v17, 0xd00, v4
+	v_add_u32_e32 v18, 0xe00, v4
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_add_u32_e32 v19, 0xf00, v4
+	.loc	1 68 49                         ; allocator.py:68:49
+	s_add_i32 s0, s0, s49
+	.loc	1 68 59 is_stmt 0               ; allocator.py:68:59
+	v_lshrrev_b32_e32 v20, 8, v5
+	v_lshrrev_b32_e32 v21, 8, v6
+	v_lshrrev_b32_e32 v22, 8, v7
+	v_lshrrev_b32_e32 v23, 8, v8
+	v_lshrrev_b32_e32 v24, 8, v9
+	v_lshrrev_b32_e32 v25, 8, v10
+	v_lshrrev_b32_e32 v26, 8, v11
+	v_lshrrev_b32_e32 v27, 8, v12
+	v_lshrrev_b32_e32 v28, 8, v13
+	v_lshrrev_b32_e32 v29, 8, v14
+	v_lshrrev_b32_e32 v30, 8, v15
+	v_lshrrev_b32_e32 v31, 8, v16
+	v_lshrrev_b32_e32 v32, 8, v17
+	v_lshrrev_b32_e32 v33, 8, v18
+	v_lshrrev_b32_e32 v34, 8, v19
+	.loc	1 68 12                         ; allocator.py:68:12
+	s_lshl_b32 s30, s0, 3
+	v_add_lshl_u32 v20, v20, s49, 3
+	.loc	1 66 24 is_stmt 1               ; allocator.py:66:24
+	v_cmp_gt_i32_e32 vcc, s46, v5
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v5, v21, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[0:1], s46, v6
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v6, v22, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[2:3], s46, v7
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v7, v23, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[4:5], s46, v8
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v8, v24, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[6:7], s46, v9
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v9, v25, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[10:11], s46, v10
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v10, v26, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[12:13], s46, v11
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v11, v27, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[14:15], s46, v12
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v12, v28, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[16:17], s46, v13
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v13, v29, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[18:19], s46, v14
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v14, v30, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[20:21], s46, v15
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v15, v31, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[22:23], s46, v16
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v16, v32, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[24:25], s46, v17
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v17, v33, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[26:27], s46, v18
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_add_lshl_u32 v18, v34, s49, 3
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[28:29], s46, v19
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_mov_b32_e32 v19, s30
+	.loc	1 66 24                         ; allocator.py:66:24
+	v_cmp_gt_i32_e64 s[30:31], s46, v4
+	.loc	1 68 12                         ; allocator.py:68:12
+	v_cndmask_b32_e64 v21, v3, v6, s[2:3]
+	v_cndmask_b32_e64 v22, v3, v7, s[4:5]
+	v_cndmask_b32_e64 v4, v3, v19, s[30:31]
+	v_cndmask_b32_e32 v19, v3, v20, vcc
+	v_cndmask_b32_e64 v20, v3, v5, s[0:1]
+	v_cndmask_b32_e64 v23, v3, v8, s[6:7]
+	v_cndmask_b32_e64 v24, v3, v9, s[10:11]
+	v_cndmask_b32_e64 v25, v3, v10, s[12:13]
+	v_cndmask_b32_e64 v26, v3, v11, s[14:15]
+	v_cndmask_b32_e64 v27, v3, v12, s[16:17]
+	v_cndmask_b32_e64 v28, v3, v13, s[18:19]
+	v_cndmask_b32_e64 v29, v3, v14, s[20:21]
+	v_cndmask_b32_e64 v30, v3, v15, s[22:23]
+	v_cndmask_b32_e64 v31, v3, v16, s[24:25]
+	v_cndmask_b32_e64 v32, v3, v17, s[26:27]
+	v_cndmask_b32_e64 v34, v3, v18, s[28:29]
+	buffer_load_dwordx2 v[4:5], v4, s[40:43], 0 offen
+	s_nop 0
+	buffer_load_dwordx2 v[6:7], v19, s[40:43], 0 offen
+	buffer_load_dwordx2 v[8:9], v20, s[40:43], 0 offen
+	buffer_load_dwordx2 v[10:11], v21, s[40:43], 0 offen
+	buffer_load_dwordx2 v[12:13], v22, s[40:43], 0 offen
+	buffer_load_dwordx2 v[14:15], v23, s[40:43], 0 offen
+	buffer_load_dwordx2 v[16:17], v24, s[40:43], 0 offen
+	buffer_load_dwordx2 v[18:19], v25, s[40:43], 0 offen
+	s_nop 0
+	buffer_load_dwordx2 v[20:21], v26, s[40:43], 0 offen
+	buffer_load_dwordx2 v[22:23], v27, s[40:43], 0 offen
+	buffer_load_dwordx2 v[24:25], v28, s[40:43], 0 offen
+	s_nop 0
+	buffer_load_dwordx2 v[26:27], v29, s[40:43], 0 offen
+	s_nop 0
+	buffer_load_dwordx2 v[28:29], v30, s[40:43], 0 offen
+	s_nop 0
+	buffer_load_dwordx2 v[30:31], v31, s[40:43], 0 offen
+	s_nop 0
+	buffer_load_dwordx2 v[32:33], v32, s[40:43], 0 offen
+	s_nop 0
+	buffer_load_dwordx2 v[34:35], v34, s[40:43], 0 offen
+	.loc	1 73 12                         ; allocator.py:73:12
+	v_add_u32_e32 v36, s50, v1
+	.loc	1 63 26                         ; allocator.py:63:26
+	s_add_i32 s48, s48, -1
+	s_add_i32 s50, s50, 0x8000
+	s_addk_i32 s51, 0x1000
+	.loc	1 73 12                         ; allocator.py:73:12
+	v_add_u32_e32 v37, 0x800, v36
+	v_add_u32_e32 v38, 0x1000, v36
+	v_add_u32_e32 v39, 0x1800, v36
+	v_add_u32_e32 v40, 0x2000, v36
+	v_add_u32_e32 v41, 0x2800, v36
+	v_add_u32_e32 v42, 0x3000, v36
+	v_add_u32_e32 v43, 0x3800, v36
+	v_add_u32_e32 v44, 0x4000, v36
+	v_add_u32_e32 v45, 0x4800, v36
+	v_add_u32_e32 v46, 0x5000, v36
+	v_add_u32_e32 v47, 0x5800, v36
+	v_add_u32_e32 v48, 0x6000, v36
+	v_add_u32_e32 v49, 0x6800, v36
+	v_add_u32_e32 v50, 0x7000, v36
+	v_add_u32_e32 v51, 0x7800, v36
+	.loc	1 63 26                         ; allocator.py:63:26
+	s_cmp_lg_u32 s48, 0
+	.loc	1 73 12                         ; allocator.py:73:12
+	v_cndmask_b32_e64 v36, v3, v36, s[30:31]
+	v_cndmask_b32_e32 v37, v3, v37, vcc
+	v_cndmask_b32_e64 v38, v3, v38, s[0:1]
+	v_cndmask_b32_e64 v39, v3, v39, s[2:3]
+	v_cndmask_b32_e64 v40, v3, v40, s[4:5]
+	v_cndmask_b32_e64 v41, v3, v41, s[6:7]
+	v_cndmask_b32_e64 v42, v3, v42, s[10:11]
+	v_cndmask_b32_e64 v43, v3, v43, s[12:13]
+	v_cndmask_b32_e64 v44, v3, v44, s[14:15]
+	v_cndmask_b32_e64 v45, v3, v45, s[16:17]
+	v_cndmask_b32_e64 v46, v3, v46, s[18:19]
+	v_cndmask_b32_e64 v47, v3, v47, s[20:21]
+	v_cndmask_b32_e64 v48, v3, v48, s[22:23]
+	v_cndmask_b32_e64 v49, v3, v49, s[24:25]
+	v_cndmask_b32_e64 v50, v3, v50, s[26:27]
+	v_cndmask_b32_e64 v51, v3, v51, s[28:29]
+	.loc	1 73 25 is_stmt 0               ; allocator.py:73:25
+	s_waitcnt vmcnt(15)
+	v_lshlrev_b64 v[4:5], 8, v[4:5]
+	s_waitcnt vmcnt(14)
+	v_lshlrev_b64 v[6:7], 8, v[6:7]
+	s_waitcnt vmcnt(13)
+	v_lshlrev_b64 v[8:9], 8, v[8:9]
+	s_waitcnt vmcnt(12)
+	v_lshlrev_b64 v[10:11], 8, v[10:11]
+	s_waitcnt vmcnt(11)
+	v_lshlrev_b64 v[12:13], 8, v[12:13]
+	s_waitcnt vmcnt(10)
+	v_lshlrev_b64 v[14:15], 8, v[14:15]
+	s_waitcnt vmcnt(9)
+	v_lshlrev_b64 v[16:17], 8, v[16:17]
+	s_waitcnt vmcnt(8)
+	v_lshlrev_b64 v[18:19], 8, v[18:19]
+	s_waitcnt vmcnt(7)
+	v_lshlrev_b64 v[20:21], 8, v[20:21]
+	s_waitcnt vmcnt(6)
+	v_lshlrev_b64 v[22:23], 8, v[22:23]
+	s_waitcnt vmcnt(5)
+	v_lshlrev_b64 v[24:25], 8, v[24:25]
+	s_waitcnt vmcnt(4)
+	v_lshlrev_b64 v[26:27], 8, v[26:27]
+	s_waitcnt vmcnt(3)
+	v_lshlrev_b64 v[28:29], 8, v[28:29]
+	s_waitcnt vmcnt(2)
+	v_lshlrev_b64 v[30:31], 8, v[30:31]
+	s_waitcnt vmcnt(1)
+	v_lshlrev_b64 v[32:33], 8, v[32:33]
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b64 v[34:35], 8, v[34:35]
+	.loc	1 73 37                         ; allocator.py:73:37
+	v_or_b32_e32 v4, v4, v0
+	v_or_b32_e32 v6, v6, v0
+	v_or_b32_e32 v8, v8, v0
+	v_or_b32_e32 v10, v10, v0
+	v_or_b32_e32 v12, v12, v0
+	v_or_b32_e32 v14, v14, v0
+	v_or_b32_e32 v16, v16, v0
+	v_or_b32_e32 v18, v18, v0
+	v_or_b32_e32 v20, v20, v0
+	v_or_b32_e32 v22, v22, v0
+	v_or_b32_e32 v24, v24, v0
+	v_or_b32_e32 v26, v26, v0
+	v_or_b32_e32 v28, v28, v0
+	v_or_b32_e32 v30, v30, v0
+	v_or_b32_e32 v32, v32, v0
+	v_or_b32_e32 v34, v34, v0
+	.loc	1 73 12                         ; allocator.py:73:12
+	buffer_store_dwordx2 v[4:5], v36, s[36:39], 0 offen
+	buffer_store_dwordx2 v[6:7], v37, s[36:39], 0 offen
+	buffer_store_dwordx2 v[8:9], v38, s[36:39], 0 offen
+	buffer_store_dwordx2 v[10:11], v39, s[36:39], 0 offen
+	buffer_store_dwordx2 v[12:13], v40, s[36:39], 0 offen
+	buffer_store_dwordx2 v[14:15], v41, s[36:39], 0 offen
+	buffer_store_dwordx2 v[16:17], v42, s[36:39], 0 offen
+	buffer_store_dwordx2 v[18:19], v43, s[36:39], 0 offen
+	buffer_store_dwordx2 v[20:21], v44, s[36:39], 0 offen
+	buffer_store_dwordx2 v[22:23], v45, s[36:39], 0 offen
+	buffer_store_dwordx2 v[24:25], v46, s[36:39], 0 offen
+	buffer_store_dwordx2 v[26:27], v47, s[36:39], 0 offen
+	buffer_store_dwordx2 v[28:29], v48, s[36:39], 0 offen
+	buffer_store_dwordx2 v[30:31], v49, s[36:39], 0 offen
+	buffer_store_dwordx2 v[32:33], v50, s[36:39], 0 offen
+	buffer_store_dwordx2 v[34:35], v51, s[36:39], 0 offen
+	.loc	1 63 26 is_stmt 1               ; allocator.py:63:26
+	s_cbranch_scc1 .LBB0_3
+.LBB0_4:                                ; %._crit_edge
+	.loc	1 76 29                         ; allocator.py:76:29
+	s_add_i32 s45, s45, s46
+	.loc	1 76 42 is_stmt 0               ; allocator.py:76:42
+	s_cmp_eq_u32 s45, s33
+	s_cbranch_scc1 .LBB0_6
+; %bb.5:
+	.loc	1 72 45 is_stmt 1               ; allocator.py:72:45
+	s_add_i32 s44, s44, s35
+	.loc	1 82 8                          ; allocator.py:82:8
+	s_ashr_i32 s35, s34, 31
+	.loc	1 80 26                         ; allocator.py:80:26
+	s_sub_i32 s2, s33, s47
+	.loc	1 82 8                          ; allocator.py:82:8
+	s_lshl_b64 s[0:1], s[34:35], 3
+	s_add_u32 s0, s8, s0
+	s_addc_u32 s1, s9, s1
+	v_mov_b32_e32 v1, 0
+	global_load_dwordx2 v[2:3], v1, s[0:1] offset:-8
+	.loc	1 85 65                         ; allocator.py:85:65
+	s_add_i32 s46, s46, s44
+	.loc	1 86 8                          ; allocator.py:86:8
+	v_bfrev_b32_e32 v1, 1
+	v_add_lshl_u32 v4, s46, v0, 3
+	.loc	1 87 31                         ; allocator.py:87:31
+	v_cmp_gt_i32_e32 vcc, s2, v0
+	.loc	1 86 20                         ; allocator.py:86:20
+	s_waitcnt vmcnt(0)
+	v_lshlrev_b64 v[2:3], 8, v[2:3]
+	.loc	1 86 32 is_stmt 0               ; allocator.py:86:32
+	v_or_b32_e32 v2, v2, v0
+	.loc	1 86 8                          ; allocator.py:86:8
+	v_cndmask_b32_e32 v0, v1, v4, vcc
+	buffer_store_dwordx2 v[2:3], v0, s[36:39], 0 offen
+.LBB0_6:                                ; %common.ret
+	.loc	1 0 0                           ; allocator.py:0
+	s_endpgm
+.Ltmp2:
+	.section	.rodata,"a",@progbits
+	.p2align	6, 0x0
+	.amdhsa_kernel alloc_extend_kernel
+		.amdhsa_group_segment_fixed_size 0
+		.amdhsa_private_segment_fixed_size 0
+		.amdhsa_kernarg_size 56
+		.amdhsa_user_sgpr_count 16
+		.amdhsa_user_sgpr_dispatch_ptr 0
+		.amdhsa_user_sgpr_queue_ptr 0
+		.amdhsa_user_sgpr_kernarg_segment_ptr 1
+		.amdhsa_user_sgpr_dispatch_id 0
+		.amdhsa_user_sgpr_kernarg_preload_length 14
+		.amdhsa_user_sgpr_kernarg_preload_offset 0
+		.amdhsa_user_sgpr_private_segment_size 0
+		.amdhsa_uses_dynamic_stack 0
+		.amdhsa_enable_private_segment 0
+		.amdhsa_system_sgpr_workgroup_id_x 1
+		.amdhsa_system_sgpr_workgroup_id_y 0
+		.amdhsa_system_sgpr_workgroup_id_z 0
+		.amdhsa_system_sgpr_workgroup_info 0
+		.amdhsa_system_vgpr_workitem_id 0
+		.amdhsa_next_free_vgpr 52
+		.amdhsa_next_free_sgpr 52
+		.amdhsa_accum_offset 52
+		.amdhsa_reserve_vcc 1
+		.amdhsa_reserve_xnack_mask 1
+		.amdhsa_float_round_mode_32 0
+		.amdhsa_float_round_mode_16_64 0
+		.amdhsa_float_denorm_mode_32 3
+		.amdhsa_float_denorm_mode_16_64 3
+		.amdhsa_dx10_clamp 1
+		.amdhsa_ieee_mode 1
+		.amdhsa_fp16_overflow 0
+		.amdhsa_tg_split 0
+		.amdhsa_exception_fp_ieee_invalid_op 0
+		.amdhsa_exception_fp_denorm_src 0
+		.amdhsa_exception_fp_ieee_div_zero 0
+		.amdhsa_exception_fp_ieee_overflow 0
+		.amdhsa_exception_fp_ieee_underflow 0
+		.amdhsa_exception_fp_ieee_inexact 0
+		.amdhsa_exception_int_div_zero 0
+	.end_amdhsa_kernel
+	.text
+.Lfunc_end0:
+	.size	alloc_extend_kernel, .Lfunc_end0-alloc_extend_kernel
+	.cfi_endproc
+                                        ; -- End function
+	.set alloc_extend_kernel.num_vgpr, 52
+	.set alloc_extend_kernel.num_agpr, 0
+	.set alloc_extend_kernel.numbered_sgpr, 52
+	.set alloc_extend_kernel.num_named_barrier, 0
+	.set alloc_extend_kernel.private_seg_size, 0
+	.set alloc_extend_kernel.uses_vcc, 1
+	.set alloc_extend_kernel.uses_flat_scratch, 0
+	.set alloc_extend_kernel.has_dyn_sized_stack, 0
+	.set alloc_extend_kernel.has_recursion, 0
+	.set alloc_extend_kernel.has_indirect_call, 0
+	.section	.AMDGPU.csdata,"",@progbits
+; Kernel info:
+; codeLenInByte = 2188
+; TotalNumSgprs: 58
+; NumVgprs: 52
+; NumAgprs: 0
+; TotalNumVgprs: 52
+; ScratchSize: 0
+; MemoryBound: 0
+; FloatMode: 240
+; IeeeMode: 1
+; LDSByteSize: 0 bytes/workgroup (compile time only)
+; SGPRBlocks: 7
+; VGPRBlocks: 6
+; NumSGPRsForWavesPerEU: 58
+; NumVGPRsForWavesPerEU: 52
+; AccumOffset: 52
+; Occupancy: 8
+; WaveLimiterHint : 1
+; COMPUTE_PGM_RSRC2:SCRATCH_EN: 0
+; COMPUTE_PGM_RSRC2:USER_SGPR: 16
+; COMPUTE_PGM_RSRC2:TRAP_HANDLER: 0
+; COMPUTE_PGM_RSRC2:TGID_X_EN: 1
+; COMPUTE_PGM_RSRC2:TGID_Y_EN: 0
+; COMPUTE_PGM_RSRC2:TGID_Z_EN: 0
+; COMPUTE_PGM_RSRC2:TIDIG_COMP_CNT: 0
+; COMPUTE_PGM_RSRC3_GFX90A:ACCUM_OFFSET: 12
+; COMPUTE_PGM_RSRC3_GFX90A:TG_SPLIT: 0
+	.text
+	.p2alignl 6, 3212836864
+	.fill 256, 4, 3212836864
+	.section	.AMDGPU.gpr_maximums,"",@progbits
+	.set amdgpu.max_num_vgpr, 0
+	.set amdgpu.max_num_agpr, 0
+	.set amdgpu.max_num_sgpr, 0
+	.set amdgpu.max_num_named_barrier, 0
+	.text
+	.section	.debug_abbrev,"",@progbits
+	.byte	1                               ; Abbreviation Code
+	.byte	17                              ; DW_TAG_compile_unit
+	.byte	0                               ; DW_CHILDREN_no
+	.byte	37                              ; DW_AT_producer
+	.byte	14                              ; DW_FORM_strp
+	.byte	19                              ; DW_AT_language
+	.byte	5                               ; DW_FORM_data2
+	.byte	3                               ; DW_AT_name
+	.byte	14                              ; DW_FORM_strp
+	.byte	16                              ; DW_AT_stmt_list
+	.byte	23                              ; DW_FORM_sec_offset
+	.byte	27                              ; DW_AT_comp_dir
+	.byte	14                              ; DW_FORM_strp
+	.byte	17                              ; DW_AT_low_pc
+	.byte	1                               ; DW_FORM_addr
+	.byte	18                              ; DW_AT_high_pc
+	.byte	6                               ; DW_FORM_data4
+	.byte	0                               ; EOM(1)
+	.byte	0                               ; EOM(2)
+	.byte	0                               ; EOM(3)
+	.section	.debug_info,"",@progbits
+.Lcu_begin0:
+	.long	.Ldebug_info_end0-.Ldebug_info_start0 ; Length of Unit
+.Ldebug_info_start0:
+	.short	4                               ; DWARF version number
+	.long	.debug_abbrev                   ; Offset Into Abbrev. Section
+	.byte	8                               ; Address Size (in bytes)
+	.byte	1                               ; Abbrev [1] 0xb:0x1f DW_TAG_compile_unit
+	.long	.Linfo_string0                  ; DW_AT_producer
+	.short	2                               ; DW_AT_language
+	.long	.Linfo_string1                  ; DW_AT_name
+	.long	.Lline_table_start0             ; DW_AT_stmt_list
+	.long	.Linfo_string2                  ; DW_AT_comp_dir
+	.quad	.Lfunc_begin0                   ; DW_AT_low_pc
+	.long	.Lfunc_end0-.Lfunc_begin0       ; DW_AT_high_pc
+.Ldebug_info_end0:
+	.section	.debug_str,"MS",@progbits,1
+.Linfo_string0:
+	.asciz	"triton"                        ; string offset=0
+.Linfo_string1:
+	.asciz	"allocator.py"                  ; string offset=7
+.Linfo_string2:
+	.asciz	"/sgl-workspace/sglang/python/sglang/srt/mem_cache/triton_ops" ; string offset=20
+	.section	".note.GNU-stack","",@progbits
+	.amdgpu_metadata
+---
+amdhsa.kernels:
+  - .agpr_count:     0
+    .args:
+      - .address_space:  global
+        .offset:         0
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         8
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         16
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         24
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         32
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         40
+        .size:           8
+        .value_kind:     global_buffer
+      - .address_space:  global
+        .offset:         48
+        .size:           8
+        .value_kind:     global_buffer
+    .group_segment_fixed_size: 0
+    .kernarg_segment_align: 8
+    .kernarg_segment_size: 56
+    .max_flat_workgroup_size: 256
+    .name:           alloc_extend_kernel
+    .private_segment_fixed_size: 0
+    .sgpr_count:     58
+    .sgpr_spill_count: 0
+    .symbol:         alloc_extend_kernel.kd
+    .uniform_work_group_size: 1
+    .uses_dynamic_stack: false
+    .vgpr_count:     52
+    .vgpr_spill_count: 0
+    .wavefront_size: 64
+amdhsa.target:   amdgcn-amd-amdhsa--gfx950
+amdhsa.version:
+  - 1
+  - 2
+...
+
+	.end_amdgpu_metadata
+	.section	.debug_line,"",@progbits
+.Lline_table_start0:
