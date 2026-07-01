@@ -49,6 +49,11 @@ class MatchPrefixParams:
     cow_mamba: bool = False
     req: Optional[Req] = None
 
+    # External KV connector specific
+    # When True, the cache may update per-request connector state (e.g. reserve
+    # load-back metadata keyed by rid) as part of match_prefix.
+    update_connector_state: bool = False
+
 
 @dataclasses.dataclass
 class InsertParams:
@@ -303,9 +308,12 @@ class BasePrefixCache(ABC, PrefixCacheTrait):
 
     def ready_to_load_host_cache(self) -> Any:
         """
-        Notify the cache controller to start the KV cache loading
+        Notify the cache controller to start the KV cache loading.
+
+        Default implementation returns -1 (no consumer task). Caches with
+        async backends (HiRadixCache, ExtendedRadixCache) override this.
         """
-        raise NotImplementedError()
+        return -1
 
     def flush_write_through_acks(self) -> None:
         """Release lock_ref on radix-tree nodes whose write-through has completed.
@@ -317,9 +325,13 @@ class BasePrefixCache(ABC, PrefixCacheTrait):
 
     def check_hicache_events(self) -> Any:
         """
-        Check HiCache related activities to update radix tree and synchronize across TP workers if needed
+        Check HiCache related activities to update radix tree and synchronize across TP workers if needed.
+
+        Default implementation is a no-op for caches that don't support
+        async backend events (e.g., plain RadixCache, SWARadixCache without
+        a KV connector). HiRadixCache and ExtendedRadixCache override this.
         """
-        raise NotImplementedError()
+        return
 
     def take_events(self):
         return []
@@ -358,6 +370,21 @@ class BasePrefixCache(ABC, PrefixCacheTrait):
         return not self.is_chunk_cache()
 
     def available_and_evictable_str(self) -> str:
-        available_size = self.token_to_kv_pool_allocator.available_size()
+        allocator = self.token_to_kv_pool_allocator
+        if self.supports_swa():
+            full_available_size = allocator.full_available_size()
+            swa_available_size = allocator.swa_available_size()
+            full_evictable_size = self.full_evictable_size()
+            swa_evictable_size = self.swa_evictable_size()
+            return (
+                f"Available full tokens: {full_available_size + full_evictable_size} "
+                f"({full_available_size=} + {full_evictable_size=})\n"
+                f"Available swa tokens: {swa_available_size + swa_evictable_size} "
+                f"({swa_available_size=} + {swa_evictable_size=})\n"
+            )
+        available_size = allocator.available_size()
         evictable_size = self.evictable_size()
-        return f"Available tokens: {available_size + evictable_size} ({available_size=} + {evictable_size=})\n"
+        return (
+            f"Available tokens: {available_size + evictable_size} "
+            f"({available_size=} + {evictable_size=})\n"
+        )

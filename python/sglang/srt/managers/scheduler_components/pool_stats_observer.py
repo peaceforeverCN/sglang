@@ -279,16 +279,16 @@ class SchedulerPoolStatsObserver:
         full_num_used = self.full_tokens_per_layer - (
             full_available_size + full_evictable_size
         )
-        swa_num_used = self.swa_tokens_per_layer - (
-            swa_available_size + swa_evictable_size
-        )
-        # FIXME(hisparse): host-backup transiently over-releases the device pool
-        # counter, producing negative full_num_used / swa_num_used. We clamp to 0
-        # to keep token_usage / leak checks sane, but the underlying accounting
-        # bug should be fixed so the clamp can go away.
-        if self.enable_hisparse:
+        # SWA usage must reflect physical allocator occupancy.  Evictable tree
+        # slots are already allocated (not in swa_available_size), so the full
+        # pool formula  ``total - (available + evictable)`` double-subtracts
+        # them and clamps to 0 under tail-only SWA mapping (alloc_extend_swa_tail
+        # / FlexKV load-back).  Admission control still uses
+        # ``available + evictable`` via PrefillAdder.rem_swa_tokens.
+        swa_num_used = self.swa_tokens_per_layer - swa_available_size
+        swa_num_used = max(0, min(swa_num_used, self.swa_tokens_per_layer))
+        if full_num_used < 0:
             full_num_used = max(0, full_num_used)
-            swa_num_used = max(0, swa_num_used)
         full_token_usage = full_num_used / self.full_tokens_per_layer
         swa_token_usage = swa_num_used / self.swa_tokens_per_layer
 
