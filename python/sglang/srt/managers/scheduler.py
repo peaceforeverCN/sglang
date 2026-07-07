@@ -1750,6 +1750,12 @@ class Scheduler(
             pool_stats_observer=self.pool_stats_observer,
             get_last_batch=lambda: self.last_batch,
             get_running_batch=lambda: self.running_batch,
+            # Waiting-queue reqs can already hold pre-allocated GPU slots
+            # via ``init_load_back`` (flexkv host-hit path).  Feeding the
+            # queue in lets the checker's uncached accounting include those
+            # reserved-but-not-yet-in-batch slots, otherwise the invariant
+            # fires the moment sampling races the "waiting for H2D" window.
+            get_waiting_queue=lambda: self.waiting_queue,
         )
 
     def init_kv_events_publisher(self) -> None:

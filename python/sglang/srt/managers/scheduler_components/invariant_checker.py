@@ -54,6 +54,16 @@ class SchedulerInvariantChecker:
     pool_stats_observer: SchedulerPoolStatsObserver
     get_last_batch: Callable
     get_running_batch: Callable
+    # Optional: scheduler's waiting queue accessor.  Waiting-queue requests
+    # can already hold pre-allocated GPU slots after ``init_load_back`` runs
+    # (extended_radix_cache.py appends restored slots to ``req.prefix_indices``
+    # while leaving ``req.req_pool_idx`` as None and ``kv_allocated_len == 0``).
+    # Without an explicit accounting for those slots the full-pool invariant
+    # ``total = available + evictable + protected + session_held + uncached``
+    # under-counts by exactly that request's ``hit_length`` — which is what
+    # tripped the 2026-07-07 Full Pool Mem Leak crash.  Default is an empty
+    # accessor so backends that don't opt in stay behavior-compatible.
+    get_waiting_queue: Callable = field(default_factory=lambda: (lambda: []))
     count_req_pool_leak_warnings: int = 0
     count_memory_leak_warnings: int = 0
     recent_busy_msgs: Deque[str] = field(
@@ -159,6 +169,17 @@ class SchedulerInvariantChecker:
 
         For full pool: uncached = allocated - cache_protected_len
         For SWA pool:  uncached = allocated - max(cache_protected_len, swa_evicted_seqlen)
+
+        Requests in the *waiting queue* that already went through
+        ``init_load_back`` also hold pre-allocated GPU slots (in
+        ``req.prefix_indices``) that are NOT accounted for by the batch
+        iteration above — those slots have no ``req_pool_idx`` yet
+        (only ``alloc_for_extend`` sets that) and ``kv_allocated_len`` is
+        still 0.  Without counting them the full-pool invariant fails
+        the moment the checker samples between ``init_load_back`` and
+        the request's batch entry, which is exactly what caused the
+        2026-07-07 leak: three DPs each leaked their SWA-hit request's
+        entire ``hit_length`` in one shot.
         """
         # After decode: running_batch IS last_batch (same object), count once.
         # After prefill: they differ, both hold uncached tokens.
@@ -192,6 +213,69 @@ class SchedulerInvariantChecker:
                     swa_uncached += allocated_len - max(
                         req.cache_protected_len, req.swa_evicted_seqlen
                     )
+
+        # ---- Waiting-queue reqs with pre-allocated slots ------------------
+        # A req that hit external cache (flexkv host/SSD hit → hit_length > 0)
+        # goes through ``init_load_back`` during admission attempt.  That call
+        # reserves ``hit_length`` GPU slots against the KV pool allocator and
+        # appends them to ``req.prefix_indices``, but the req may not be
+        # admitted in the same iteration (memory quota, chunked-prefill
+        # overflow, etc.).  In that window the req stays in ``waiting_queue``
+        # holding real GPU slots that no invariant category currently claims:
+        #
+        #   * not ``available``      — allocator handed them out
+        #   * not ``evictable``      — not inserted into radix
+        #   * not ``protected``      — same (radix un-tracked)
+        #   * not ``session_held``   — no session
+        #   * not per-batch uncached — req_pool_idx is None, kv_allocated_len == 0
+        #
+        # The flexkv path deliberately keeps ``req.cache_protected_len`` at
+        # the *pre-restore* prefix length so the extra tokens show up as
+        # uncached (see extended_radix_cache.py + the ``_flexkv_uncached_restore``
+        # flag).  We surface that here.
+        #
+        # Wrapped in a broad try/except so a stray attribute miss (mock reqs
+        # in tests, third-party queue implementations that hand us plain
+        # objects) can never mask a real leak by raising.  We prefer
+        # "possibly under-count" to "checker crashes and hides the leak."
+        try:
+            waiting_reqs = self.get_waiting_queue() or ()
+        except Exception:
+            waiting_reqs = ()
+        for req in waiting_reqs:
+            try:
+                # Skip reqs that were already committed (defensive; a req
+                # that reached commit shouldn't still be in waiting_queue,
+                # but the check is cheap and matches the batch-loop contract).
+                if getattr(req, "kv_committed_freed", False):
+                    continue
+                prefix_indices = getattr(req, "prefix_indices", None)
+                if prefix_indices is None:
+                    continue
+                allocated_len = int(prefix_indices.numel())
+                if allocated_len <= 0:
+                    continue
+                cache_protected_len = int(getattr(req, "cache_protected_len", 0))
+                if self.page_size > 1:
+                    allocated_len = ceil_align(allocated_len, self.page_size)
+                    if cache_protected_len % self.page_size != 0:
+                        # Contract violation somewhere upstream; skip rather
+                        # than assert (checker must be robust for leak-report
+                        # purposes even in half-broken states).
+                        continue
+                delta = allocated_len - cache_protected_len
+                if delta <= 0:
+                    continue
+                full_uncached += delta
+                if self.is_hybrid_swa:
+                    swa_evicted = int(getattr(req, "swa_evicted_seqlen", 0) or 0)
+                    swa_uncached += allocated_len - max(
+                        cache_protected_len, swa_evicted
+                    )
+            except Exception:
+                # Same defensive stance as the outer try — a bad req shape
+                # must not mask the leak that follows.
+                continue
 
         return full_uncached, swa_uncached
 
