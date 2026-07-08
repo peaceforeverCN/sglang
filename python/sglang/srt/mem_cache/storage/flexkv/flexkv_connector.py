@@ -457,10 +457,12 @@ class FlexKVConnector(BaseKVConnector):
 
         # SWA config (cache_config.swa + enable_swa_transfer) is populated by
         # FlexKVConfig.post_init_from_sglang_config for DSv4 with the correct
-        # padded bytes-per-token; the connector no longer derives it. We only
-        # read window_size below for the trailing-window logic.
+        # padded bytes-per-token; the connector no longer derives it. FlexKV now
+        # manages SWA at page granularity == cache_config.tokens_per_block (the
+        # standalone SWAPoolConfig.window_size field was removed), so the SWA
+        # page/window size follows tokens_per_block.
         self._swa_window_size = (
-            cache_config.swa.window_size
+            cache_config.tokens_per_block
             if cache_config.swa is not None and cache_config.swa.enabled
             else 0
         )
