@@ -535,7 +535,11 @@ class ExtendedRadixCache(BasePrefixCache):
         # AFTER insert.  These kv_indices are the tree node values (not the
         # req_to_token_pool snapshot), so they are protected by lock_ref and
         # won't be freed by the allocator while D2H transfer is in flight.
-        radix_key = RadixKey(token_ids, req.extra_key)
+        radix_key = RadixKey(
+            token_ids,
+            req.extra_key,
+            is_bigram=bool(getattr(self._inner_radixtree, "is_eagle", False)),
+        )
         match_result = self._inner_radixtree.match_prefix(
             MatchPrefixParams(key=radix_key)
         )
@@ -716,7 +720,11 @@ class ExtendedRadixCache(BasePrefixCache):
         # Store the page-aligned prefix that has been committed to the GPU tree
         # so far. Mirrors cache_finished_req, but uses fill_ids (the tokens
         # filled up to this point) rather than the committed output.
-        token_ids = list(req.fill_ids)
+        # Keep req.fill_ids as array("q") — the inner SWARadixCache inserts with
+        # the same type. Converting to list breaks RadixKey.match() (array slice
+        # != list slice) while child_key lookup still hits, yielding prefix_len=0
+        # and an assert in _split_node.
+        token_ids = req.fill_ids
         page_aligned_len = (len(token_ids) // self.page_size) * self.page_size
         token_ids = token_ids[:page_aligned_len]
         if len(token_ids) == 0 or req_id is None:
@@ -726,7 +734,11 @@ class ExtendedRadixCache(BasePrefixCache):
         # AFTER the inner insert above. These indices are protected by lock_ref
         # (not the transient req_to_token_pool snapshot), so they survive the
         # in-flight D2H transfer.
-        radix_key = RadixKey(token_ids, req.extra_key)
+        radix_key = RadixKey(
+            token_ids,
+            req.extra_key,
+            is_bigram=bool(getattr(self._inner_radixtree, "is_eagle", False)),
+        )
         match_result = self._inner_radixtree.match_prefix(
             MatchPrefixParams(key=radix_key)
         )
@@ -767,7 +779,7 @@ class ExtendedRadixCache(BasePrefixCache):
         try:
             self._connector.start_store_kv(
                 task_id=task_id,
-                token_ids=token_ids,
+                token_ids=list(token_ids),
                 kv_indices=kv_indices,
             )
         except Exception as e:

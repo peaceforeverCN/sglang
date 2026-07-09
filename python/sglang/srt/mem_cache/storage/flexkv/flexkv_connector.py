@@ -4,7 +4,7 @@ import os
 import socket
 import struct
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -60,6 +60,31 @@ if cudart:
         ctypes.c_void_p,
     ]
     cudart.cudaLaunchHostFunc.restype = ctypes.c_int
+
+
+def _to_numpy_mask(mask: Optional[Union[torch.Tensor, np.ndarray]]) -> Optional[np.ndarray]:
+    if mask is None:
+        return None
+    if isinstance(mask, torch.Tensor):
+        return mask.detach().cpu().numpy().astype(np.bool_, copy=False)
+    return np.asarray(mask, dtype=np.bool_)
+
+
+def _swa_trailing_mask_from_return_mask(
+    return_mask: np.ndarray, page_size: int
+) -> np.ndarray:
+    """SWA window is the trailing page-sized block of a swa_aware return_mask."""
+    mask = np.asarray(return_mask, dtype=np.bool_)
+    swa_mask = np.zeros_like(mask, dtype=np.bool_)
+    if page_size <= 0 or not mask.any():
+        return swa_mask
+    true_idx = np.flatnonzero(mask)
+    tail_start = int(true_idx[-1]) + 1 - page_size
+    if tail_start < int(true_idx[0]):
+        return swa_mask
+    if mask[tail_start : tail_start + page_size].all():
+        swa_mask[tail_start : tail_start + page_size] = True
+    return swa_mask
 
 
 # ---- FlexKV Connector ----
@@ -457,10 +482,12 @@ class FlexKVConnector(BaseKVConnector):
 
         # SWA config (cache_config.swa + enable_swa_transfer) is populated by
         # FlexKVConfig.post_init_from_sglang_config for DSv4 with the correct
-        # padded bytes-per-token; the connector no longer derives it. We only
-        # read window_size below for the trailing-window logic.
+        # padded bytes-per-token; the connector no longer derives it. Sliding
+        # window size for trailing-window logic comes from the GPU kvcache
+        # (DeepSeekV4TokenToKVPool.swa_window_size == swa_page_size), not
+        # SWAPoolConfig (page-granular host pool only).
         self._swa_window_size = (
-            cache_config.swa.window_size
+            getattr(kvcache, "swa_window_size", 0)
             if cache_config.swa is not None and cache_config.swa.enabled
             else 0
         )
@@ -547,24 +574,24 @@ class FlexKVConnector(BaseKVConnector):
         if self._sync_ctx.is_sync_leader:
             token_ids_np = np.array(token_ids, dtype=np.int64)
             # SWA-aware match when a dedicated SWA GPU pool is registered:
-            # get_match_swa internally clamps the Full-KV transfer to the SWA-reusable prefix (usable = min(full_hit, swa_hit)) and returns (task_id, mask_full, mask_swa).
+            # get_match(swa_aware=True) clamps Full-KV to usable=min(full_hit,
+            # swa_hit); the SWA window is the trailing block of return_mask.
             if self._swa_kv_pool is not None:
-                # swa_mask marks device-hit tokens whose SWA window was evicted from the GPU SWA pool and must be restored from the host.
-                result = self.kv_manager.get_match_swa(
+                # swa_mask marks device-hit tokens whose SWA window was evicted
+                # from the GPU SWA pool and must be restored from the host.
+                token_mask_np = _to_numpy_mask(token_mask)
+                swa_mask_np = _to_numpy_mask(swa_mask)
+                if swa_mask_np is not None:
+                    token_mask_np = token_mask_np | swa_mask_np
+                flexkv_task_id, matched_mask = self.kv_manager.get_match(
                     token_ids=token_ids_np,
-                    full_mask=token_mask,
-                    swa_mask=swa_mask,
+                    token_mask=token_mask_np,
+                    swa_aware=True,
                 )
-                if result is None:
-                    logger.warning(
-                        "[FlexKV] get_match_swa returned None, treating as no hit"
-                    )
-                    flexkv_task_id = -1
-                    hit_length = 0
-                    matched_mask_swa = None
-                else:
-                    flexkv_task_id, matched_mask, matched_mask_swa = result
-                    hit_length = int(matched_mask.sum()) if matched_mask is not None else 0
+                matched_mask_swa = _swa_trailing_mask_from_return_mask(
+                    matched_mask, self.page_size
+                )
+                hit_length = int(matched_mask.sum()) if matched_mask is not None else 0
             else:
                 # Non-SWA (MLA / MHA / NSA): plain single-mask match, unchanged.
                 result = self.kv_manager.get_match(
@@ -604,7 +631,7 @@ class FlexKVConnector(BaseKVConnector):
                 ):
                     self._pending_swa_token_ids[rid] = token_ids_np[:hit_length].copy()
                     logger.info(
-                        f"[FlexKV-SWA] get_match_swa hit: hit_length={hit_length}, "
+                        f"[FlexKV-SWA] get_match(swa_aware=True) hit: hit_length={hit_length}, "
                         f"swa_window_marked=True, rid={rid}"
                     )
 
@@ -650,7 +677,7 @@ class FlexKVConnector(BaseKVConnector):
         flexkv_task_ids: List[int] = []
         slot_mappings: List[torch.Tensor] = []
         # Parallel to slot_mappings: per-task SWA GPU slot mapping (or None).
-        # FlexKV built the SWA H2D op at get_match_swa time; launch() late-binds
+        # FlexKV built the SWA H2D op at get_match(swa_aware=True) time; launch()
         # its GPU slot from this mapping. None leaves the op at its built ids
         # (no-op when this request has no SWA reuse window).
         swa_slot_mappings: List[Optional[torch.Tensor]] = []
