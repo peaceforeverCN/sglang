@@ -21,7 +21,6 @@ from __future__ import annotations
 import os
 import sys
 import unittest
-from array import array
 from typing import Optional
 from unittest.mock import MagicMock
 
@@ -35,12 +34,9 @@ if _REPO_ROOT not in sys.path:
 # We import these AFTER tweaking sys.path so dev edits are picked up live.
 from sglang.srt.mem_cache.base_prefix_cache import (  # noqa: E402
     InitLoadBackParams,
-    InsertParams,
-    MatchPrefixParams,
 )
 from sglang.srt.mem_cache.cache_init_params import CacheInitParams  # noqa: E402
 from sglang.srt.mem_cache.extended_radix_cache import ExtendedRadixCache  # noqa: E402
-from sglang.srt.mem_cache.radix_cache import RadixKey  # noqa: E402
 from sglang.srt.mem_cache.swa_radix_cache import SWARadixCache  # noqa: E402
 
 
@@ -784,174 +780,6 @@ class TestEagleBigramAlignment(unittest.TestCase):
             "LoadOperation.device_indices must equal host_hit_length so FlexKV "
             "src/dst block counts match",
         )
-
-
-class TestSignalDenseLayersReady(unittest.TestCase):
-    """Regression: scheduler hangs after first H2D because FlexKV's
-    multi-group C++ worker only fires layerwise eventfds for layers that
-    have at least one LayerGroupSpec member. DSv4 dense layers
-    (compress_ratio=0, e.g. layers 0/1 in DSv4-Flash) have empty
-    layer_members and get NO eventfd. sglang's forward calls
-    ``get_swa_key_buffer_radix(0)`` → ``wait_until(0)`` → ``eventfd_read``
-    which blocks forever.
-
-    Fix: pre-fire eventfds for those dense layers right after producer
-    rotation. Their SWA KV is restored by the SWA fallback path before
-    ``kv_manager.launch`` is even called, so the eventfd is purely a
-    "ready" signal.
-
-    These tests exercise ``_signal_dense_layers_ready`` against a real
-    ``FlexKVLayerDoneCounter`` over a realistic DSv4-Flash layout
-    (43 layers, dense=[0, 1]).
-    """
-
-    DSV4_FLASH_NUM_LAYERS = 43
-    DSV4_FLASH_DENSE_IDS = [0, 1]
-    DSV4_FLASH_COMPRESS_RATIOS = [0, 0] + [4, 128] * 20 + [4]
-
-    def setUp(self):
-        from sglang.srt.mem_cache.storage.flexkv.flexkv_comm import (
-            FlexKVLayerDoneCounter,
-        )
-        self.counter = FlexKVLayerDoneCounter(
-            num_layers=self.DSV4_FLASH_NUM_LAYERS
-        )
-
-    def _make_stub_with_dense_ids(self, dense_ids):
-        """Bind ``_signal_dense_layers_ready`` from FlexKVConnector onto a
-        minimal stub object. Avoids spinning up the full connector."""
-        from sglang.srt.mem_cache.storage.flexkv.flexkv_connector import (
-            FlexKVConnector,
-        )
-        stub = type("Stub", (), {})()
-        stub._layer_done_counter = self.counter
-        stub._dense_layer_local_ids = list(dense_ids)
-        stub._signal_dense_layers_ready = (
-            FlexKVConnector._signal_dense_layers_ready.__get__(stub)
-        )
-        return stub
-
-    def test_dsv4_flash_dense_ids_match_config(self):
-        """Sanity-check our ratios fixture. DSv4-Flash config.json has
-        compress_ratios = [0, 0, 4, 128, ..., 4, 0] = 44 entries (43 main
-        layers + 1 nextn). The 43-main-layer slice has dense at [0, 1]."""
-        ratios = self.DSV4_FLASH_COMPRESS_RATIOS
-        self.assertEqual(len(ratios), self.DSV4_FLASH_NUM_LAYERS)
-        dense = [i for i, r in enumerate(ratios) if r == 0]
-        self.assertEqual(dense, self.DSV4_FLASH_DENSE_IDS)
-        self.assertEqual(ratios.count(4), 21)
-        self.assertEqual(ratios.count(128), 20)
-
-    def test_prefire_unblocks_dense_layer_wait(self):
-        """After ``_signal_dense_layers_ready``, ``wait_until(layer)`` for
-        each dense layer must NOT block. We use SIGALRM as a safety net
-        so the test fails (instead of deadlocking) if the prefire didn't
-        write the eventfds."""
-        import signal
-
-        producer_id = self.counter.update_producer()
-        self.counter.events[producer_id].reset_for_new_transfer()
-        stub = self._make_stub_with_dense_ids(self.DSV4_FLASH_DENSE_IDS)
-        stub._signal_dense_layers_ready(producer_id)
-
-        # Register the task so set_consumer can resolve to the producer slot.
-        TASK_ID = 1234
-        self.counter._task_to_producer[TASK_ID] = producer_id
-        self.counter.set_consumer(TASK_ID)
-
-        def _alarm(signum, frame):
-            raise TimeoutError(
-                "wait_until blocked beyond 2s — prefire did not signal eventfd"
-            )
-        prev = signal.signal(signal.SIGALRM, _alarm)
-        signal.alarm(2)
-        try:
-            for layer in self.DSV4_FLASH_DENSE_IDS:
-                self.counter.wait_until(layer)
-        finally:
-            signal.alarm(0)
-            signal.signal(signal.SIGALRM, prev)
-
-    def test_prefire_does_not_signal_managed_layers(self):
-        """Layers FlexKV's worker WILL handle (compress_ratio in {4, 128})
-        must NOT have their eventfds pre-fired by us — those eventfds are
-        the worker's responsibility. Pre-firing them would cause the
-        eventfd counter to drift up by 1 per round (we write 1 + worker
-        writes 2 per round, sglang reads 1 per round → +2 net per round)."""
-        producer_id = self.counter.update_producer()
-        self.counter.events[producer_id].reset_for_new_transfer()
-        stub = self._make_stub_with_dense_ids(self.DSV4_FLASH_DENSE_IDS)
-        stub._signal_dense_layers_ready(producer_id)
-
-        # Eventfds for non-dense layers should still be unsignalled. Reading
-        # any of them must block (we use a non-blocking dup to verify).
-        import os, fcntl, errno
-
-        for managed_layer in (2, 3, 21, 42):  # sample of c4 / c128 layers
-            fd = self.counter.events[producer_id].load_event_fds[managed_layer]
-            # Set non-blocking and try to read; should fail with EAGAIN.
-            flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-            fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
-            try:
-                with self.assertRaises(BlockingIOError,
-                                       msg=f"layer {managed_layer} should NOT be pre-fired"):
-                    os.read(fd, 8)
-            finally:
-                fcntl.fcntl(fd, fcntl.F_SETFL, flags)
-
-    def test_prefire_eventfd_counter_is_balanced_across_rounds(self):
-        """With sglang's ``wait_remaining=1`` (one read per layer per
-        round), pre-firing 1 per round keeps the eventfd counter at 0
-        after every wait. Three rounds: counter must stay bounded."""
-        stub = self._make_stub_with_dense_ids(self.DSV4_FLASH_DENSE_IDS)
-
-        TASK_BASE = 9000
-        for round_idx in range(3):
-            producer_id = self.counter.update_producer()
-            self.counter.events[producer_id].reset_for_new_transfer()
-            stub._signal_dense_layers_ready(producer_id)
-            task_id = TASK_BASE + round_idx
-            self.counter._task_to_producer[task_id] = producer_id
-            self.counter.set_consumer(task_id)
-            for layer in self.DSV4_FLASH_DENSE_IDS:
-                self.counter.wait_until(layer)
-            # Mark slot finished so update_producer can rotate next round.
-            self.counter.events[producer_id]._finished = True
-
-        # After 3 rounds, dense-layer eventfds should be drained (counter == 0).
-        # Verify by setting them non-blocking and confirming a read fails.
-        import os, fcntl
-        last_event = self.counter.events[producer_id]
-        for layer in self.DSV4_FLASH_DENSE_IDS:
-            fd = last_event.load_event_fds[layer]
-            flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-            fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
-            try:
-                with self.assertRaises(BlockingIOError,
-                                       msg=f"dense layer {layer} eventfd not drained"):
-                    os.read(fd, 8)
-            finally:
-                fcntl.fcntl(fd, fcntl.F_SETFL, flags)
-
-    def test_no_dense_layers_is_noop(self):
-        """If the model has no dense layers (e.g. DSv2/V3 style), the
-        signal call must be a no-op — no eventfds touched."""
-        producer_id = self.counter.update_producer()
-        self.counter.events[producer_id].reset_for_new_transfer()
-        stub = self._make_stub_with_dense_ids([])  # no dense layers
-        stub._signal_dense_layers_ready(producer_id)
-
-        # All eventfds must still be empty.
-        import os, fcntl
-        for layer in (0, 1, 2, 42):
-            fd = self.counter.events[producer_id].load_event_fds[layer]
-            flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-            fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
-            try:
-                with self.assertRaises(BlockingIOError):
-                    os.read(fd, 8)
-            finally:
-                fcntl.fcntl(fd, fcntl.F_SETFL, flags)
 
 
 class TestExtendedRadixCacheOOMDiagnostics(unittest.TestCase):

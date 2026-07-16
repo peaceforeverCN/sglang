@@ -4,7 +4,7 @@ import os
 import socket
 import struct
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import torch
@@ -15,7 +15,6 @@ from sglang.srt.mem_cache.storage.flexkv.flexkv_comm import (
     CMD_PUT_META,
     CMD_LAYERWISE,
     CMD_STORE_COMPLETE,
-    FlexKVLayerLoadingEvent,
     FlexKVLayerDoneCounter,
     FlexKVComm,
     send_fds,
@@ -674,12 +673,9 @@ class FlexKVConnector(BaseKVConnector):
                 self._layer_done_counter.events[producer_id].reset_for_new_transfer()
                 self._layer_done_counter.register_task(task_id, producer_id)
 
-            # Pre-fire eventfds for layers FlexKV's multi-group worker won't
-            # touch (DSv4 dense layers, compress_ratio=0). These layers carry no
-            # c4/c128 group and thus no layerwise eventfd write; pre-firing
-            # releases sglang's per-layer wait_until so forward can progress
-            # through them. See ``_signal_dense_layers_ready``.
-            self._signal_dense_layers_ready(producer_id)
+            # FlexKV's C++ worker signals every layer after its main-KV and
+            # optional SWA H2D work completes. SGLang must not pre-fire dense
+            # layers because their SWA data may still be in flight.
 
             # PP0 sync leader: send counter_id to PP1+
             if self._sync_ctx.is_pp_sender:
@@ -1775,86 +1771,8 @@ class FlexKVConnector(BaseKVConnector):
 
         self._layer_done_counter = FlexKVLayerDoneCounter(self.rank_info.num_layers_per_pp_stage)
 
-        # Compute the set of layer indices (PP-stage-local) whose layerwise
-        # eventfds FlexKV's C++ multi-group worker will NOT fire.
-        #
-        # Reason: the multi-group worker iterates ``layer_members[orig]`` and
-        # only schedules a layer_done callback when that list is non-empty.
-        # Layers whose ``compress_ratio == 0`` (DSv4 dense MLA layers, e.g.
-        # layer 0 and 1 in DSv4-Flash) are NOT in any LayerGroupSpec
-        # (c4 / c128 / c4_indexer all require ratio in {4, 128}), so their
-        # ``layer_members`` are empty and FlexKV omits the eventfd write.
-        #
-        # However, sglang's DSv4 forward calls
-        # ``get_swa_key_buffer_radix(layer_id)`` for ALL 43 attention layers
-        # — including the dense ones — which triggers
-        # ``layer_transfer_counter.wait_until(layer_id)`` →
-        # ``eventfd_read``. With no writer, the read blocks forever and
-        # the scheduler hangs.
-        #
-        # The fix is to pre-fire the eventfds of these dense layers right
-        # after each ``update_producer`` call, so that ``wait_until`` for
-        # those layers returns immediately. This is semantically correct:
-        # dense layers carry no c4/c128 group, so FlexKV never transfers KV
-        # for them (their KV is recomputed by forward, not loaded); the
-        # eventfd is purely a "ready" signal and firing it early is safe.
-        self._dense_layer_local_ids: List[int] = []
-        if getattr(self, "_is_dsv4", False) and self._dsv4_kvcache is not None:
-            compression_ratios = getattr(self._dsv4_kvcache, "compression_ratios", None)
-            stage_start = getattr(self._dsv4_kvcache, "_stage_start", 0)
-            stage_end = getattr(
-                self._dsv4_kvcache, "_stage_end",
-                len(compression_ratios) if compression_ratios is not None else 0,
-            )
-            if compression_ratios is not None:
-                for absolute_layer in range(stage_start, stage_end):
-                    if compression_ratios[absolute_layer] == 0:
-                        self._dense_layer_local_ids.append(absolute_layer - stage_start)
-        if self._dense_layer_local_ids:
-            logger.info(
-                f"[FlexKV] Detected %d dense layer(s) (PP-stage-local ids=%s) "
-                f"whose layerwise eventfds will be pre-fired per H2D so "
-                f"sglang's wait_until does not hang. Total layers in stage=%d.",
-                len(self._dense_layer_local_ids),
-                self._dense_layer_local_ids,
-                self.rank_info.num_layers_per_pp_stage,
-            )
-
         self._send_eventfds_to_worker()
         logger.info(f"[FlexKV] Initialized layerwise transfer{self._rank_label}")
-
-    def _signal_dense_layers_ready(self, producer_id: int) -> None:
-        """Pre-fire eventfds for layers FlexKV does not manage.
-
-        FlexKV's multi-group worker only fires eventfds for layers that have
-        at least one ``LayerGroupSpec`` member (c4/c128/c4_indexer). DSv4
-        dense layers (compress_ratio=0) have empty ``layer_members`` and get
-        no eventfd write, so sglang's per-layer ``wait_until`` would block.
-        FlexKV never transfers KV for these layers (they are recomputed by
-        forward, not loaded), so signalling completion here is semantically
-        correct.
-
-        Must be called AFTER ``reset_for_new_transfer`` on the same counter
-        slot. Writes ``1`` (not 2) so that with sglang's ``wait_remaining=1``
-        the eventfd counter stays balanced across rounds (one write per
-        round, one read per round, no accumulation).
-        """
-        if not self._dense_layer_local_ids:
-            return
-        event = self._layer_done_counter.events[producer_id]
-        # eventfd ABI: write 8-byte little-endian uint64 to increment the
-        # semaphore counter.
-        for layer in self._dense_layer_local_ids:
-            fd = event.load_event_fds[layer]
-            if fd < 0:
-                continue
-            try:
-                os.write(fd, (1).to_bytes(8, byteorder="little"))
-            except OSError as e:
-                logger.warning(
-                    f"[FlexKV] Failed to pre-fire dense layer eventfd: "
-                    f"layer={layer}, counter={producer_id}, fd={fd}, err={e}"
-                )
 
     def send_slot_mapping_to_remote(self, task_id: int, slot_mapping: torch.Tensor) -> None:
         """Send slot_mapping to TransferManagerOnRemote via existing ZMQ channel (PP1 side only).
