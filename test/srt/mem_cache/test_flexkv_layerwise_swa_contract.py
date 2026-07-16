@@ -3,13 +3,25 @@ from pathlib import Path
 
 
 class TestFlexKVLayerwiseSWAContract(unittest.TestCase):
-    def test_connector_does_not_prefire_dense_layer_eventfds(self):
+    @staticmethod
+    def _connector_source():
         repo_root = Path(__file__).resolve().parents[3]
-        connector_source = (
+        return (
             repo_root / "python/sglang/srt/mem_cache/storage/flexkv/flexkv_connector.py"
         ).read_text(encoding="utf-8")
 
+    def test_connector_does_not_prefire_dense_layer_eventfds(self):
+        connector_source = self._connector_source()
+
         self.assertNotIn("_signal_dense_layers_ready", connector_source)
+
+    def test_connector_does_not_depend_on_flexkv_debug_logging(self):
+        connector_source = self._connector_source()
+
+        self.assertNotIn("flexkv.common.debug", connector_source)
+        self.assertNotIn("SEGV-DEBUG", connector_source)
+        self.assertNotIn("FLEXKV-DEBUG", connector_source)
+        self.assertNotIn("print(", connector_source)
 
 
 if __name__ == "__main__":

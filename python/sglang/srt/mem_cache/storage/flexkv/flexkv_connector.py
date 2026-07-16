@@ -101,21 +101,11 @@ class FlexKVConnector(BaseKVConnector):
         self.page_size = params.page_size
         kvcache = params.token_to_kv_pool_allocator.get_kvcache()
 
-        print(
-            f"[FlexKV] kvcache type={type(kvcache).__name__}, "
-            f"keys={sorted(vars(kvcache).keys())}"
+        logger.info(
+            "[FlexKV] Initializing connector: kv_cache_type=%s, page_size=%d",
+            type(kvcache).__name__,
+            self.page_size,
         )
-
-        attr = ["c4_kv_pool", "c128_kv_pool", "swa_kv_pool", "c4_indexer_kv_pool"]
-        for _attr in attr:
-            _sub_pool = getattr(kvcache, _attr, None)
-            if _sub_pool is not None:
-                print(
-                    f"[FlexKV] kvcache.{_attr} "
-                    f"type={type(_sub_pool).__name__}, "
-                    f"keys={sorted(vars(_sub_pool).keys())}"
-                )
-
 
         sglang_model_config = ModelConfig.from_server_args(server_args)
 
@@ -269,7 +259,6 @@ class FlexKVConnector(BaseKVConnector):
                     # Compute per-token bytes from buffer shape so we don't
                     # duplicate the formula in DeepSeekV4IndexerPool.
                     sample = indexer_buffers_pool[0]
-                    print("[FlexKV] sample: ", sample.shape, "indexer_pool.page_size: ", indexer_pool.page_size)
                     bytes_per_page = sample.shape[1]
                     bytes_per_token_idx = bytes_per_page // indexer_pool.page_size
                     self._dsv4_layer_groups_info.append({
@@ -628,26 +617,14 @@ class FlexKVConnector(BaseKVConnector):
             slot_mapping_cpu = slot_mapping_cpu.to(torch.int64)
             slot_mappings.append(slot_mapping_cpu)
             swa_slot_mappings.append(swa_sm)
-            try:
-                from flexkv.common.debug import summarize_block_ids_from_slots
-
-                block_stats = summarize_block_ids_from_slots(
-                    slot_mapping_cpu, self.page_size
-                )
-                logger.info(
-                    f"[FlexKV-SEGV-DEBUG] start_load_kv rid={op.rid}, fkv_tid={fkv_tid}, "
-                    f"device_indices_count={int(indices.numel())}, "
-                    f"slot_min={block_stats.get('slot_min', 'n/a')}, "
-                    f"slot_max={block_stats.get('slot_max', 'n/a')}, "
-                    f"block_count={block_stats.get('block_count', 0)}, "
-                    f"block_min={block_stats.get('block_min', 'n/a')}, "
-                    f"block_max={block_stats.get('block_max', 'n/a')}, "
-                    f"swa_restore={swa_sm is not None}"
-                )
-            except Exception as e:
-                logger.warning(
-                    f"[FlexKV-SEGV-DEBUG] start_load_kv stats failed rid={op.rid}: {e}"
-                )
+            logger.debug(
+                "[FlexKV] Prepared KV load: rid=%s, flexkv_task_id=%d, "
+                "slot_count=%d, swa_slot_count=%d",
+                op.rid,
+                fkv_tid,
+                int(slot_mapping_cpu.numel()),
+                int(swa_sm.numel()) if swa_sm is not None else 0,
+            )
 
         logger.debug(f"[FlexKV] start_load_kv: resolved {len(flexkv_task_ids)} flexkv tasks")
         if not flexkv_task_ids:
@@ -684,11 +661,18 @@ class FlexKVConnector(BaseKVConnector):
                 )
 
             if self._sync_ctx.is_sync_leader:
-                # [FLEXKV-DEBUG-ISOLATE] main c4/c128/indexer H2D path.
                 logger.info(
-                    f"[FLEXKV-DEBUG] MAIN H2D (layerwise) launch task_ids={flexkv_task_ids}, "
-                    f"slot_counts={[int(s.numel()) for s in slot_mappings]}, "
-                    f"counter_id={producer_id}"
+                    "[FlexKV] Launching layerwise KV load: task_id=%d, "
+                    "flexkv_task_ids=%s, slot_counts=%s, swa_slot_counts=%s, "
+                    "counter_id=%d",
+                    task_id,
+                    flexkv_task_ids,
+                    [int(mapping.numel()) for mapping in slot_mappings],
+                    [
+                        int(mapping.numel()) if mapping is not None else 0
+                        for mapping in swa_slot_mappings
+                    ],
+                    producer_id,
                 )
                 self.kv_manager.launch(
                     task_ids=flexkv_task_ids,
@@ -824,27 +808,6 @@ class FlexKVConnector(BaseKVConnector):
                 filtered = kv_indices[unmatched_mask]
                 slot_mapping = filtered.cpu() if filtered.is_cuda else filtered
                 slot_mapping = slot_mapping.to(torch.int64)
-                try:
-                    from flexkv.common.debug import summarize_block_ids_from_slots
-
-                    store_stats = summarize_block_ids_from_slots(
-                        slot_mapping, self.page_size
-                    )
-                    logger.info(
-                        f"[FlexKV-SEGV-DEBUG] start_store_kv launch D2H "
-                        f"task_id={task_id}, fkv_task_id={fkv_task_id}, "
-                        f"token_count={len(token_ids_np)}, "
-                        f"unmatched_count={int(unmatched_mask.sum())}, "
-                        f"slot_min={store_stats.get('slot_min', 'n/a')}, "
-                        f"slot_max={store_stats.get('slot_max', 'n/a')}, "
-                        f"block_count={store_stats.get('block_count', 0)}, "
-                        f"block_min={store_stats.get('block_min', 'n/a')}, "
-                        f"block_max={store_stats.get('block_max', 'n/a')}"
-                    )
-                except Exception as log_err:
-                    logger.warning(
-                        f"[FlexKV-SEGV-DEBUG] start_store_kv stats failed task_id={task_id}: {log_err}"
-                    )
 
                 # SWA store rides the SAME launch: FlexKV built the SWA D2H op at
                 # put_match time; we late-bind its GPU slot via swa_slot_mappings.
@@ -867,6 +830,17 @@ class FlexKVConnector(BaseKVConnector):
                             exc_info=True,
                         )
                         store_swa_sm = None
+                logger.info(
+                    "[FlexKV] Launching KV store: task_id=%d, "
+                    "flexkv_task_id=%d, token_count=%d, unmatched_count=%d, "
+                    "slot_count=%d, swa_slot_count=%d",
+                    task_id,
+                    fkv_task_id,
+                    len(token_ids_np),
+                    int(unmatched_mask.sum()),
+                    int(slot_mapping.numel()),
+                    int(store_swa_sm.numel()) if store_swa_sm is not None else 0,
+                )
                 self.kv_manager.launch(
                     task_ids=[fkv_task_id],
                     slot_mappings=[slot_mapping],
