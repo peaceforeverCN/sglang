@@ -179,6 +179,7 @@ class FlexKVConnector(BaseKVConnector):
         # separately further down (matches existing SWA path).
         self._is_dsv4 = False
         self._dsv4_layer_groups_info: List[Dict[str, Any]] = []
+        self._dsv4_swa_state_groups_info: List[Dict[str, Any]] = []
         self._dsv4_kvcache = None
 
         indexer_buffers = getattr(kvcache, "index_k_with_scale_buffer", None)
@@ -270,6 +271,92 @@ class FlexKVConnector(BaseKVConnector):
                         "sub_page_size": indexer_pool.page_size,
                         "dtype": torch.uint8,
                     })
+
+            # Compress states are indexed by SWA physical page, not by the
+            # full-KV slot mapping.  Keep them out of the main layer groups and
+            # register them later as heterogeneous sidecars of the dedicated
+            # SWA channel.  This mirrors HiCache's C4_STATE and
+            # C4_INDEXER_STATE pools.
+            def _append_c4_state_group(
+                name: str, pools: List[Any]
+            ) -> None:
+                if not pools or any(pool is None for pool in pools):
+                    return
+                ring_sizes = {int(pool.ring_size) for pool in pools}
+                if len(ring_sizes) != 1:
+                    raise RuntimeError(
+                        f"[FlexKV-DSv4-State] group '{name}' has mixed ring "
+                        f"sizes: {sorted(ring_sizes)}"
+                    )
+                ring_size = ring_sizes.pop()
+                swa_page_size = int(
+                    getattr(kvcache, "swa_page_size", self.page_size)
+                )
+                if swa_page_size != self.page_size:
+                    raise RuntimeError(
+                        f"[FlexKV-DSv4-State] swa_page_size={swa_page_size} "
+                        f"must match FlexKV page_size={self.page_size}"
+                    )
+                if swa_page_size % ring_size != 0:
+                    raise RuntimeError(
+                        f"[FlexKV-DSv4-State] SWA page_size={swa_page_size} "
+                        f"is not divisible by ring_size={ring_size}"
+                    )
+                buffers = [pool.kv_score_buffer.kv_score for pool in pools]
+                sample = buffers[0]
+                if sample.ndim != 2 or not sample.is_contiguous():
+                    raise RuntimeError(
+                        f"[FlexKV-DSv4-State] group '{name}' expects contiguous "
+                        f"2D state tensors, got shape={sample.shape}"
+                    )
+                for layer_id, buf in zip(c4_layer_ids, buffers):
+                    if buf.shape != sample.shape or buf.dtype != sample.dtype:
+                        raise RuntimeError(
+                            f"[FlexKV-DSv4-State] group '{name}' layer "
+                            f"{layer_id} differs from shape={sample.shape}, "
+                            f"dtype={sample.dtype}"
+                        )
+                self._dsv4_swa_state_groups_info.append(
+                    {
+                        "name": name,
+                        "layer_ids": list(c4_layer_ids),
+                        "buffers": buffers,
+                        # CPU SWA blocks use full-page token geometry; only the
+                        # ring_size state rows belonging to that page travel.
+                        "ratio": swa_page_size // ring_size,
+                        "sub_page_size": ring_size,
+                        "head_size": int(sample.shape[1]),
+                        "dtype": sample.dtype,
+                    }
+                )
+
+            _append_c4_state_group(
+                "c4_attention_state",
+                [kvcache.compress_state_pools[i] for i in c4_layer_ids],
+            )
+            _append_c4_state_group(
+                "c4_indexer_state",
+                [kvcache.indexer_compress_state_pools[i] for i in c4_layer_ids],
+            )
+            if self._dsv4_swa_state_groups_info:
+                if cache_config.swa is None:
+                    raise RuntimeError(
+                        "[FlexKV-DSv4-State] SWA config is required for state sidecars"
+                    )
+                cache_config.swa.multi_group = True
+                logger.info(
+                    "[FlexKV-DSv4-State] Prepared SWA-page state sidecars: %s",
+                    [
+                        (
+                            group["name"],
+                            len(group["layer_ids"]),
+                            group["sub_page_size"],
+                            group["head_size"],
+                            str(group["dtype"]),
+                        )
+                        for group in self._dsv4_swa_state_groups_info
+                    ],
+                )
 
             # Build the flat ``kv_caches`` list expected by the registration
             # path (concatenation of all non-empty group buffers; ordering
@@ -1502,10 +1589,9 @@ class FlexKVConnector(BaseKVConnector):
             * ``cache_config.tokens_per_block`` (= ``page_size_full``) must
               be divisible by every group's compress_ratio. FlexKV's
               KVCacheLayout enforces this.
-            * Indexer compression-state pools and SWA pool are NOT covered
-              by this registration; SWA goes through the existing
-              ``self._swa_kv_pool`` path; indexer compress states stay
-              GPU-only.
+            * SWA KV and the C4 attention/indexer compression-state pools use
+              the dedicated SWA page channel.  They share its physical page
+              mapping while retaining heterogeneous GPU layouts/dtypes.
 
         Args:
             kv_caches: concatenation of all DSv4 sub-pool buffers, in the
@@ -1670,6 +1756,9 @@ class FlexKVConnector(BaseKVConnector):
         # self._swa_kv_pool (assigned later and absent here -> AttributeError).
         swa_caches = None
         swa_layout = None
+        swa_layer_groups = None
+        swa_gpu_layouts = None
+        swa_handles_per_group = None
         dsv4_kvcache = getattr(self, '_dsv4_kvcache', None)
         swa_pool = getattr(dsv4_kvcache, 'swa_kv_pool', None) if dsv4_kvcache is not None else None
         logger.info(
@@ -1703,6 +1792,76 @@ class FlexKVConnector(BaseKVConnector):
                 head_size=swa_effective_head_size,
                 is_mla=True,
             )
+
+            if self._dsv4_swa_state_groups_info:
+                stage_start = int(getattr(dsv4_kvcache, "_stage_start", 0))
+                swa_layer_ids = list(
+                    range(stage_start, stage_start + len(swa_buffers))
+                )
+                swa_layer_groups = [
+                    LayerGroupSpec(
+                        num_layers=len(swa_buffers),
+                        num_kv_heads=1,
+                        head_size=swa_effective_head_size,
+                        layer_indices=swa_layer_ids,
+                        compress_ratio=1,
+                        dtype=torch.uint8,
+                    )
+                ]
+                swa_gpu_layouts = [swa_layout]
+                swa_handles_per_group = [list(swa_buffers)]
+
+                for state_group in self._dsv4_swa_state_groups_info:
+                    buffers = state_group["buffers"]
+                    ring_size = int(state_group["sub_page_size"])
+                    head_size = int(state_group["head_size"])
+                    num_state_pages = min(
+                        int(buf.shape[0]) // ring_size for buf in buffers
+                    )
+                    if num_state_pages <= 0:
+                        raise RuntimeError(
+                            f"[FlexKV-DSv4-State] group "
+                            f"'{state_group['name']}' has no complete state page"
+                        )
+                    if num_state_pages < swa_num_pages:
+                        raise RuntimeError(
+                            f"[FlexKV-DSv4-State] group "
+                            f"'{state_group['name']}' has {num_state_pages} "
+                            f"pages, fewer than SWA's {swa_num_pages} pages"
+                        )
+                    state_spec = LayerGroupSpec(
+                        num_layers=len(state_group["layer_ids"]),
+                        num_kv_heads=1,
+                        head_size=head_size,
+                        layer_indices=list(state_group["layer_ids"]),
+                        compress_ratio=int(state_group["ratio"]),
+                        dtype=state_group["dtype"],
+                    )
+                    state_layout = KVCacheLayout(
+                        type=KVCacheLayoutType.LAYERFIRST,
+                        num_layer=len(state_group["layer_ids"]),
+                        num_block=num_state_pages,
+                        tokens_per_block=ring_size,
+                        num_head=1,
+                        head_size=head_size,
+                        is_mla=True,
+                    )
+                    swa_layer_groups.append(state_spec)
+                    swa_gpu_layouts.append(state_layout)
+                    swa_handles_per_group.append(list(buffers))
+                    swa_caches.extend(buffers)
+                    logger.info(
+                        "[FlexKV-DSv4-State] Registered group '%s': "
+                        "layers=%d, pages=%d, ring_size=%d, head_size=%d, "
+                        "dtype=%s, compress_ratio=%d",
+                        state_group["name"],
+                        len(state_group["layer_ids"]),
+                        num_state_pages,
+                        ring_size,
+                        head_size,
+                        state_group["dtype"],
+                        state_group["ratio"],
+                    )
             logger.info(
                 f"[FlexKV-SWA] Prepared SWA dedicated pool registration: "
                 f"num_layers={len(swa_buffers)}, num_pages={swa_num_pages}, "
@@ -1730,10 +1889,18 @@ class FlexKVConnector(BaseKVConnector):
             handles_per_group=handles_per_group,
             swa_caches=swa_caches,
             swa_layout=swa_layout,
+            swa_layer_groups=swa_layer_groups,
+            swa_gpu_layouts=swa_gpu_layouts,
+            swa_handles_per_group=swa_handles_per_group,
         )
         logger.info(
             "[FlexKV-DSv4] Registered DSv4 multi-pool KV caches to server"
             + (" (+ SWA dedicated pool)" if swa_caches else "")
+            + (
+                " (+ C4 compress-state sidecars)"
+                if swa_layer_groups is not None
+                else ""
+            )
         )
 
     def _init_layer_transfer_components(self):
