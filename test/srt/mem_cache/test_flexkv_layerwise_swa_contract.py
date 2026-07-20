@@ -23,6 +23,16 @@ class TestFlexKVLayerwiseSWAContract(unittest.TestCase):
         self.assertNotIn("FLEXKV-DEBUG", connector_source)
         self.assertNotIn("print(", connector_source)
 
+    def test_compress_state_sidecars_default_on_and_allow_swa_only(self):
+        connector_source = self._connector_source()
+
+        self.assertIn(
+            'self.flexkv_config.user_config, "swa_multi_group", None',
+            connector_source,
+        )
+        self.assertIn("if swa_multi_group is not False:", connector_source)
+        self.assertIn("using SWA-only I/O", connector_source)
+
 
 if __name__ == "__main__":
     unittest.main()

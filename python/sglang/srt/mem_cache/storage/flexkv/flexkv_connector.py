@@ -330,14 +330,33 @@ class FlexKVConnector(BaseKVConnector):
                     }
                 )
 
-            _append_c4_state_group(
-                "c4_attention_state",
-                [kvcache.compress_state_pools[i] for i in c4_layer_ids],
+            # ``swa_multi_group`` is a tri-state user option on FlexKV's
+            # UserConfig.  Missing/None preserves the correctness-first default
+            # (SWA + both state sidecars); explicit False keeps the legacy
+            # SWA-only path.  Keep the user option separate from
+            # cache_config.swa.multi_group: the latter is set only after real
+            # state groups have been constructed and is consumed internally by
+            # FlexKV's transfer scheduler.
+            swa_multi_group = getattr(
+                self.flexkv_config.user_config, "swa_multi_group", None
             )
-            _append_c4_state_group(
-                "c4_indexer_state",
-                [kvcache.indexer_compress_state_pools[i] for i in c4_layer_ids],
-            )
+            if swa_multi_group is not False:
+                _append_c4_state_group(
+                    "c4_attention_state",
+                    [kvcache.compress_state_pools[i] for i in c4_layer_ids],
+                )
+                _append_c4_state_group(
+                    "c4_indexer_state",
+                    [
+                        kvcache.indexer_compress_state_pools[i]
+                        for i in c4_layer_ids
+                    ],
+                )
+            else:
+                logger.info(
+                    "[FlexKV-DSv4-State] swa_multi_group=false; "
+                    "using SWA-only I/O without compress-state sidecars"
+                )
             if self._dsv4_swa_state_groups_info:
                 if cache_config.swa is None:
                     raise RuntimeError(
