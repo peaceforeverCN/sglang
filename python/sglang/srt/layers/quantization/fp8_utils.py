@@ -943,20 +943,51 @@ def aiter_w8a8_block_fp8_linear(
         if materialize_bpreshuffle_scale:
             x_scale = materialize_bpreshuffle_fp8_scale(x_scale)
 
-    if use_triton:
-        gemm_a8w8_blockscale_op = triton_gemm_a8w8_blockscale
-    elif _use_aiter_bpreshuffle_gfx95:
-        gemm_a8w8_blockscale_op = gemm_a8w8_blockscale_bpreshuffle
-    else:
-        gemm_a8w8_blockscale_op = ck_gemm_a8w8_blockscale
+    # OpForge gfx942 W8A8 fast path. The master switch defaults this kernel
+    # on; TACO_OPFORGE_W8A8_GEMM=0 remains an explicit per-kernel escape hatch.
+    opforge_w8a8_gemm = None
+    if not getattr(aiter_w8a8_block_fp8_linear, "_opforge_w8a8_disabled", False):
+        try:
+            from opforge import is_opforge_kernel_enabled
 
-    output = gemm_a8w8_blockscale_op(
-        q_input,
-        weight,
-        x_scale,
-        weight_scale,
-        dtype=torch.bfloat16 if input_scale is not None else input.dtype,
-    )
+            if is_opforge_kernel_enabled("w8a8_gemm"):
+                from opforge import w8a8_gemm as opforge_w8a8_gemm
+        except (ImportError, KeyError):
+            pass
+
+    output = None
+    if opforge_w8a8_gemm is not None:
+        try:
+            output = opforge_w8a8_gemm(
+                q_input,
+                weight,
+                x_scale,
+                weight_scale,
+            )
+        except Exception:
+            # Keep serving functional if the optimized extension cannot load
+            # on a future runtime. Disable retries in this worker and retain
+            # the pinned SGLang/AITER behavior below.
+            aiter_w8a8_block_fp8_linear._opforge_w8a8_disabled = True
+            logger.exception(
+                "OpForge W8A8 GEMM failed; disabling it for this worker"
+            )
+
+    if output is None:
+        if use_triton:
+            gemm_a8w8_blockscale_op = triton_gemm_a8w8_blockscale
+        elif _use_aiter_bpreshuffle_gfx95:
+            gemm_a8w8_blockscale_op = gemm_a8w8_blockscale_bpreshuffle
+        else:
+            gemm_a8w8_blockscale_op = ck_gemm_a8w8_blockscale
+
+        output = gemm_a8w8_blockscale_op(
+            q_input,
+            weight,
+            x_scale,
+            weight_scale,
+            dtype=torch.bfloat16 if input_scale is not None else input.dtype,
+        )
 
     if bias is not None:
         output += bias
