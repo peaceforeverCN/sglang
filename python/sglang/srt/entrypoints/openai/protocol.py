@@ -193,10 +193,15 @@ class PromptTokensDetails(BaseModel):
         return data
 
 
+class CompletionTokensDetails(BaseModel):
+    reasoning_tokens: Optional[int] = 0
+
+
 class UsageInfo(BaseModel):
     prompt_tokens: int = 0
     total_tokens: int = 0
     completion_tokens: Optional[int] = 0
+    completion_tokens_details: Optional[CompletionTokensDetails] = None
     # Used to return cached tokens info when --enable-cache-report is set
     prompt_tokens_details: Optional[PromptTokensDetails] = None
     reasoning_tokens: Optional[int] = 0
