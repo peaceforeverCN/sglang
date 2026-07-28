@@ -461,6 +461,19 @@ class Envs:
     SGLANG_DISAGG_STAGING_BUFFER = EnvBool(False)
     SGLANG_DISAGG_STAGING_BUFFER_SIZE_MB = EnvInt(64)
     SGLANG_DISAGG_STAGING_POOL_SIZE_MB = EnvInt(4096)
+
+    # TTFT-based admission control for PD prefill server.
+    # Rejects incoming requests whose estimated TTFT (queue wait + prefill
+    # compute time) exceeds the configured threshold, to prevent upstream
+    # gateway timeouts (90s) causing wasted KV transfers on aborted requests.
+    # All defaults make the feature effectively disabled; set ENABLED=true and
+    # a realistic THRESHOLD to activate.
+    SGLANG_TTFT_LIMIT_ENABLED = EnvBool(False)
+    SGLANG_TTFT_LIMIT_THRESHOLD = EnvFloat(999999.0)
+    # Fixed prefix cache hit rate for cost estimation (0.0-1.0).
+    SGLANG_TTFT_CACHE_HIT_RATE = EnvFloat(0.9)
+    # Fixed prefill throughput (tokens/s). <=0 means use runtime measured value.
+    SGLANG_TTFT_PREFILL_THROUGHPUT = EnvFloat(0.0)
     # TODO(yangminl): remove SGLANG_STAGING_USE_TORCH and the torch fallback in
     # staging_buffer.py once Triton kernels are fully validated in production.
     SGLANG_STAGING_USE_TORCH = EnvBool(False)
