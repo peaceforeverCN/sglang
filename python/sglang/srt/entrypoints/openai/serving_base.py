@@ -274,6 +274,26 @@ class OpenAIServingBase(ABC):
             return None
         return raw_request.headers.get("x-smg-routing-key")
 
+    def extract_rid_from_header(
+        self, raw_request: Request, body_rid: Optional[str] = None
+    ) -> Optional[str]:
+        """Extract request id from X-Request-Id header, with higher priority than body rid.
+
+        Header name: X-Request-Id (HTTP standard, case-insensitive)
+        Priority: header > body > None (filled with UUID later)
+        """
+        if raw_request is None:
+            return body_rid
+
+        header_rid = raw_request.headers.get("x-request-id")
+        if header_rid:
+            if body_rid and body_rid != header_rid:
+                logger.debug(
+                    f"X-Request-Id header ({header_rid}) overrides body rid ({body_rid})"
+                )
+            return header_rid
+        return body_rid
+
     def extract_routed_dp_rank_from_header(
         self, raw_request: Request, body_routed_dp_rank: Optional[int] = None
     ) -> Optional[int]:

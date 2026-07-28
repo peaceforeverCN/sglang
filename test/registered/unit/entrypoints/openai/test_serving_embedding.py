@@ -339,6 +339,37 @@ class ServingEmbeddingTestCase(unittest.TestCase):
                 self.image_only_multimodal_req
             )
 
+    # ------------- X-Request-Id header tests -------------
+    def test_convert_to_internal_request_rid_from_header(self):
+        """X-Request-Id header becomes the adapted request's rid."""
+        self.request.headers = {"x-request-id": "tione-trace-abc-123"}
+        adapted, _ = self.serving_embedding._convert_to_internal_request(
+            self.basic_req, self.request
+        )
+        self.assertEqual(adapted.rid, "tione-trace-abc-123")
+
+    def test_convert_to_internal_request_header_rid_overrides_body_rid(self):
+        """Header rid takes priority over the body rid field."""
+        self.request.headers = {"x-request-id": "header-rid-xxx"}
+        req = EmbeddingRequest(
+            model="test-model", input="Hi", encoding_format="float", rid="body-rid-yyy"
+        )
+        adapted, _ = self.serving_embedding._convert_to_internal_request(
+            req, self.request
+        )
+        self.assertEqual(adapted.rid, "header-rid-xxx")
+
+    def test_convert_to_internal_request_rid_from_body_when_no_header(self):
+        """Without a header, the body rid is preserved."""
+        self.request.headers = {}
+        req = EmbeddingRequest(
+            model="test-model", input="Hi", encoding_format="float", rid="body-rid-yyy"
+        )
+        adapted, _ = self.serving_embedding._convert_to_internal_request(
+            req, self.request
+        )
+        self.assertEqual(adapted.rid, "body-rid-yyy")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -369,6 +369,32 @@ class ServingCompletionTestCase(unittest.TestCase):
             },
         )
 
+    # ------------- X-Request-Id header tests -------------
+    def test_convert_to_internal_request_rid_from_header(self):
+        """X-Request-Id header becomes the adapted request's rid."""
+        self.fastapi_request.headers = {"x-request-id": "tione-trace-abc-123"}
+        req = CompletionRequest(model="x", prompt="Hi", max_tokens=10)
+        adapted, _ = self.sc._convert_to_internal_request(req, self.fastapi_request)
+        self.assertEqual(adapted.rid, "tione-trace-abc-123")
+
+    def test_convert_to_internal_request_header_rid_overrides_body_rid(self):
+        """Header rid takes priority over the body rid field."""
+        self.fastapi_request.headers = {"x-request-id": "header-rid-xxx"}
+        req = CompletionRequest(
+            model="x", prompt="Hi", max_tokens=10, rid="body-rid-yyy"
+        )
+        adapted, _ = self.sc._convert_to_internal_request(req, self.fastapi_request)
+        self.assertEqual(adapted.rid, "header-rid-xxx")
+
+    def test_convert_to_internal_request_rid_from_body_when_no_header(self):
+        """Without a header, the body rid is preserved."""
+        self.fastapi_request.headers = {}
+        req = CompletionRequest(
+            model="x", prompt="Hi", max_tokens=10, rid="body-rid-yyy"
+        )
+        adapted, _ = self.sc._convert_to_internal_request(req, self.fastapi_request)
+        self.assertEqual(adapted.rid, "body-rid-yyy")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

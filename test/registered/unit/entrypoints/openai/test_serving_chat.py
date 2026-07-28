@@ -1941,6 +1941,113 @@ class ServingChatTestCase(unittest.TestCase):
         self.assertEqual(context.exception.status_code, 400)
         self.assertIn("must be an integer", context.exception.detail)
 
+    # ------------- X-Request-Id header tests -------------
+    def test_extract_rid_from_header_none_when_no_header_no_body(self):
+        """No header and no body rid -> None (UUID filled later)."""
+        self.fastapi_request.headers = {}
+        self.assertIsNone(
+            self.chat.extract_rid_from_header(self.fastapi_request, None)
+        )
+
+    def test_extract_rid_from_header_returns_body_when_no_header(self):
+        """Without a header, the body rid is preserved."""
+        self.fastapi_request.headers = {}
+        self.assertEqual(
+            self.chat.extract_rid_from_header(self.fastapi_request, "body-rid"),
+            "body-rid",
+        )
+
+    def test_extract_rid_from_header_returns_header_when_no_body(self):
+        """Header rid is used when no body rid is present."""
+        self.fastapi_request.headers = {"x-request-id": "header-rid"}
+        self.assertEqual(
+            self.chat.extract_rid_from_header(self.fastapi_request, None),
+            "header-rid",
+        )
+
+    def test_extract_rid_from_header_header_overrides_body(self):
+        """Header rid takes priority over body rid when they differ."""
+        self.fastapi_request.headers = {"x-request-id": "header-rid"}
+        self.assertEqual(
+            self.chat.extract_rid_from_header(self.fastapi_request, "body-rid"),
+            "header-rid",
+        )
+
+    def test_extract_rid_from_header_case_insensitive(self):
+        """Header lookup is case-insensitive (HTTP standard)."""
+        from starlette.datastructures import Headers
+
+        self.fastapi_request.headers = Headers({"X-Request-Id": "header-rid"})
+        self.assertEqual(
+            self.chat.extract_rid_from_header(self.fastapi_request, None),
+            "header-rid",
+        )
+
+    def test_extract_rid_from_header_none_request_returns_body(self):
+        """A None raw_request falls back to the body rid."""
+        self.assertEqual(self.chat.extract_rid_from_header(None, "body-rid"), "body-rid")
+
+    def test_extract_rid_from_header_empty_header_falls_back_to_body(self):
+        """An empty header value is treated as absent -> body rid."""
+        self.fastapi_request.headers = {"x-request-id": ""}
+        self.assertEqual(
+            self.chat.extract_rid_from_header(self.fastapi_request, "body-rid"),
+            "body-rid",
+        )
+
+    def test_convert_to_internal_request_rid_from_header(self):
+        """X-Request-Id header becomes the adapted request's rid."""
+        with (
+            patch(
+                "sglang.srt.entrypoints.openai.serving_chat.generate_chat_conv"
+            ) as conv_mock,
+            patch.object(self.chat, "_process_messages") as proc_mock,
+        ):
+            conv_ins = Mock()
+            conv_ins.get_prompt.return_value = "Test prompt"
+            conv_ins.image_data = conv_ins.audio_data = None
+            conv_ins.modalities = []
+            conv_ins.stop_str = ["</s>"]
+            conv_mock.return_value = conv_ins
+            proc_mock.return_value = MessageProcessingResult(
+                "Test prompt", [1, 2, 3], None, None, [], ["</s>"], None
+            )
+
+            self.fastapi_request.headers = {"x-request-id": "tione-trace-abc-123"}
+            adapted, _ = self.chat._convert_to_internal_request(
+                self.basic_req, self.fastapi_request
+            )
+            self.assertEqual(adapted.rid, "tione-trace-abc-123")
+
+    def test_convert_to_internal_request_header_rid_overrides_body_rid(self):
+        """When both header and body rid are present, the header wins."""
+        with (
+            patch(
+                "sglang.srt.entrypoints.openai.serving_chat.generate_chat_conv"
+            ) as conv_mock,
+            patch.object(self.chat, "_process_messages") as proc_mock,
+        ):
+            conv_ins = Mock()
+            conv_ins.get_prompt.return_value = "Test prompt"
+            conv_ins.image_data = conv_ins.audio_data = None
+            conv_ins.modalities = []
+            conv_ins.stop_str = ["</s>"]
+            conv_mock.return_value = conv_ins
+            proc_mock.return_value = MessageProcessingResult(
+                "Test prompt", [1, 2, 3], None, None, [], ["</s>"], None
+            )
+
+            req = ChatCompletionRequest(
+                model="x",
+                messages=[{"role": "user", "content": "Hi?"}],
+                rid="body-rid-yyy",
+            )
+            self.fastapi_request.headers = {"x-request-id": "header-rid-xxx"}
+            adapted, _ = self.chat._convert_to_internal_request(
+                req, self.fastapi_request
+            )
+            self.assertEqual(adapted.rid, "header-rid-xxx")
+
     def test_hunyuan_reasoning_effort_dispatch(self):
         tm = _MockTokenizerManager()
         tm.server_args.reasoning_parser = "hunyuan"
