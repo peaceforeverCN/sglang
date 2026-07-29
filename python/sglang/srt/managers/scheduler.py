@@ -202,6 +202,9 @@ from sglang.srt.managers.scheduler_components.new_token_ratio_tracker import (
 from sglang.srt.managers.scheduler_components.output_streamer import (
     SchedulerOutputStreamer,
 )
+from sglang.srt.managers.scheduler_components.ttft_limit_protector import (
+    TtftLimitProtector,
+)
 from sglang.srt.managers.scheduler_components.pool_stats_observer import (
     SchedulerPoolStatsObserver,
 )
@@ -1108,6 +1111,7 @@ class Scheduler(
         self.disagg_prefill_inflight_queue = None
         self.disagg_decode_prealloc_queue = None
         self.disagg_decode_transfer_queue = None
+        self.ttft_protector = None
 
         self.disaggregation_mode = DisaggregationMode(
             self.server_args.disaggregation_mode
@@ -1224,6 +1228,21 @@ class Scheduler(
             self.disagg_prefill_inflight_queue: List[Req] = []
 
             self.enable_staging = envs.SGLANG_DISAGG_STAGING_BUFFER.get()
+
+            # TTFT-based admission control for PD prefill server.
+            # Disabled by default; activated via SGLANG_TTFT_LIMIT_ENABLED.
+            if envs.SGLANG_TTFT_LIMIT_ENABLED.get():
+                self.ttft_protector: Optional[TtftLimitProtector] = (
+                    TtftLimitProtector(self)
+                )
+                logger.info(
+                    f"TTFT limit protection enabled: "
+                    f"threshold={envs.SGLANG_TTFT_LIMIT_THRESHOLD.get()}s, "
+                    f"hit_rate={envs.SGLANG_TTFT_CACHE_HIT_RATE.get()}, "
+                    f"throughput={'runtime' if envs.SGLANG_TTFT_PREFILL_THROUGHPUT.get() <= 0 else envs.SGLANG_TTFT_PREFILL_THROUGHPUT.get()}"
+                )
+            else:
+                self.ttft_protector = None
 
         # Init mm receiver for EPD disaggregation mode
         if (
@@ -2332,6 +2351,14 @@ class Scheduler(
             self.waiting_queue.append(req)
             req.time_stats.set_wait_queue_entry_time()
         elif self.disaggregation_mode == DisaggregationMode.PREFILL:
+            # TTFT-based admission control: reject if estimated TTFT exceeds limit.
+            if self.ttft_protector is not None and not is_retracted:
+                num_tokens = len(req.origin_input_ids)
+                admit, est_ttft = self.ttft_protector.should_admit(num_tokens)
+                if not admit:
+                    self._reject_by_ttft_limit(req, est_ttft)
+                    return
+                self.ttft_protector.register(req.rid, num_tokens)
             self._prefetch_kvcache(req)
             self.disagg_prefill_bootstrap_queue.add(
                 req, self.model_config.num_key_value_heads
@@ -2419,6 +2446,30 @@ class Scheduler(
         )
         req_to_abort.time_stats.trace_ctx.abort(abort_info={"reason": message})
         return req_to_abort.rid == recv_req.rid
+
+    def _reject_by_ttft_limit(self, req: Req, est_ttft: float) -> None:
+        """Reject an incoming request because its estimated TTFT exceeds the limit."""
+        threshold = envs.SGLANG_TTFT_LIMIT_THRESHOLD.get()
+        message = (
+            f"Request rejected: estimated TTFT ({est_ttft:.1f}s) exceeds the "
+            f"configured limit ({threshold:.1f}s)."
+        )
+        logger.warning(
+            f"TTFT limit rejected. {req.rid=} est_ttft={est_ttft:.1f}s "
+            f"threshold={threshold:.1f}s"
+        )
+        req.time_stats.trace_ctx.abort(abort_info={"reason": message})
+        self.ipc_channels.send_to_tokenizer.send_output(
+            AbortReq(
+                finished_reason={
+                    "type": "abort",
+                    "status_code": HTTPStatus.SERVICE_UNAVAILABLE,
+                    "message": message,
+                },
+                rid=req.rid,
+            ),
+            req,
+        )
 
     def _abort_on_waiting_timeout(self):
         if (timeout_s := envs.SGLANG_REQ_WAITING_TIMEOUT.get()) <= 0:
@@ -2975,6 +3026,13 @@ class Scheduler(
             self.chunked_req.inflight_middle_chunks += 1
 
         set_time_batch(can_run_list, "set_forward_entry_time")
+
+        # Notify TTFT protector that these requests have started computing.
+        # set_forward_entry_time only fires once per request (guarded by
+        # forward_entry_time == 0.0), so this is safe for chunked prefill.
+        if self.ttft_protector is not None:
+            for req in can_run_list:
+                self.ttft_protector.mark_compute_start(req.rid)
 
         # Create a new batch
         new_batch = ScheduleBatch.init_new(
@@ -3958,6 +4016,8 @@ class Scheduler(
             # This only works for requests that have not started anything.
             # We still need to send something back to TokenizerManager to clean up the state.
             req = self.waiting_queue.pop(i)
+            if self.ttft_protector is not None:
+                self.ttft_protector.deregister(req.rid)
             if self.enable_hicache_storage:
                 # to release prefetch events associated with the request
                 self.tree_cache.release_aborted_request(req.rid)
@@ -3999,6 +4059,8 @@ class Scheduler(
             for req in self.disagg_prefill_bootstrap_queue.queue:
                 if recv_req.abort_all or req.rid.startswith(recv_req.rid):
                     logger.debug(f"Abort bootstrap queue request. {req.rid=}")
+                    if self.ttft_protector is not None:
+                        self.ttft_protector.deregister(req.rid)
                     if self.enable_hicache_storage:
                         self.tree_cache.release_aborted_request(req.rid)
 
@@ -4009,6 +4071,8 @@ class Scheduler(
             for req in self.disagg_prefill_inflight_queue:
                 if recv_req.abort_all or req.rid.startswith(recv_req.rid):
                     logger.debug(f"Abort inflight queue request. {req.rid=}")
+                    if self.ttft_protector is not None:
+                        self.ttft_protector.deregister(req.rid)
                     if hasattr(req.disagg_kv_sender, "abort"):
                         req.disagg_kv_sender.abort()
 

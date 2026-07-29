@@ -650,6 +650,10 @@ class SchedulerDisaggregationPrefillMixin:
             if req.inflight_middle_chunks <= 0:
                 req.time_stats.set_prefill_finished_time()
 
+                # Notify TTFT protector: prefill compute done, KV transfer starting.
+                if self.ttft_protector is not None:
+                    self.ttft_protector.mark_transferring(req.rid)
+
                 # Test hook: exercise the release/requeue retry path.
                 if req.pending_bootstrap and should_force_retry(req):
                     self.optimistic_release_and_requeue(req)
@@ -835,6 +839,9 @@ class SchedulerDisaggregationPrefillMixin:
 
         for req in done_reqs:
             req.time_stats.set_completion_time()
+            # Remove from TTFT protector tracking.
+            if self.ttft_protector is not None:
+                self.ttft_protector.deregister(req.rid)
 
         for req in done_reqs:
             if isinstance(req.finished_reason, FINISH_ABORT):
